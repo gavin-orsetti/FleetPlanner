@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="FleetPlanner.MVVM.Views.MyFleets_AddNew_Page"
+             Title="MyFleets_AddNew_Page">
+    <VerticalStackLayout>
+        <Label 
+            Text="Add New Fleet Page"
+            VerticalOptions="Center" 
+            HorizontalOptions="Center" />
+    </VerticalStackLayout>
+</ContentPage>
