@@ -4,9 +4,83 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
-    <Color x:Key="Primary">#512BD4</Color>
-    <Color x:Key="Secondary">#DFD8F7</Color>
-    <Color x:Key="Tertiary">#2B0B98</Color>
+    <!--Primary Set + 4-->
+    <Color x:Key="PrimaryPlus4">#6b6090</Color>
+    <Color x:Key="SecondaryPlus4">#b3aad0</Color>
+    <Color x:Key="CuePlus4">#60907e</Color>
+    <Color x:Key="WarningPlus4">#908c60</Color>
+    <Color x:Key="DangerPlus4">#906860</Color>
+    <Color x:Key="GrayPlus4">#717773</Color>
+
+    <!--Primary Set + 3-->
+    <Color x:Key="PrimaryPlus3">#5f5387</Color>
+    <Color x:Key="SecondaryPlus3">#ada3cc</Color>
+    <Color x:Key="CuePlus3">#538773</Color>
+    <Color x:Key="WarningPlus3">#878253</Color>
+    <Color x:Key="DangerPlus3">#875c53</Color>
+    <Color x:Key="GrayPlus3">#656c67</Color>
+    
+    <!--Primary Set + 2-->
+    <Color x:Key="PrimaryPlus2">#53467e</Color>
+    <Color x:Key="SecondaryPlus2">#a69cc8</Color>
+    <Color x:Key="CuePlus2">#467e69</Color>
+    <Color x:Key="WarningPlus2">#7e7946</Color>
+    <Color x:Key="DangerPlus2">#7e4f46</Color>
+    <Color x:Key="GrayPlus2">#5a605c</Color>
+    
+    <!--Primary Set + 1-->
+    <Color x:Key="PrimaryPlus1">#463874</Color>
+    <Color x:Key="SecondaryPlus1">#a094c4</Color>
+    <Color x:Key="CuePlus1">#38745e</Color>
+    <Color x:Key="WarningPlus1">#746f38</Color>
+    <Color x:Key="DangerPlus1">#744338</Color>
+    <Color x:Key="GrayPlus1">#4e5550</Color>
+    
+    <!--Primary Set-->
+    <Color x:Key="Primary">#3a2b6b</Color>
+    <Color x:Key="Secondary">#998dc0</Color>
+    <Color x:Key="Cue">#2b6b53</Color>
+    <Color x:Key="Warning">#6b652b</Color>
+    <Color x:Key="Danger">#6b362b</Color>
+    <Color x:Key="Gray">#424944</Color>
+    
+    <!--Primary Set - 1-->
+    <Color x:Key="Primary-1">#372864</Color>
+    <Color x:Key="Secondary-1">#9084b4</Color>
+    <Color x:Key="Cue-1">#28644e</Color>
+    <Color x:Key="Warning-1">#645f28</Color>
+    <Color x:Key="Danger-1">#643328</Color>
+    <Color x:Key="Gray-1">#3e4540</Color>
+
+    <!--Primary Set - 2-->
+    <Color x:Key="Primary-2">#33265e</Color>
+    <Color x:Key="Secondary-2">#867ca8</Color>
+    <Color x:Key="Cue-2">#265e49</Color>
+    <Color x:Key="Warning-2">#5e5926</Color>
+    <Color x:Key="Danger-2">#5e3026</Color>
+    <Color x:Key="Gray-2">#3a403c</Color>
+
+    <!--Primary Set - 3-->
+    <Color x:Key="Primary-3">#302357</Color>
+    <Color x:Key="Secondary-3">#7d739c</Color>
+    <Color x:Key="Cue-3">#235743</Color>
+    <Color x:Key="Warning-3">#575223</Color>
+    <Color x:Key="Danger-3">#572c23</Color>
+    <Color x:Key="Gray-3">#363c37</Color>
+
+    <!--Primary Set - 4-->
+    <Color x:Key="Primary-4">#2c2050</Color>
+    <Color x:Key="Secondary-4">#736a90</Color>
+    <Color x:Key="Cue-4">#20503e</Color>
+    <Color x:Key="Warning-4">#504c20</Color>
+    <Color x:Key="Danger-4">#502920</Color>
+    <Color x:Key="Gray-4">#323733</Color>
+    
+    
+    
+    
+    
+    
     <Color x:Key="White">White</Color>
     <Color x:Key="Black">Black</Color>
     <Color x:Key="Gray100">#E1E1E1</Color>
@@ -19,7 +93,6 @@
     <Color x:Key="Gray950">#141414</Color>
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
     <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>
-    <SolidColorBrush x:Key="TertiaryBrush" Color="{StaticResource Tertiary}"/>
     <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource White}"/>
     <SolidColorBrush x:Key="BlackBrush" Color="{StaticResource Black}"/>
     <SolidColorBrush x:Key="Gray100Brush" Color="{StaticResource Gray100}"/>
