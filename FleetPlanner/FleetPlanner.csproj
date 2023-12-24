@@ -75,9 +75,6 @@
 	  <MauiXaml Update="MVVM\Views\Fleet_Edit_Page.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="MVVM\Views\MyFleetsPage.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
 	  <MauiXaml Update="MVVM\Views\MyFleets_AddNew_Page.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
