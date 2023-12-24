@@ -4,11 +4,53 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:FleetPlanner"
-    Shell.FlyoutBehavior="Disabled">
+    xmlns:views="clr-namespace:FleetPlanner.MVVM.Views"
+    Shell.FlyoutBehavior="Flyout">
 
     <ShellContent
-        Title="Home"
+        Title="Fleets"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
 
+    <Shell.FlyoutHeader>
+        <Label Text="Fleetify" 
+               FontSize="Title"
+               HorizontalTextAlignment="Center"
+               Padding="10"/>
+    </Shell.FlyoutHeader>
+    
+    <FlyoutItem 
+        Title="Shopping Lists">
+        <Tab>
+            <ShellContent ContentTemplate="{DataTemplate views:ShoppingListPage}"/>
+        </Tab>
+    </FlyoutItem>
+
+    <FlyoutItem Title="About">
+        <Tab>
+            <ShellContent ContentTemplate="{DataTemplate views:AboutPage}"/>
+        </Tab>
+    </FlyoutItem>
+
+    <FlyoutItem Title="Contribute">
+        <Tab>
+            <ShellContent ContentTemplate="{DataTemplate views:ContributePage}"/>
+        </Tab>
+    </FlyoutItem>
+
+    <Shell.FlyoutFooter>
+        <StackLayout>
+            <Image Source="madebythecommunity_white.png"
+                   MaximumWidthRequest="250"
+                   MaximumHeightRequest="250"
+                   WidthRequest="200"
+                   HeightRequest="200"/>
+
+            <Label Text="This is an unofficial Star Citizen fan project, not affiliated with the Cloud Imperium group of companies. All content on this app not authored by its host or users are property of their respective owners"
+                   HorizontalTextAlignment="Center"
+                   VerticalTextAlignment="Start"
+                   HeightRequest="150"
+                   Padding="10"/>
+        </StackLayout>
+    </Shell.FlyoutFooter>
 </Shell>
