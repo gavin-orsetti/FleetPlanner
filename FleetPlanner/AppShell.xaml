@@ -18,9 +18,8 @@
                HorizontalTextAlignment="Center"
                Padding="10"/>
     </Shell.FlyoutHeader>
-    
-    <FlyoutItem 
-        Title="Shopping Lists">
+
+    <FlyoutItem Title="Shopping Lists">
         <Tab>
             <ShellContent ContentTemplate="{DataTemplate views:ShoppingListPage}"/>
         </Tab>
