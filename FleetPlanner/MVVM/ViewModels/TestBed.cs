@@ -6,27 +6,62 @@ using System.Threading.Tasks;
 
 using FleetPlanner.MVVM.Models;
 
+using MvvmHelpers;
+using MvvmHelpers.Commands;
+
+using Command = Microsoft.Maui.Controls.Command;
+
 namespace FleetPlanner.MVVM.ViewModels
 {
-    class TestBed
+    public class TestBed : BaseViewModel
     {
-        public List<Ship> Ships
+        public TestBed()
         {
-            get; set;
+            Task.Run( async () => await Refresh() );
         }
 
-        private Command loadShips => GetShips();
-        public Command LoadShips => loadShips;
+        #region Properties & Fields
 
-        private Command GetShips()
+        private ObservableRangeCollection<Ship> ships;
+        public ObservableRangeCollection<Ship> Ships
         {
-            Ships = Services.ServiceProvider.ShipDB.ShipDB.Values.ToList();
+            get => ships ??= new ObservableRangeCollection<Ship>();
+            set => ships = value;
+        }
+
+        #region Commands
+        private AsyncCommand refreshCommand;
+        public AsyncCommand RefreshCommand => refreshCommand ??= new AsyncCommand( Refresh );
+
+        private AsyncCommand loadShipsCommand;
+        public AsyncCommand LoadShipsCommand => loadShipsCommand ??= new AsyncCommand( LoadShips );
+        #endregion Commands
+        #endregion Properties & Fields
+
+
+        #region Methods
+
+        private async Task Refresh()
+        {
+            Console.WriteLine( "ViewModel Refreshed" );
+        }
+
+        private async Task LoadShips()
+        {
+            Ships.AddRange( await Services.ServiceProvider.GetShips() );
+
             foreach( Ship ship in Ships )
             {
-                Console.WriteLine( ship );
+                Console.WriteLine( ship.Name );
             }
 
-            return GetShips();
+            Console.WriteLine( "--------------" );
+
+            Console.WriteLine( "Ships Loaded" );
         }
+
+        #endregion Methods
+
+
     }
 }

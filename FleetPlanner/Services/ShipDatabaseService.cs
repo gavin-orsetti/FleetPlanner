@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,26 +13,37 @@ namespace FleetPlanner.Services
     {
         readonly Dictionary<int, Ship> shipDB = [];
 
-        public Dictionary<int, Ship> ShipDB
+        public Dictionary<int, Ship> Db
         {
             get => shipDB;
         }
 
-        public ShipDatabaseService()
+        //public ShipDatabaseService()
+        //{
+        //    Task.Run( Init );
+        //}
+
+        public async Task Init()
         {
-            Task.Run( Init );
-        }
 
-        async Task Init()
-        {
-            FileStream fs = new( Config.ShipDatabaseFilePath, FileMode.Open, FileAccess.Read );
-
-            IAsyncEnumerable<Ship> ships = System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<Ship>( fs );
-
-            await foreach( Ship ship in ships )
+            try
             {
-                shipDB.Add( ship.Id, ship );
+                using Stream stream = await FileSystem.OpenAppPackageFileAsync( "ships.json" );
+                using StreamReader r = new( stream );
+
+                IAsyncEnumerable<Ship> ships = System.Text.Json.JsonSerializer.DeserializeAsyncEnumerable<Ship>( stream );
+
+                await foreach( Ship ship in ships )
+                {
+                    shipDB.Add( ship.Id, ship );
+                }
+
             }
+            catch( Exception ex )
+            {
+                throw;
+            }
+
         }
 
         public IDatabaseItem GetRow( int id )

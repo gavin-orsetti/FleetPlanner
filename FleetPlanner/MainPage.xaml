@@ -25,7 +25,7 @@
             <Button
                 x:Name="GoToFleetBtn"
                 Text="Load Ships"
-                Command="{Binding LoadShips}"
+                Command="{Binding LoadShipsCommand}"
                 SemanticProperties.Hint="Sends you to the fleet page (substitute for a list item atm)"
                 HorizontalOptions="Center" />
 

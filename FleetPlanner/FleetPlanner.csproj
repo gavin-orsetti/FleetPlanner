@@ -55,9 +55,11 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
+		<PackageReference Include="Refractored.MvvmHelpers" Version="1.6.2" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="Database\" />
 	  <Folder Include="MVVM\Models\" />
 	  <Folder Include="MVVM\ViewModels\" />
 	</ItemGroup>
