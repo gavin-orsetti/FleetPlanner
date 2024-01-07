@@ -39,7 +39,7 @@
     "SCU": 0,
     "Stowage": 1000,
     "LivePriceUSD": 220,
-    "LivePriceAuec": "2 859 000"
+    "LivePriceAuec": 2859000
   },
   {
     "Id": 4,
@@ -109,7 +109,7 @@
     "SCU": 576,
     "Stowage": 596000,
     "LivePriceUSD": 295,
-    "LivePriceAuec": "4 686 600"
+    "LivePriceAuec": 4686600
   },
   {
     "Id": 9,
@@ -123,7 +123,7 @@
     "SCU": 46,
     "Stowage": 46000,
     "LivePriceUSD": 100,
-    "LivePriceAuec": "1 385 300"
+    "LivePriceAuec": 1385300
   },
   {
     "Id": 10,
@@ -137,7 +137,7 @@
     "SCU": 4,
     "Stowage": 4000,
     "LivePriceUSD": 40,
-    "LivePriceAuec": "675 000"
+    "LivePriceAuec": 675000
   },
   {
     "Id": 11,
@@ -193,7 +193,7 @@
     "SCU": 66,
     "Stowage": 66000,
     "LivePriceUSD": 110,
-    "LivePriceAuec": "1 697 600"
+    "LivePriceAuec": 1697600
   },
   {
     "Id": 15,
@@ -207,7 +207,7 @@
     "SCU": 0,
     "Stowage": 250,
     "LivePriceUSD": 90,
-    "LivePriceAuec": "1 169 900"
+    "LivePriceAuec": 1169900
   },
   {
     "Id": 16,
@@ -221,7 +221,7 @@
     "SCU": 114,
     "Stowage": 114000,
     "LivePriceUSD": 240,
-    "LivePriceAuec": "4 912 500"
+    "LivePriceAuec": 4912500
   },
   {
     "Id": 17,
@@ -235,7 +235,7 @@
     "SCU": 0,
     "Stowage": 650,
     "LivePriceUSD": 40,
-    "LivePriceAuec": "404 000"
+    "LivePriceAuec": 404000
   },
   {
     "Id": 18,
@@ -249,7 +249,7 @@
     "SCU": 32,
     "Stowage": 650,
     "LivePriceUSD": 140,
-    "LivePriceAuec": "2 061 000"
+    "LivePriceAuec": 2061000
   },
   {
     "Id": 19,
@@ -263,7 +263,7 @@
     "SCU": 96,
     "Stowage": 96000,
     "LivePriceUSD": 110,
-    "LivePriceAuec": "1 853 000"
+    "LivePriceAuec": 1853000
   },
   {
     "Id": 20,
@@ -347,6 +347,6 @@
     "SCU": 96,
     "Stowage": 96000,
     "LivePriceUSD": 240,
-    "LivePriceAuec": "3 548 000"
+    "LivePriceAuec": 3548000
   }
 ]

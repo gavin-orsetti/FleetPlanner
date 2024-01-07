@@ -25,9 +25,10 @@ namespace FleetPlanner.MVVM.ViewModels
         private ObservableRangeCollection<Ship> ships;
         public ObservableRangeCollection<Ship> Ships
         {
-            get => ships ??= new ObservableRangeCollection<Ship>();
+            get => ships ??= [];
             set => ships = value;
         }
+
 
         #region Commands
         private AsyncCommand refreshCommand;

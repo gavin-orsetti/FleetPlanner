@@ -28,42 +28,42 @@ namespace FleetPlanner.MVVM.Models
             get; set;
         }
 
-        public int role
+        public string Role
         {
             get; set;
         }
 
-        public int size
+        public int Size
         {
             get; set;
         }
 
-        public int crew_min
+        public int Crew_min
         {
             get; set;
         }
 
-        public int crew_max
+        public int Crew_max
         {
             get; set;
         }
 
-        public int scu
+        public int Scu
         {
             get; set;
         }
 
-        public int stowage
+        public int Stowage
         {
             get; set;
         }
 
-        public int livePriceUSD
+        public int LivePriceUSD
         {
             get; set;
         }
 
-        public int livePriceAuec
+        public int LivePriceAuec
         {
             get; set;
         }

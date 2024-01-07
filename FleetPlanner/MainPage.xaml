@@ -29,9 +29,19 @@
                 SemanticProperties.Hint="Sends you to the fleet page (substitute for a list item atm)"
                 HorizontalOptions="Center" />
 
-            <!--<CollectionView ItemsSource="{Binding Ships}">
-                
-            </CollectionView>-->
+            <CollectionView ItemsSource="{Binding Ships}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <ViewCell>
+                            <StackLayout Orientation="Horizontal">
+                                <Label Text="{Binding Id}"/>
+                                <Label Text="{Binding Name}"/>
+                                <Label Text="{Binding Manufacturer}"/>
+                            </StackLayout>
+                        </ViewCell>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
 
         </VerticalStackLayout>
     </ScrollView>

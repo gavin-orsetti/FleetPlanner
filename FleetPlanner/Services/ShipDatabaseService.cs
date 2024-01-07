@@ -1,27 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using FleetPlanner.MVVM.Models;
+﻿using FleetPlanner.MVVM.Models;
 
 namespace FleetPlanner.Services
 {
     public class ShipDatabaseService : IReadOnlyDatabaseService
     {
-        readonly Dictionary<int, Ship> shipDB = [];
+        private Dictionary<int, Ship> db;
 
         public Dictionary<int, Ship> Db
         {
-            get => shipDB;
+            get => db ??= [];
         }
 
-        //public ShipDatabaseService()
-        //{
-        //    Task.Run( Init );
-        //}
+        private ShipDatabaseService()
+        {
+        }
+
+        public static async Task<ShipDatabaseService> Create()
+        {
+            ShipDatabaseService service = new();
+            await service.Init();
+            return service;
+        }
 
         public async Task Init()
         {
@@ -35,11 +34,11 @@ namespace FleetPlanner.Services
 
                 await foreach( Ship ship in ships )
                 {
-                    shipDB.Add( ship.Id, ship );
+                    Db.Add( ship.Id, ship );
                 }
 
             }
-            catch( Exception ex )
+            catch( Exception )
             {
                 throw;
             }
@@ -48,7 +47,7 @@ namespace FleetPlanner.Services
 
         public IDatabaseItem GetRow( int id )
         {
-            return shipDB[ id ];
+            return Db[ id ];
         }
     }
 }
