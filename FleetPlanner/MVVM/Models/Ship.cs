@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FleetPlanner.MVVM.Models
 {
-    public class Ship : IDatabaseItem
+    public class Ship : IStorable
     {
         public int Id
         {

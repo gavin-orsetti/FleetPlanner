@@ -37,6 +37,9 @@ namespace FleetPlanner.MVVM.ViewModels
 
         private AsyncCommand loadFleetsCommand;
         public AsyncCommand LoadFleetsCommand => loadFleetsCommand ??= new AsyncCommand( LoadFleets );
+
+        private AsyncCommand goToFleetNewPageCommand;
+        public AsyncCommand GoToFleetNewPageCommand => goToFleetNewPageCommand ??= new AsyncCommand( GoToFleetNewPage );
         #endregion Commands
         #endregion Properties & Fields
 
@@ -45,9 +48,10 @@ namespace FleetPlanner.MVVM.ViewModels
 
         private async Task Refresh()
         {
-            Console.WriteLine( "ViewModel Refreshed" );
+            await LoadFleets();
         }
 
+        //TODO: Remove calls to Console.WriteLine()
         private async Task LoadFleets()
         {
             FleetDatabaseService dbService = await Services.ServiceProvider.GetFleetDatabaseServiceAsync();
@@ -57,7 +61,7 @@ namespace FleetPlanner.MVVM.ViewModels
             Fleets.Clear();
             foreach( Fleet fleet in fleetList )
             {
-                FleetViewModel fvm = new FleetViewModel( fleet );
+                FleetViewModel fvm = new( fleet );
                 Fleets.Add( fvm );
                 Console.WriteLine( fvm.Name );
             }
@@ -67,6 +71,10 @@ namespace FleetPlanner.MVVM.ViewModels
             Console.WriteLine( "Fleets Loaded" );
         }
 
+        private async Task GoToFleetNewPage()
+        {
+            await Shell.Current.GoToAsync( Routes.MyFleets_NewFleet_PageName );
+        }
         #endregion Methods
 
     }

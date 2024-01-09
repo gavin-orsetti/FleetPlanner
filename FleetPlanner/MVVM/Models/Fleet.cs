@@ -12,7 +12,7 @@ using SQLitePCL;
 
 namespace FleetPlanner.MVVM.Models
 {
-    public class Fleet
+    public class Fleet : IStorable
     {
         [PrimaryKey, AutoIncrement]
         public int Id

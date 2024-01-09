@@ -13,19 +13,19 @@ namespace FleetPlanner.Services
         /// </summary>
         /// <param name="id">The row id of the desired record</param>
         /// <returns>The requested row</returns>
-        public abstract Task<T> GetRow( int id );
+        public Task<T> GetRow( int id );
 
         /// <summary>
         /// Compiles a list of all the rows with matching ids and returns them as type T.
         /// </summary>
         /// <param name="range">A series of row ids</param>
         /// <returns>A list of records of type T</returns>
-        public abstract Task<List<T>> GetRange( IEnumerable<int> range );
+        public Task<List<T>> GetRange( List<int> range );
 
         /// <summary>
         /// Returns all the records contained in the table T
         /// </summary>
         /// <returns></returns>
-        public abstract Task<List<T>> GetAll();
+        public Task<List<T>> GetAll();
     }
 }

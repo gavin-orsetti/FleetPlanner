@@ -9,7 +9,7 @@
         <viewmodels:MainPageViewModel/>
     </ContentPage.BindingContext>
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Add New" Command="{Binding GoTo_MyFleets_AddNew}"/>
+        <ToolbarItem Text="Add New" Command="{Binding GoToFleetNewPageCommand}"/>
     </ContentPage.ToolbarItems>
     <ScrollView>
         <VerticalStackLayout
@@ -17,16 +17,14 @@
             Padding="30,0"
             VerticalOptions="Center">
 
-            <CollectionView ItemsSource="{Binding Ships}">
-                <CollectionView.EmptyView>
-                    <Label Text="Nothing to show. Tap the + to get started!"/>
-                </CollectionView.EmptyView>
+            <CollectionView ItemsSource="{Binding Fleets}"
+                            EmptyView="Nothing to display. Tap the + to get started!">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <StackLayout Orientation="Horizontal" Spacing="30">
                             <Label Text="{Binding Id}" HorizontalOptions="Start"/>
                             <Label Text="{Binding Name}" HorizontalOptions="StartAndExpand" WidthRequest="300"/>
-                            <Label Text="{Binding Manufacturer}" HorizontalOptions="End"/>
+                            <Label Text="{Binding Manifesto}" HorizontalOptions="End"/>
                         </StackLayout>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

@@ -30,13 +30,13 @@ namespace FleetPlanner.MVVM.ViewModels
         }
 
 
-        #region Commands
-        private AsyncCommand refreshCommand;
-        public AsyncCommand RefreshCommand => refreshCommand ??= new AsyncCommand( Refresh );
+        //#region Commands
+        //private AsyncCommand refreshCommand;
+        //public AsyncCommand RefreshCommand => refreshCommand ??= new AsyncCommand( Refresh );
 
-        private AsyncCommand loadShipsCommand;
-        public AsyncCommand LoadShipsCommand => loadShipsCommand ??= new AsyncCommand( LoadShips );
-        #endregion Commands
+        //private AsyncCommand loadShipsCommand;
+        //public AsyncCommand LoadShipsCommand => loadShipsCommand ??= new AsyncCommand( LoadShips );
+        //#endregion Commands
         #endregion Properties & Fields
 
 
@@ -47,23 +47,23 @@ namespace FleetPlanner.MVVM.ViewModels
             Console.WriteLine( "ViewModel Refreshed" );
         }
 
-        private async Task LoadShips()
-        {
-            Ships.Clear();
+        //private async Task LoadShips()
+        //{
+        //    Ships.Clear();
 
-            List<Ship> shipList = await Services.ServiceProvider.GetShips();
+        //    List<Ship> shipList = await Services.ServiceProvider.GetShips();
 
-            foreach( Ship ship in shipList )
-            {
-                ShipViewModel svm = new ShipViewModel( ship );
-                Ships.Add( svm );
-                Console.WriteLine( svm.Name );
-            }
+        //    foreach( Ship ship in shipList )
+        //    {
+        //        ShipViewModel svm = new ShipViewModel( ship );
+        //        Ships.Add( svm );
+        //        Console.WriteLine( svm.Name );
+        //    }
 
-            Console.WriteLine( "--------------" );
+        //    Console.WriteLine( "--------------" );
 
-            Console.WriteLine( "Ships Loaded" );
-        }
+        //    Console.WriteLine( "Ships Loaded" );
+        //}
 
         #endregion Methods
 

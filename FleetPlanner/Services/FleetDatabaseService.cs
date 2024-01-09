@@ -12,8 +12,10 @@ namespace FleetPlanner.Services
 {
     public class FleetDatabaseService : IDatabaseService<FleetDatabaseService, Fleet>
     {
-        private SQLiteAsyncConnection db;
+
         private static FleetDatabaseService service;
+        private static TableMapping mapping;
+        private static DatabaseService instance;
 
         private FleetDatabaseService()
         {
@@ -32,28 +34,50 @@ namespace FleetPlanner.Services
 
         async Task Init()
         {
-            if( db != null )
-                return;
+            instance = await DatabaseService.Instance();
 
-            db = new SQLiteAsyncConnection( Config.DatabasePath, Config.Flags );
-            CreateTableResult result = await db.CreateTableAsync<Fleet>();
+            try
+            {
+                mapping = await instance.CreateTable<Fleet>();
+            }
+            catch( Exception )
+            {
+                throw;
+            }
         }
         #endregion Initialization
 
         #region Data Access
-        public Task<List<Fleet>> GetAll()
+
+        /// <summary>
+        /// Gets all the records in the table.
+        /// </summary>
+        /// <returns>A list of all records</returns>
+        public async Task<List<Fleet>> GetAll()
         {
-            throw new NotImplementedException();
+            return await instance.GetAll<Fleet>();
         }
 
-        public Task<List<Fleet>> GetRange( IEnumerable<int> range )
+        /// <summary>
+        /// Gets all the Fleets with the associated Id
+        /// </summary>
+        /// <param name="range"></param>
+        /// <returns>List<Fleet> where the ids match those passed in.</returns>
+        public async Task<List<Fleet>> GetRange( List<int> range )
         {
-            throw new NotImplementedException();
+            List<Fleet> result = await GetAll();
+
+            return result.Where( x => range.Contains( x.Id ) ) as List<Fleet>;
         }
 
-        public Task<Fleet> GetRow( int id )
+        /// <summary>
+        /// This uses the "FindAsync" method of the SQLite-net project which means it can return null. Make sure to do a null check.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns>The Fleet with the associated id or null</returns>
+        public async Task<Fleet> GetRow( int id )
         {
-            throw new NotImplementedException();
+            return await instance.FindRow<Fleet>( id );
         }
         #endregion DataAccess
     }

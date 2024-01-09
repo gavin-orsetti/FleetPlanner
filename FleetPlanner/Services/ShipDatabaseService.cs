@@ -47,7 +47,7 @@ namespace FleetPlanner.Services
             }
         }
 
-        Task<Ship> IDatabaseService<ShipDatabaseService, Ship>.GetRow( int id )
+        public Task<Ship> GetRow( int id )
         {
             throw new NotImplementedException();
         }
@@ -58,6 +58,11 @@ namespace FleetPlanner.Services
         }
 
         public Task<List<Ship>> GetAll()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<Ship>> GetRange( List<int> range )
         {
             throw new NotImplementedException();
         }
