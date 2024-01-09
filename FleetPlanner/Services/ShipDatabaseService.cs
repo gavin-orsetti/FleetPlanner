@@ -2,10 +2,10 @@
 
 namespace FleetPlanner.Services
 {
-    public class ShipDatabaseService : IReadOnlyDatabaseService
+    public class ShipDatabaseService : IDatabaseService<ShipDatabaseService, Ship>
     {
         private Dictionary<int, Ship> db;
-
+        private static ShipDatabaseService service;
         public Dictionary<int, Ship> Db
         {
             get => db ??= [];
@@ -17,14 +17,17 @@ namespace FleetPlanner.Services
 
         public static async Task<ShipDatabaseService> Create()
         {
-            ShipDatabaseService service = new();
+            if( service != null )
+                return service;
+
+            service = new ShipDatabaseService();
             await service.Init();
+
             return service;
         }
 
-        public async Task Init()
+        private async Task Init()
         {
-
             try
             {
                 using Stream stream = await FileSystem.OpenAppPackageFileAsync( "ships.json" );
@@ -42,12 +45,21 @@ namespace FleetPlanner.Services
             {
                 throw;
             }
-
         }
 
-        public IDatabaseItem GetRow( int id )
+        Task<Ship> IDatabaseService<ShipDatabaseService, Ship>.GetRow( int id )
         {
-            return Db[ id ];
+            throw new NotImplementedException();
+        }
+
+        public Task<List<Ship>> GetRange( IEnumerable<int> range )
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<List<Ship>> GetAll()
+        {
+            throw new NotImplementedException();
         }
     }
 }

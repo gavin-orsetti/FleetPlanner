@@ -6,39 +6,28 @@
              Title="My Fleets">
 
     <ContentPage.BindingContext>
-        <viewmodels:TestBed/>
+        <viewmodels:MainPageViewModel/>
     </ContentPage.BindingContext>
-    
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Add New" Command="{Binding GoTo_MyFleets_AddNew}"/>
+    </ContentPage.ToolbarItems>
     <ScrollView>
         <VerticalStackLayout
             Spacing="25"
             Padding="30,0"
             VerticalOptions="Center">
 
-            <Label
-                Text="My Fleets"
-                SemanticProperties.HeadingLevel="Level2"
-                SemanticProperties.Description="Welcome to dot net Multi platform App U I"
-                FontSize="18"
-                HorizontalOptions="Center" />
-
-            <Button
-                x:Name="GoToFleetBtn"
-                Text="Load Ships"
-                Command="{Binding LoadShipsCommand}"
-                SemanticProperties.Hint="Sends you to the fleet page (substitute for a list item atm)"
-                HorizontalOptions="Center" />
-
             <CollectionView ItemsSource="{Binding Ships}">
+                <CollectionView.EmptyView>
+                    <Label Text="Nothing to show. Tap the + to get started!"/>
+                </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <ViewCell>
-                            <StackLayout Orientation="Horizontal">
-                                <Label Text="{Binding Id}"/>
-                                <Label Text="{Binding Name}"/>
-                                <Label Text="{Binding Manufacturer}"/>
-                            </StackLayout>
-                        </ViewCell>
+                        <StackLayout Orientation="Horizontal" Spacing="30">
+                            <Label Text="{Binding Id}" HorizontalOptions="Start"/>
+                            <Label Text="{Binding Name}" HorizontalOptions="StartAndExpand" WidthRequest="300"/>
+                            <Label Text="{Binding Manufacturer}" HorizontalOptions="End"/>
+                        </StackLayout>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>

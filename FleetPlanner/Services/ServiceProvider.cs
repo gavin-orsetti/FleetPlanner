@@ -11,22 +11,17 @@ namespace FleetPlanner.Services
     public static class ServiceProvider
     {
         private static ShipDatabaseService shipDb;
+        private static FleetDatabaseService fleetDb;
 
-        public static async Task<ShipDatabaseService> GetShipDatabaseService()
+        public static async Task<ShipDatabaseService> GetShipDatabaseServiceAsync()
         {
-            shipDb ??= await ShipDatabaseService.Create();
-
-            return shipDb;
+            return shipDb ??= await ShipDatabaseService.Create();
         }
 
-        public static async Task<List<Ship>> GetShips()
+        public static async Task<FleetDatabaseService> GetFleetDatabaseServiceAsync()
         {
-            if( shipDb == null )
-            {
-                await GetShipDatabaseService();
-            }
-
-            return [ .. shipDb.Db.Values ];
+            return fleetDb ??= await FleetDatabaseService.Create();
         }
+
     }
 }

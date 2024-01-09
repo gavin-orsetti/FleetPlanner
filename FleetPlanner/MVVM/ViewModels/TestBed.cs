@@ -22,11 +22,11 @@ namespace FleetPlanner.MVVM.ViewModels
 
         #region Properties & Fields
 
-        private ObservableRangeCollection<Ship> ships;
-        public ObservableRangeCollection<Ship> Ships
+        private ObservableRangeCollection<ShipViewModel> ships;
+        public ObservableRangeCollection<ShipViewModel> Ships
         {
             get => ships ??= [];
-            set => ships = value;
+            set => SetProperty( ref ships, value );
         }
 
 
@@ -49,11 +49,15 @@ namespace FleetPlanner.MVVM.ViewModels
 
         private async Task LoadShips()
         {
-            Ships.AddRange( await Services.ServiceProvider.GetShips() );
+            Ships.Clear();
 
-            foreach( Ship ship in Ships )
+            List<Ship> shipList = await Services.ServiceProvider.GetShips();
+
+            foreach( Ship ship in shipList )
             {
-                Console.WriteLine( ship.Name );
+                ShipViewModel svm = new ShipViewModel( ship );
+                Ships.Add( svm );
+                Console.WriteLine( svm.Name );
             }
 
             Console.WriteLine( "--------------" );
