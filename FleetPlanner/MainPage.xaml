@@ -83,11 +83,11 @@
                                         <RowDefinition/>
                                     </Grid.RowDefinitions>
 
-                                    <Button StyleClass="PrimaryElevatedButton" Text="Details"
+                                    <Button StyleClass="TertiaryElevatedButton" Text="Details"
                                                 Grid.Row="0"
                                                 Margin="0,2.5"
                                                 VerticalOptions="StartAndExpand"/>
-                                    <Button StyleClass="FilledButton" Text="Edit"
+                                    <Button StyleClass="WarningElevatedButton" Text="Edit"
                                                 Grid.Row="1"
                                                 Margin="0,2.5"
                                                 VerticalOptions="StartAndExpand"/>

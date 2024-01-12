@@ -182,6 +182,19 @@
 
 
 
+    <Color x:Key="Warning">#d5cd95</Color>
+    <Color x:Key="WarningDark">#6a622a</Color>
+
+    <Color x:Key="OnWarning">#24220f</Color>
+    <Color x:Key="OnWarningDark">#ffffff</Color>
+
+    <Color x:Key="WarningContainer">#f0eedb</Color>
+    <Color x:Key="WarningContainerDark">#6d662c</Color>
+
+    <Color x:Key="OnWarningContainer">#24220f</Color>
+    <Color x:Key="OnWarningContainerDark">#f0eedb</Color>
+
+
 
 
     <Color x:Key="Gray100">#E1E1E1</Color>

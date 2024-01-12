@@ -464,10 +464,30 @@
     </Style>
     
     <!-- Button Styles -->
-    <Style TargetType="Button"  Class="PrimaryElevatedButton">
+    <Style TargetType="Button"  Class="TertiaryElevatedButton">
         <Setter Property="CornerRadius" Value="1" />
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Tertiary}, Dark={StaticResource TertiaryDark}}"/>
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnTertiary}, Dark={StaticResource OnTertiaryDark}}"/>
+    </Style>
+
+    <Style TargetType="Button"  Class="TertiaryFilledButton">
+        <Setter Property="CornerRadius" Value="1" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource TertiaryContainer}, Dark={StaticResource TertiaryContainerDark}}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnTertiaryContainer}, Dark={StaticResource OnTertiaryContainerDark}}"/>
+    </Style>
+    
+    <Style TargetType="Button"  Class="TertiaryOutlineButton">
+        <Setter Property="CornerRadius" Value="1" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Background}, Dark={StaticResource BackgroundDark}}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnBackground}, Dark={StaticResource OnBackgroundDark}}"/>
+        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource Tertiary}, Dark={StaticResource TertiaryDark}}"/>
+        <Setter Property="BorderWidth" Value="2"/>
+    </Style>
+
+    <Style TargetType="Button"  Class="WarningElevatedButton">
+        <Setter Property="CornerRadius" Value="1" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Warning}, Dark={StaticResource WarningDark}}"/>
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnWarning}, Dark={StaticResource OnWarningDark}}"/>
     </Style>
 
 

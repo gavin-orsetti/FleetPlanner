@@ -13,10 +13,17 @@
         Route="MainPage" />
 
     <Shell.FlyoutHeader>
-        <Label Text="Fleetify" 
-               FontSize="Title"
-               HorizontalTextAlignment="Center"
-               Padding="10"/>
+        <VerticalStackLayout StyleClass="PrimaryContainer" Padding="20">
+            <Label Text="Fleet Planner" FontSize="Large" HorizontalTextAlignment="Center" Margin="10" />
+
+            <Label Text="App Theme" HorizontalOptions="Center"/>
+
+            <HorizontalStackLayout HorizontalOptions="Center">
+                <Label Text="Light" VerticalOptions="Center" />
+                <Switch x:Name="themeSwitch" Toggled="ThemeToggled"/>
+                <Label Text="Dark" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </VerticalStackLayout>
     </Shell.FlyoutHeader>
 
     <FlyoutItem Title="Shopping Lists">
