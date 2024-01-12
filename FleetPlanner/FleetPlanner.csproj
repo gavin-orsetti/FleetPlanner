@@ -49,6 +49,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Database\**" />
+	  <EmbeddedResource Remove="Database\**" />
+	  <MauiCss Remove="Database\**" />
+	  <MauiXaml Remove="Database\**" />
+	  <None Remove="Database\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <None Remove="Resources\Images\made_by_the_community_white.png" />
 	</ItemGroup>
 
@@ -59,11 +67,9 @@
 		<PackageReference Include="sqlite-net-pcl" Version="1.8.116" />
 		<PackageReference Include="SQLiteNetExtensions" Version="2.1.0" />
 		<PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.7" />
+		<PackageReference Include="UraniumUI.Icons.MaterialIcons" Version="2.7.4" />
+		<PackageReference Include="UraniumUI.Material" Version="2.7.4" />
 		<PackageReference Include="xunit" Version="2.6.5" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Database\" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -107,6 +113,9 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="MVVM\Views\TaskGroup_Edit_Page.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="MVVM\Views\TestPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	</ItemGroup>

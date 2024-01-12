@@ -1,12 +1,12 @@
-﻿using System;
+﻿using FleetPlanner.MVVM.Models;
+
+using SQLite;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-using FleetPlanner.MVVM.Models;
-
-using SQLite;
 
 namespace FleetPlanner.Services
 {
@@ -47,7 +47,26 @@ namespace FleetPlanner.Services
         }
         #endregion Initialization
 
-        #region Data Access
+        #region Database Operations
+
+        #region Create Data
+
+        public async Task<bool> Insert( Fleet f )
+        {
+            try
+            {
+                return await instance.Insert( f );
+            }
+            catch( Exception )
+            {
+
+                throw;
+            }
+        }
+
+        #endregion Create Data
+
+        #region Read Data
 
         /// <summary>
         /// Gets all the records in the table.
@@ -79,6 +98,14 @@ namespace FleetPlanner.Services
         {
             return await instance.FindRow<Fleet>( id );
         }
-        #endregion DataAccess
+        #endregion Read Data
+
+        #region Update Data
+        #endregion Update Data
+
+        #region Delete Data
+        #endregion Delete Data
+
+        #endregion Database Operations
     }
 }

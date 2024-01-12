@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using FleetPlanner.MVVM.Models;
+﻿using FleetPlanner.MVVM.Models;
 using FleetPlanner.Services;
 
 using MvvmHelpers;
 using MvvmHelpers.Commands;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
@@ -30,6 +30,12 @@ namespace FleetPlanner.MVVM.ViewModels
             set => SetProperty( ref fleets, value );
         }
 
+        private bool isRefreshing = false;
+        public bool IsRefreshing
+        {
+            get => isRefreshing;
+            set => SetProperty( ref isRefreshing, value );
+        }
 
         #region Commands
         private AsyncCommand refreshCommand;
@@ -49,6 +55,9 @@ namespace FleetPlanner.MVVM.ViewModels
         private async Task Refresh()
         {
             await LoadFleets();
+
+
+            IsRefreshing = false;
         }
 
         //TODO: Remove calls to Console.WriteLine()
@@ -61,9 +70,9 @@ namespace FleetPlanner.MVVM.ViewModels
             Fleets.Clear();
             foreach( Fleet fleet in fleetList )
             {
-                FleetViewModel fvm = new( fleet );
-                Fleets.Add( fvm );
-                Console.WriteLine( fvm.Name );
+                FleetViewModel_Populated fvm_p = new( fleet );
+                Fleets.Add( fvm_p );
+                Console.WriteLine( fvm_p.Name );
             }
 
             Console.WriteLine( "--------------" );

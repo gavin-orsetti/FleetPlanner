@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using FleetPlanner.MVVM.Models;
+﻿using FleetPlanner.MVVM.Models;
 
 using SQLite;
 
 using SQLiteNetExtensions.Extensions;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace FleetPlanner.Services
 {
@@ -18,6 +18,7 @@ namespace FleetPlanner.Services
 
         private static DatabaseService instance;
 
+        #region Start Up
         public static async Task<DatabaseService> Instance()
         {
             if( instance == null )
@@ -44,6 +45,12 @@ namespace FleetPlanner.Services
             };
         }
 
+        #endregion Start Up
+
+        #region Operations
+
+        #region Create
+
         public async Task<TableMapping> CreateTable<T>() where T : IStorable, new()
         {
             if( db.Table<T>() != null )
@@ -54,6 +61,13 @@ namespace FleetPlanner.Services
             return await db.GetMappingAsync<T>();
         }
 
+        public async Task<bool> Insert<T>( T item ) where T : IStorable, new()
+        {
+            return await db.InsertAsync( item, typeof( T ) ) >= 1;
+        }
+
+        #endregion Create
+        #region Read
         public async Task<List<T>> GetAll<T>() where T : IStorable, new()
         {
             List<T> results = await db.Table<T>().ToListAsync();
@@ -64,5 +78,14 @@ namespace FleetPlanner.Services
         {
             return await db.GetAsync<T>( id );
         }
+        #endregion Read
+
+        #region Update
+        #endregion
+
+        #region Delete
+        #endregion Delete
+
+        #endregion Operations
     }
 }

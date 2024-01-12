@@ -1,12 +1,34 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:FleetPlanner.MVVM.ViewModels"
+             xmlns:u="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
              x:Class="FleetPlanner.MVVM.Views.MyFleets_AddNew_Page"
-             Title="MyFleets_AddNew_Page">
+             Title="New Fleet">
+    <ContentPage.BindingContext>
+        <viewmodels:NewFleetViewModel/>
+    </ContentPage.BindingContext>
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Save" Command="{Binding SaveCommand}"/>
+    </ContentPage.ToolbarItems>
     <VerticalStackLayout>
-        <Label 
-            Text="Add New Fleet Page"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
+    
+        <u:TextField Title="Name" 
+                     Text="{Binding Name}"
+                     Padding="10"/>
+
+        <u:TextField Title="Affiliation"
+               Text="{Binding Affiliation}"
+                     Padding="10"/>
+
+        <u:TextField Title="Area Of Operation"
+               Text="{Binding AreaOfOperation}"
+                     Padding="10"/>
+
+        <u:EditorField Title="Manifesto"
+                Text="{Binding Manifesto}"
+				VerticalOptions="EndAndExpand"
+				MinimumHeightRequest="800"
+                       Padding="10"/>
     </VerticalStackLayout>
 </ContentPage>
