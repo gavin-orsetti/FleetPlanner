@@ -81,7 +81,7 @@ namespace FleetPlanner.Services
         /// Gets all the Fleets with the associated Id
         /// </summary>
         /// <param name="range"></param>
-        /// <returns>List<Fleet> where the ids match those passed in.</returns>
+        /// <returns> List of Fleet objects where the ids match those passed in.</returns>
         public async Task<List<Fleet>> GetRange( List<int> range )
         {
             List<Fleet> result = await GetAll();

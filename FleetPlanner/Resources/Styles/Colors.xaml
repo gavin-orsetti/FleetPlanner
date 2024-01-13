@@ -57,14 +57,14 @@
     <Color x:Key="OnErrorContainerDark">#f3d8da</Color>-->
     <!---->
 
-    <Color x:Key="Error">#d5a095</Color>
+    <Color x:Key="Error">#6b362b</Color>
     <Color x:Key="ErrorDark">#6b362b</Color>
 
     <Color x:Key="OnError">#ffffff</Color>
-    <Color x:Key="OnErrorDark">#49241d</Color>
+    <Color x:Key="OnErrorDark">#ffffff</Color>
 
     <Color x:Key="ErrorContainer">#f0dedb</Color>
-    <Color x:Key="ErrorContainerDark">#6d372c</Color>
+    <Color x:Key="ErrorContainerDark">#24120f</Color>
 
     <Color x:Key="OnErrorContainer">#24120f</Color>
     <Color x:Key="OnErrorContainerDark">#f0dedb</Color>
@@ -119,54 +119,55 @@
     <Color x:Key="Black">Black</Color>
     
     
-
     <Color x:Key="Primary">#271d49</Color>
-    <Color x:Key="PrimaryDark">#c0b6e2</Color>
+<!--Old PrimaryDark hex code: c0b6e2-->
+    <Color x:Key="PrimaryDark">#271d49</Color>
 
     <Color x:Key="OnPrimary">#ffffff</Color>
-    <Color x:Key="OnPrimaryDark">#271d49</Color>
+    <!--Old OnPrimaryDark hex code: 271d49-->
+    <Color x:Key="OnPrimaryDark">#ffffff</Color>
 
     <Color x:Key="PrimaryContainer">#e0dbf0</Color>
-    <Color x:Key="PrimaryContainerDark">#3b2c6d</Color>
+    <Color x:Key="PrimaryContainerDark">#140F24</Color>
 
     <Color x:Key="OnPrimaryContainer">#140f24</Color>
     <Color x:Key="OnPrimaryContainerDark">#e0dbf0</Color>
 
 
     <Color x:Key="Secondary">#988cc0</Color>
-    <Color x:Key="SecondaryDark">#4b3f73</Color>
+    <Color x:Key="SecondaryDark">#988cc0</Color>
 
-    <Color x:Key="OnSecondary">#ffffff</Color>
+    <Color x:Key="OnSecondary">#2b2442</Color>
     <Color x:Key="OnSecondaryDark">#2b2442</Color>
 
     <Color x:Key="SecondaryContainer">#e2deed</Color>
-    <Color x:Key="SecondaryContainerDark">#413663</Color>
+    <Color x:Key="SecondaryContainerDark">#161221</Color>
 
     <Color x:Key="OnSecondaryContainer">#161221</Color>
     <Color x:Key="OnSecondaryContainerDark">#e2deed</Color>
 
 
     <Color x:Key="Tertiary">#2a6a52</Color>
-    <Color x:Key="TertiaryDark">#95d5be</Color>
+    <Color x:Key="TertiaryDark">#2a6a52</Color>
 
     <Color x:Key="OnTertiary">#ffffff</Color>
-    <Color x:Key="OnTertiaryDark">#1d4939</Color>
+    <Color x:Key="OnTertiaryDark">#ffffff</Color>
 
     <Color x:Key="TertiaryContainer">#dbf0e8</Color>
-    <Color x:Key="TertiaryContainerDark">#2c6d55</Color>
+    <Color x:Key="TertiaryContainerDark">#0f241c</Color>
 
     <Color x:Key="OnTertiaryContainer">#0f241c</Color>
     <Color x:Key="OnTertiaryContainerDark">#dbf0e8</Color>
 
 
     <Color x:Key="Background">#dbe1dc</Color>
-    <Color x:Key="BackgroundDark">#333834</Color>
+    <Color x:Key="BackgroundDark">#171c18</Color>
 
     <Color x:Key="OnBackground">#171c18</Color>
     <Color x:Key="OnBackgroundDark">#e3e8e4</Color>
 
     <Color x:Key="Surface">#dbe1dc</Color>
-    <Color x:Key="SurfaceDark">#333834</Color>
+    <Color x:Key="SurfaceDark">#171c18</Color>
 
     <Color x:Key="OnSurface">#171c18</Color>
     <Color x:Key="OnSurfaceDark">#e3e8e4</Color>
@@ -177,19 +178,19 @@
     <Color x:Key="SurfaceVariantDark">#465348</Color>
     <Color x:Key="OnSurfaceVariantDark">#c7d1c9</Color>
 
-    <Color x:Key="Outline">#6249b6</Color>
-    <Color x:Key="OutlineDark">#826dc5</Color>
+    <Color x:Key="Outline">#2a6a52</Color>
+    <Color x:Key="OutlineDark">#2a6a52</Color>
 
 
 
-    <Color x:Key="Warning">#d5cd95</Color>
+    <Color x:Key="Warning">#6a622a</Color>
     <Color x:Key="WarningDark">#6a622a</Color>
 
-    <Color x:Key="OnWarning">#24220f</Color>
+    <Color x:Key="OnWarning">#ffffff</Color>
     <Color x:Key="OnWarningDark">#ffffff</Color>
 
     <Color x:Key="WarningContainer">#f0eedb</Color>
-    <Color x:Key="WarningContainerDark">#6d662c</Color>
+    <Color x:Key="WarningContainerDark">#24220f</Color>
 
     <Color x:Key="OnWarningContainer">#24220f</Color>
     <Color x:Key="OnWarningContainerDark">#f0eedb</Color>

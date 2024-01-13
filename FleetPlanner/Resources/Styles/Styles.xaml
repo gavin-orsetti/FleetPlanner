@@ -409,12 +409,13 @@
 
     <!--In Use-->
     <Style TargetType="Shell" ApplyToDerivedTypes="True">
-        <Setter Property="Shell.BackgroundColor" Value="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource SecondaryDark}}" />
-        <Setter Property="Shell.ForegroundColor" Value="{OnPlatform WinUI={StaticResource OnSecondary}, Default={StaticResource OnSecondaryDark}}" />
-        <Setter Property="Shell.TitleColor" Value="{AppThemeBinding Light={StaticResource OnSecondary}, Dark={StaticResource OnSecondaryDark}}" />
+        <Setter Property="Shell.BackgroundColor" Value="{AppThemeBinding Light={StaticResource Background}, Dark={StaticResource BackgroundDark} }" />
+        <Setter Property="Shell.ForegroundColor" Value="{OnPlatform WinUI={StaticResource OnBackground}, Default={StaticResource OnBackgroundDark}}" />
+        <Setter Property="Shell.TitleColor" Value="{AppThemeBinding Light={StaticResource OnBackground}, Dark={StaticResource OnBackgroundDark}}" />
         <Setter Property="Shell.DisabledColor" Value="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceVariantDark}}" />
         <Setter Property="Shell.UnselectedColor" Value="{AppThemeBinding Light={StaticResource OnSecondary}, Dark={StaticResource OnSecondaryDark}}" />
         <Setter Property="Shell.NavBarHasShadow" Value="False" />
+        <Setter Property="Shell.FlyoutBackdrop" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource SecondaryDark}}" />
         <Setter Property="Shell.TabBarBackgroundColor" Value="{AppThemeBinding Light={StaticResource SecondaryContainer}, Dark={StaticResource SecondaryContainerDark}}" />
         <Setter Property="Shell.TabBarForegroundColor" Value="{AppThemeBinding Light={StaticResource OnSecondaryContainer}, Dark={StaticResource OnSecondaryContainerDark}}" />
         <Setter Property="Shell.TabBarTitleColor" Value="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource SecondaryDark}}" />
@@ -423,9 +424,10 @@
 
     <!--In Use-->
     <Style TargetType="NavigationPage">
-        <Setter Property="BarBackgroundColor" Value="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource SecondaryDark}}" />
-        <Setter Property="BarTextColor" Value="{AppThemeBinding Light={StaticResource OnSecondary}, Dark={StaticResource OnSecondaryDark}}" />
-        <Setter Property="IconColor" Value="{AppThemeBinding Light={StaticResource OnSecondary}, Dark={StaticResource OnSecondaryDark}}" />
+        <Setter Property="BarBackgroundColor" Value="{AppThemeBinding Light={StaticResource Background}, Dark={StaticResource BackgroundDark}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Background}, Dark={StaticResource BackgroundDark}}" />
+        <Setter Property="BarTextColor" Value="{AppThemeBinding Light={StaticResource OnBackground}, Dark={StaticResource OnBackgroundDark}}" />
+        <Setter Property="IconColor" Value="{AppThemeBinding Light={StaticResource OnBackground}, Dark={StaticResource OnBackgroundDark}}" />
     </Style>
 
     <!--Not Currently Used-->
@@ -456,13 +458,13 @@
         <Setter Property="Fill" Value="{AppThemeBinding Light={StaticResource OnPrimary},
                                                         Dark={StaticResource OnPrimaryDark}}" />
     </Style>
-    
+
     <!-- Label Styles-->
     <Style TargetType="Label" Class="OnPrimaryLabel">
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"/>
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}"/>
     </Style>
-    
+
     <!-- Button Styles -->
     <Style TargetType="Button"  Class="TertiaryElevatedButton">
         <Setter Property="CornerRadius" Value="1" />
@@ -475,7 +477,7 @@
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource TertiaryContainer}, Dark={StaticResource TertiaryContainerDark}}"/>
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnTertiaryContainer}, Dark={StaticResource OnTertiaryContainerDark}}"/>
     </Style>
-    
+
     <Style TargetType="Button"  Class="TertiaryOutlineButton">
         <Setter Property="CornerRadius" Value="1" />
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Background}, Dark={StaticResource BackgroundDark}}"/>
@@ -491,6 +493,24 @@
     </Style>
 
 
+    <!--VerticalStackLayout-->
+
+    <Style TargetType="VerticalStackLayout" Class="FlyoutHeader">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource PrimaryDark}}}"/>
+        <Setter Property="t:CascadingStyle.Resources">
+            <ResourceDictionary>
+                <!--Switch-->
+                <!--TODO: Check back on this -> currently this does not do anything, but it is a known bug https://github.com/dotnet/maui/issues/19380 -->
+                <Style TargetType="Switch">
+                    <Setter Property="OnColor" Value="{AppThemeBinding Light={StaticResource OnSecondary}, Dark={StaticResource OnPrimary}}}"/>
+                    <Setter Property="ThumbColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource SecondaryDark}}}"/>
+                </Style>
+                <Style TargetType="Label">
+                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}"/>
+                </Style>
+            </ResourceDictionary>
+        </Setter>
+    </Style>
 
 
 </ResourceDictionary>

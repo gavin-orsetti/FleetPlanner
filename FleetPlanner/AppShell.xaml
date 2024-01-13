@@ -5,7 +5,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:FleetPlanner"
     xmlns:views="clr-namespace:FleetPlanner.MVVM.Views"
-    Shell.FlyoutBehavior="Flyout">
+    Shell.FlyoutBehavior="Flyout"
+    FlyoutBackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource PrimaryDark}}">
 
     <ShellContent
         Title="Fleets"
@@ -13,7 +14,7 @@
         Route="MainPage" />
 
     <Shell.FlyoutHeader>
-        <VerticalStackLayout StyleClass="PrimaryContainer" Padding="20">
+        <VerticalStackLayout StyleClass="FlyoutHeader" Padding="20">
             <Label Text="Fleet Planner" FontSize="Large" HorizontalTextAlignment="Center" Margin="10" />
 
             <Label Text="App Theme" HorizontalOptions="Center"/>
@@ -46,7 +47,7 @@
 
     <Shell.FlyoutFooter>
         <StackLayout>
-            <Image Source="madebythecommunity_white.png"
+            <Image Source="made_by_the_community_white.png" 
                    MaximumWidthRequest="250"
                    MaximumHeightRequest="250"
                    WidthRequest="200"
