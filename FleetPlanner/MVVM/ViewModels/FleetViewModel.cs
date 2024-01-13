@@ -1,6 +1,8 @@
 ﻿using FleetPlanner.MVVM.Models;
+using FleetPlanner.Services;
 
 using MvvmHelpers;
+using MvvmHelpers.Commands;
 
 using System;
 using System.Collections.Generic;
@@ -17,6 +19,11 @@ namespace FleetPlanner.MVVM.ViewModels
             fleet = new Fleet();
         }
 
+        #region Fields
+        public AsyncCommand RefreshParentView;
+        #endregion Fields
+
+        #region Properties & Commands
         readonly Fleet fleet;
         public Fleet Fleet => fleet;
 
@@ -55,11 +62,61 @@ namespace FleetPlanner.MVVM.ViewModels
             set => SetProperty( ref areaOfOperation, value );
         }
 
-        private ObservableRangeCollection<TaskUnit> taskUnits;
-        public ObservableRangeCollection<TaskUnit> TaskUnits
+        private ObservableRangeCollection<TaskGroup> taskGroups;
+        public ObservableRangeCollection<TaskGroup> TaskGroups
         {
-            get => taskUnits ??= [];
-            set => SetProperty( ref taskUnits, value );
+            get => taskGroups ??= [];
+            set => SetProperty( ref taskGroups, value );
         }
+
+        private AsyncCommand<int> goToFleetCommand;
+        public AsyncCommand<int> GoToFleetCommand => goToFleetCommand ??= new AsyncCommand<int>( GoToFleet );
+
+        private AsyncCommand<int> goToEditFleetCommand;
+        public AsyncCommand<int> GoToEditFleetCommand => goToEditFleetCommand ??= new AsyncCommand<int>( GoToEditFleet );
+
+        private AsyncCommand<int> deleteCommand;
+        public AsyncCommand<int> DeleteCommand => deleteCommand ??= new AsyncCommand<int>( Delete );
+
+        #endregion Properties & Commands
+
+        #region Methods
+
+        private async Task GoToFleet( int id )
+        {
+            await Shell.Current.GoToAsync( $"{Routes.FleetPage_PageName}" );
+        }
+
+        private async Task GoToEditFleet( int id )
+        {
+            await Shell.Current.GoToAsync( $"{Routes.EditFleetPage_PageName}" );
+        }
+
+        private async Task Delete( int id )
+        {
+            FleetDatabaseService dBService = await Services.ServiceProvider.GetFleetDatabaseServiceAsync();
+
+            if( await dBService.DeleteAsync<Fleet>( id ) )
+            {
+                if( RefreshParentView != null )
+                {
+                    try
+                    {
+                        await RefreshParentView.ExecuteAsync();
+                    }
+                    catch( Exception )
+                    {
+
+                        throw;
+                    }
+                }
+                else
+                {
+                    await Shell.Current.GoToAsync( Routes.BackOne );
+                }
+            }
+        }
+
+        #endregion Methods
     }
 }

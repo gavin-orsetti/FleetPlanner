@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FleetPlanner.Helpers
 {
-    internal class Constants
+    internal static class Constants
     {
         #region Strings
         #region Fleet Defaults
@@ -16,6 +16,10 @@ namespace FleetPlanner.Helpers
         public const string DefaultManifesto = "Replace me";
         #endregion Fleet Defaults
         #endregion Strings
+
+        #region Enums
+        //internal enum QueryFlag = Async, 
+        #endregion
 
     }
 }

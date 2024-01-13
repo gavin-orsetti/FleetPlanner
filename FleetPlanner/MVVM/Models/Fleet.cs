@@ -42,7 +42,7 @@ namespace FleetPlanner.MVVM.Models
         }
 
         [OneToMany( CascadeOperations = CascadeOperation.CascadeRead )]
-        public List<TaskUnit> TaskUnits
+        public List<TaskGroup> TaskUnits
         {
             get; set;
         }

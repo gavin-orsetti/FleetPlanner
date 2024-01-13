@@ -432,13 +432,19 @@
 
     <!--Not Currently Used-->
     <Style TargetType="TabbedPage">
-        <Setter Property="BarBackgroundColor" Value="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource BackgroundDark}}" />
+        <Setter Property="BarBackgroundColor" Value="{AppThemeBinding Light={StaticResource Background}, Dark={StaticResource BackgroundDark}}" />
         <Setter Property="BarTextColor" Value="{AppThemeBinding Light={StaticResource OnSecondary}, Dark={StaticResource OnSecondaryDark}}" />
         <Setter Property="UnselectedTabColor" Value="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource SecondaryDark}}" />
         <Setter Property="SelectedTabColor" Value="{AppThemeBinding Light={StaticResource SecondaryContainer}, Dark={StaticResource SecondaryContainerDark}}" />
     </Style>
 
 
+    <Style TargetType="Grid" Class="ExpanderViewContainer" ApplyToDerivedTypes="True">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Primary},
+                                                                   Dark={StaticResource PrimaryDark}}" />
+        <Setter Property="Margin" Value="2.5"/>
+    </Style>
+    
     <!--Expander View Styles-->
     <Style TargetType="Layout" Class="ExpanderView.Header" ApplyToDerivedTypes="True">
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Primary},

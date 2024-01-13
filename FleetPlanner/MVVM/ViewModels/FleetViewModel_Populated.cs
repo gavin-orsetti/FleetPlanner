@@ -55,8 +55,8 @@ namespace FleetPlanner.MVVM.ViewModels
             private set => SetProperty( ref areaOfOperation, value );
         }
 
-        private ObservableRangeCollection<TaskUnit> taskUnits;
-        new public ObservableRangeCollection<TaskUnit> TaskUnits
+        private ObservableRangeCollection<TaskGroup> taskUnits;
+        new public ObservableRangeCollection<TaskGroup> TaskUnits
         {
             get => taskUnits ??= [ .. Fleet.TaskUnits ];
             private set => SetProperty( ref taskUnits, value );

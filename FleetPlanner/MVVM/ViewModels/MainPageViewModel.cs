@@ -71,6 +71,7 @@ namespace FleetPlanner.MVVM.ViewModels
             foreach( Fleet fleet in fleetList )
             {
                 FleetViewModel_Populated fvm_p = new( fleet );
+                fvm_p.RefreshParentView = new AsyncCommand( Refresh );
                 Fleets.Add( fvm_p );
                 Console.WriteLine( fvm_p.Name );
             }

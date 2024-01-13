@@ -104,6 +104,11 @@ namespace FleetPlanner.Services
         #endregion Update Data
 
         #region Delete Data
+        public async Task<bool> DeleteAsync<T>( int id )
+        {
+            return await instance.DeleteRowAsync<T>( id );
+        }
+
         #endregion Delete Data
 
         #endregion Database Operations

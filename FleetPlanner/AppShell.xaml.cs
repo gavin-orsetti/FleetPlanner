@@ -6,13 +6,21 @@ public partial class AppShell : Shell
     {
         InitializeComponent();
 
+        #region Routes
         #region Fleet Routes
         // Home Page
         Routing.RegisterRoute( Routes.MainPage_PageName, Routes.MainPage_PageType );
 
         // Create New Fleet
         Routing.RegisterRoute( Routes.MyFleets_NewFleet_PageName, Routes.MyFleets_NewFleet_PageType );
+
+        // Fleet Page
+        Routing.RegisterRoute( Routes.FleetPage_PageName, Routes.FleetPage_PageType );
+
+        // Edit Fleet Page
+        Routing.RegisterRoute( Routes.EditFleetPage_PageName, Routes.EditFleetPage_PageType );
         #endregion Fleet Routes
+        #endregion Routes
 
         #region Theme Settings
         // Gets the user's system theme and sets the app theme to match

@@ -31,10 +31,11 @@
                                     <SwipeItem IconImageSource="{FontImageSource FontFamily=MaterialSharp,
                                                        Glyph={x:Static m:MaterialSharp.Clear}}"
                                                BackgroundColor="{AppThemeBinding Light={StaticResource Error}, Dark={StaticResource Error}}"
-                                               />
+                                               Command="{Binding DeleteCommand}"
+                                               CommandParameter="{Binding Id}"/>
                                 </SwipeItems>
                             </SwipeView.RightItems>
-                            <Grid BackgroundColor="{StaticResource Primary}" Margin="2.5">
+                            <Grid StyleClass="ExpanderViewContainer">
                                 <Grid.RowDefinitions>
                                     <RowDefinition/>
                                 </Grid.RowDefinitions>
@@ -110,13 +111,18 @@
                                             </Grid.RowDefinitions>
 
                                             <Button StyleClass="TertiaryElevatedButton" Text="Details"
-                                                Grid.Row="0"
-                                                Margin="0,2.5"
-                                                VerticalOptions="StartAndExpand"/>
+                                                    Command="{Binding GoToFleetCommand}"
+                                                    CommandParameter="{Binding Id}"
+                                                    Grid.Row="0"
+                                                    Margin="0,2.5"
+                                                    VerticalOptions="StartAndExpand"/>
+                                            
                                             <Button StyleClass="WarningElevatedButton" Text="Edit"
-                                                Grid.Row="1"
-                                                Margin="0,2.5"
-                                                VerticalOptions="StartAndExpand"/>
+                                                    Command="{Binding GoToEditFleetCommand}"
+                                                    CommandParameter="{Binding Id}"
+                                                    Grid.Row="1"
+                                                    Margin="0,2.5"
+                                                    VerticalOptions="StartAndExpand"/>
 
                                         </Grid>
                                     </Grid>

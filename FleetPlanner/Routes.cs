@@ -26,6 +26,19 @@ namespace FleetPlanner
         // New Fleet Page
         public const string MyFleets_NewFleet_PageName = nameof( MyFleets_AddNew_Page );
         public static readonly Type MyFleets_NewFleet_PageType = typeof( MyFleets_AddNew_Page );
+
+        // Fleet Page
+        public const string FleetPage_PageName = nameof( FleetPage );
+        public static readonly Type FleetPage_PageType = typeof( FleetPage );
+
+        // Edit Fleet Page
+        public const string EditFleetPage_PageName = nameof( Fleet_Edit_Page );
+        public static readonly Type EditFleetPage_PageType = typeof( Fleet_Edit_Page );
+
+        #region Query Parameters
+        public const string id = "id=";
+        #endregion
+
         #endregion Fleets
     }
 }

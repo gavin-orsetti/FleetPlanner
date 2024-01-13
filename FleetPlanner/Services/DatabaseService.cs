@@ -84,6 +84,12 @@ namespace FleetPlanner.Services
         #endregion
 
         #region Delete
+        public async Task<bool> DeleteRowAsync<T>( int id )
+        {
+            int i = await db.DeleteAsync<T>( id );
+
+            return i > 0;
+        }
         #endregion Delete
 
         #endregion Operations
