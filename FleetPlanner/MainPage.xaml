@@ -4,6 +4,7 @@
              xmlns:viewmodels="clr-namespace:FleetPlanner.MVVM.ViewModels"
              xmlns:uCore="http://schemas.enisn-projects.io/dotnet/maui/uraniumui"
              xmlns:u="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+             xmlns:m="clr-namespace:UraniumUI.Icons.MaterialIcons;assembly=UraniumUI.Icons.MaterialIcons"
              x:Class="FleetPlanner.MainPage"
              Title="My Fleets">
 
@@ -11,95 +12,120 @@
         <viewmodels:MainPageViewModel/>
     </ContentPage.BindingContext>
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Add New" Command="{Binding GoToFleetNewPageCommand}"/>
+        <ToolbarItem Text="Add New" 
+                     IconImageSource="{FontImageSource FontFamily=MaterialSharp,
+                                                       Glyph={x:Static m:MaterialSharp.Add_circle},
+                                                       Color={StaticResource Tertiary}}"
+                     Command="{Binding GoToFleetNewPageCommand}"/>
     </ContentPage.ToolbarItems>
     <RefreshView Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
-
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition/>
-            </Grid.RowDefinitions>
-
+        <ScrollView>
             <CollectionView ItemsSource="{Binding Fleets}"
                         EmptyView="Nothing to display. Tap the + to get started!"
-                        Margin="5"
-                        Grid.Column="0"
-                        Grid.Row="0">
+                        Margin="2.5">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
-                        <uCore:ExpanderView Padding="0, 13.5">
-                            <uCore:ExpanderView.Header>
-                                <Label Text="{Binding Name}" StyleClass="OnPrimaryLabel"/>
-                            </uCore:ExpanderView.Header>
-
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems >
+                                    <SwipeItem IconImageSource="{FontImageSource FontFamily=MaterialSharp,
+                                                       Glyph={x:Static m:MaterialSharp.Clear}}"
+                                               BackgroundColor="{AppThemeBinding Light={StaticResource Error}, Dark={StaticResource Error}}"
+                                               />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+                            <Grid BackgroundColor="{StaticResource Primary}" Margin="2.5">
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="*"/>
-                                    <RowDefinition Height="*"/>
+                                    <RowDefinition/>
                                 </Grid.RowDefinitions>
 
-                                <Label Text="{Binding Id}" 
-                                               HorizontalOptions="Start"
-                                               Grid.Column="0"
-                                               Grid.Row="0"/>
-                                <Grid
-                                                    Grid.Column="0"
-                                                    Grid.ColumnSpan="3"
-                                                    Grid.Row="1"
-                                                    Grid.RowSpan="3">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
+                                <uCore:ExpanderView Padding="0, 13.5"
+                                                    Grid.Row="0">
+                                    <uCore:ExpanderView.Header>
+                                        <Label Text="{Binding Name}" StyleClass="OnPrimaryLabel"/>
+                                    </uCore:ExpanderView.Header>
 
-                                    <uCore:ExpanderView StyleClass="ExpanderView.Content">
-                                        <uCore:ExpanderView.Header StyleClass="ExpanderView.Header">
-                                            <Label Text="{Binding Manifesto_150}" StyleClass="OnPrimaryLabel"/>
-                                        </uCore:ExpanderView.Header>
-                                        <Label Text="{Binding Manifesto}" StyleClass="OnPrimaryLabel"
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+
+                                        <Label Text="Planned Crew:" 
+                                       FontSize="Micro"
+                                       HorizontalOptions="CenterAndExpand"
+                                       Grid.Column="0"
+                                       Grid.Row="0"/>
+                                        <Label Text="Player Crew:" 
+                                       FontSize="Micro"
+                                       HorizontalOptions="CenterAndExpand"
+                                       Grid.Column="1"
+                                       Grid.Row="0"/>
+                                        <Label Text="Task Groups:" 
+                                       FontSize="Micro"
+                                       HorizontalOptions="CenterAndExpand"
+                                       Grid.Column="2"
+                                       Grid.Row="0"/>
+                                        <Label Text="Ships:" 
+                                       FontSize="Micro"
+                                       HorizontalOptions="CenterAndExpand"
+                                       Grid.Column="3"
+                                       Grid.Row="0"/>
+                                        <Grid Grid.Column="0" 
+                                      Grid.ColumnSpan="3"
+                                      Grid.Row="1"
+                                      Grid.RowSpan="3">
+
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition/>
+                                            </Grid.RowDefinitions>
+
+                                            <uCore:ExpanderView StyleClass="ExpanderView.Content">
+                                                <uCore:ExpanderView.Header StyleClass="ExpanderView.Header">
+                                                    <Label Text="{Binding Manifesto_150}" StyleClass="OnPrimaryLabel"/>
+                                                </uCore:ExpanderView.Header>
+                                                <Label Text="{Binding Manifesto}" StyleClass="OnPrimaryLabel"
                                                                    HorizontalOptions="FillAndExpand"
                                                                    VerticalOptions="FillAndExpand"/>
-                                    </uCore:ExpanderView>
+                                            </uCore:ExpanderView>
 
-                                </Grid>
+                                        </Grid>
 
-                                <Grid Grid.Column="4"
+                                        <Grid Grid.Column="4"
                                           Grid.Row="1"
                                           Grid.RowSpan="2"
                                           VerticalOptions="Start">
 
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition/>
-                                        <RowDefinition/>
-                                    </Grid.RowDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                            </Grid.RowDefinitions>
 
-                                    <Button StyleClass="TertiaryElevatedButton" Text="Details"
+                                            <Button StyleClass="TertiaryElevatedButton" Text="Details"
                                                 Grid.Row="0"
                                                 Margin="0,2.5"
                                                 VerticalOptions="StartAndExpand"/>
-                                    <Button StyleClass="WarningElevatedButton" Text="Edit"
+                                            <Button StyleClass="WarningElevatedButton" Text="Edit"
                                                 Grid.Row="1"
                                                 Margin="0,2.5"
                                                 VerticalOptions="StartAndExpand"/>
 
-                                </Grid>
+                                        </Grid>
+                                    </Grid>
+                                </uCore:ExpanderView>
                             </Grid>
-                        </uCore:ExpanderView>
+                        </SwipeView>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-
-        </Grid>
+        </ScrollView>
     </RefreshView>
-
 </ContentPage>
