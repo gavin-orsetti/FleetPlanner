@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FleetPlanner.Helpers
 {
-    internal static class Constants
+    public static class Constants
     {
         #region Strings
         #region Fleet Defaults
@@ -18,8 +18,18 @@ namespace FleetPlanner.Helpers
         #endregion Strings
 
         #region Enums
-        //internal enum QueryFlag = Async, 
+        public enum QueryFlag { Async, Sycn }
         #endregion
+
+        #region SQLite Query Strings
+
+        public const string SELECT_ALL = "SELECT *";
+        public const string FROM = "FROM";
+        public const string WHERE = "WHERE";
+        public const string ID = "Id";
+        public const string EQUALS = "=";
+
+        #endregion SQLite Query Strings
 
     }
 }

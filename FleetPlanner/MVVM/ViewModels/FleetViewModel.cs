@@ -12,20 +12,18 @@ using System.Threading.Tasks;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class FleetViewModel : BaseViewModel
+    public class FleetViewModel : ViewModelBase
     {
         public FleetViewModel()
-        {
-            fleet = new Fleet();
-        }
+        { }
 
         #region Fields
         public AsyncCommand RefreshParentView;
         #endregion Fields
 
         #region Properties & Commands
-        readonly Fleet fleet;
-        public Fleet Fleet => fleet;
+        private Fleet fleet;
+        public Fleet Fleet => fleet ??= new Fleet();
 
         private int? id;
         public int Id
@@ -69,11 +67,6 @@ namespace FleetPlanner.MVVM.ViewModels
             set => SetProperty( ref taskGroups, value );
         }
 
-        private AsyncCommand<int> goToFleetCommand;
-        public AsyncCommand<int> GoToFleetCommand => goToFleetCommand ??= new AsyncCommand<int>( GoToFleet );
-
-        private AsyncCommand<int> goToEditFleetCommand;
-        public AsyncCommand<int> GoToEditFleetCommand => goToEditFleetCommand ??= new AsyncCommand<int>( GoToEditFleet );
 
         private AsyncCommand<int> deleteCommand;
         public AsyncCommand<int> DeleteCommand => deleteCommand ??= new AsyncCommand<int>( Delete );
@@ -82,18 +75,17 @@ namespace FleetPlanner.MVVM.ViewModels
 
         #region Methods
 
-        private async Task GoToFleet( int id )
-        {
-            await Shell.Current.GoToAsync( $"{Routes.FleetPage_PageName}" );
-        }
 
-        private async Task GoToEditFleet( int id )
-        {
-            await Shell.Current.GoToAsync( $"{Routes.EditFleetPage_PageName}" );
-        }
+
+
 
         private async Task Delete( int id )
         {
+            if( id <= 0 )
+            {
+                throw new Exception( "Error 0: Object does not exist in database" );
+            }
+
             FleetDatabaseService dBService = await Services.ServiceProvider.GetFleetDatabaseServiceAsync();
 
             if( await dBService.DeleteAsync<Fleet>( id ) )
@@ -116,6 +108,43 @@ namespace FleetPlanner.MVVM.ViewModels
                 }
             }
         }
+
+        #region Query Handling
+
+        private protected override Task EvaluateQueryParams( KeyValuePair<string, object> kvp )
+        {
+            switch( kvp.Key )
+            {
+                case Routes.FleetQueryParams.PopulatedViewModel:
+                    fleet = kvp.Value as Fleet;
+                    //Populate();
+                    break;
+
+                default:
+                    break;
+            }
+            return null;
+        }
+
+        private void Populate()
+        {
+            Id = Fleet.Id;
+            Name = Fleet.Name;
+            Affiliation = Fleet.Affiliation;
+            AreaOfOperation = Fleet.AreaOfOperation;
+            Manifesto = Fleet.Manifesto;
+            //if( Fleet.TaskGroups != null )
+            //{
+            //    TaskGroups.Clear();
+            //    TaskGroups.AddRange( Fleet.TaskGroups );
+            //}
+            //else
+            //{
+            //    Fleet.TaskGroups = new List<TaskGroup>();
+            //}
+        }
+
+        #endregion Query Handling
 
         #endregion Methods
     }

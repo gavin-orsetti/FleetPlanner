@@ -36,6 +36,7 @@ namespace FleetPlanner.MVVM.ViewModels
             Fleet.Affiliation = Affiliation != string.Empty ? Affiliation : Constants.DefaultAffiliation;
             Fleet.AreaOfOperation = AreaOfOperation != string.Empty ? AreaOfOperation : Constants.DefaultAreaOfOperation;
             Fleet.Manifesto = Manifesto != string.Empty ? Manifesto : Constants.DefaultManifesto;
+            Fleet.TaskGroups = [];
 
             FleetDatabaseService service = await ServiceProvider.GetFleetDatabaseServiceAsync();
             if( await service.Insert( Fleet ) )

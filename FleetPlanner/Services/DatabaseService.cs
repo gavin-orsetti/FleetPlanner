@@ -1,4 +1,5 @@
-﻿using FleetPlanner.MVVM.Models;
+﻿using FleetPlanner.Helpers;
+using FleetPlanner.MVVM.Models;
 
 using SQLite;
 
@@ -77,6 +78,14 @@ namespace FleetPlanner.Services
         public async Task<T> FindRow<T>( int id ) where T : IStorable, new()
         {
             return await db.GetAsync<T>( id );
+        }
+
+        public async Task<List<T>> GetContainedObjectsList<T>( int parentId, string tableName, string columnName ) where T : IStorable, new()
+        {
+            string query = $"{Constants.SELECT_ALL} {Constants.FROM} {tableName} {Constants.WHERE} {columnName} {Constants.EQUALS} ?";
+            List<T> items = await db.QueryAsync<T>( query, [ parentId ] );
+
+            return items;
         }
         #endregion Read
 

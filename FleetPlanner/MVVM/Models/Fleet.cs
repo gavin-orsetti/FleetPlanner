@@ -1,17 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using SQLite;
+﻿using SQLite;
 
 using SQLiteNetExtensions.Attributes;
 
 using SQLitePCL;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
 namespace FleetPlanner.MVVM.Models
 {
+    [Table( nameof( Fleet ) )]
     public class Fleet : IStorable
     {
         [PrimaryKey, AutoIncrement]
@@ -42,7 +43,7 @@ namespace FleetPlanner.MVVM.Models
         }
 
         [OneToMany( CascadeOperations = CascadeOperation.CascadeRead )]
-        public List<TaskGroup> TaskUnits
+        public List<TaskGroup> TaskGroups
         {
             get; set;
         }

@@ -77,6 +77,19 @@ namespace FleetPlanner.Services
             return await instance.GetAll<Fleet>();
         }
 
+        public async Task Test()
+        {
+            string tName = mapping.TableName;
+            TableMapping.Column column = mapping.FindColumnWithPropertyName( "Id" );
+
+            List<Fleet> f = await instance.GetContainedObjectsList<Fleet>( 7, tName, column.Name );
+
+            foreach( Fleet fitem in f )
+            {
+                Console.WriteLine( $"Fleet: {fitem.Name}\nID:{fitem.Id}" );
+            }
+        }
+
         /// <summary>
         /// Gets all the Fleets with the associated Id
         /// </summary>

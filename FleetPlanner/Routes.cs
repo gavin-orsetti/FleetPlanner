@@ -1,4 +1,5 @@
-﻿using FleetPlanner.MVVM.Views;
+﻿using FleetPlanner.MVVM.ViewModels;
+using FleetPlanner.MVVM.Views;
 
 using System;
 using System.Collections.Generic;
@@ -36,7 +37,17 @@ namespace FleetPlanner
         public static readonly Type EditFleetPage_PageType = typeof( Fleet_Edit_Page );
 
         #region Query Parameters
-        public const string id = "id=";
+
+        public class CommonQueryParams
+        {
+            public const string id = "id";
+        }
+
+        public class FleetQueryParams : CommonQueryParams
+        {
+            public const string PopulatedViewModel = "PopulatedViewModel";
+        }
+
         #endregion
 
         #endregion Fleets

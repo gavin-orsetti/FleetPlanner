@@ -20,7 +20,7 @@
         </Frame>
         
 
-        <CollectionView ItemsSource="{Binding TaskGroups}">
+        <CollectionView ItemsSource="{Binding TaskGroups}" EmptyView="Nothing to Display...">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
                     <Label Text="{Binding Name}"/>

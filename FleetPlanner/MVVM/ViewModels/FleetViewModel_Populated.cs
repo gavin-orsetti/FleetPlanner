@@ -1,6 +1,7 @@
 ﻿using FleetPlanner.MVVM.Models;
 
 using MvvmHelpers;
+using MvvmHelpers.Commands;
 
 using System;
 using System.Collections.Generic;
@@ -12,8 +13,8 @@ namespace FleetPlanner.MVVM.ViewModels
 {
     public class FleetViewModel_Populated( Fleet fleet ) : FleetViewModel
     {
-        private readonly Fleet fleet = fleet;
-        new public Fleet Fleet => fleet;
+        private readonly Fleet fleet_populated = fleet;
+        new public Fleet Fleet => fleet_populated;
 
         private int? id;
         new public int Id
@@ -55,11 +56,33 @@ namespace FleetPlanner.MVVM.ViewModels
             private set => SetProperty( ref areaOfOperation, value );
         }
 
-        private ObservableRangeCollection<TaskGroup> taskUnits;
-        new public ObservableRangeCollection<TaskGroup> TaskUnits
+        private ObservableRangeCollection<TaskGroup> taskGroups;
+        new public ObservableRangeCollection<TaskGroup> TaskGroups
         {
-            get => taskUnits ??= [ .. Fleet.TaskUnits ];
-            private set => SetProperty( ref taskUnits, value );
+            get => taskGroups ??= [ .. Fleet.TaskGroups ];
+            private set => SetProperty( ref taskGroups, value );
+        }
+
+
+        private AsyncCommand<int> goToFleetCommand;
+        public AsyncCommand<int> GoToFleetCommand => goToFleetCommand ??= new AsyncCommand<int>( GoToFleet );
+
+        private async Task GoToFleet( int id )
+        {
+            Dictionary<string, object> queryParams = new()
+            {
+                { Routes.FleetQueryParams.PopulatedViewModel, Fleet }
+            };
+
+            await Shell.Current.GoToAsync( $"{Routes.FleetPage_PageName}", queryParams );
+        }
+
+        private AsyncCommand<int> goToEditFleetCommand;
+        public AsyncCommand<int> GoToEditFleetCommand => goToEditFleetCommand ??= new AsyncCommand<int>( GoToEditFleet );
+
+        private async Task GoToEditFleet( int id )
+        {
+            await Shell.Current.GoToAsync( $"{Routes.EditFleetPage_PageName}" );
         }
     }
 }
