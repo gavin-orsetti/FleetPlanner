@@ -47,10 +47,10 @@ namespace FleetPlanner.Services
             return items.Where( x => range.Contains( x.Id ) ) as List<T>;
         }
 
-        public async Task<List<T>> GetChildrenUsingId( int parentId, string columnName )
+        public async Task<List<T>> GetChildrenUsingPropertyName( int parentId, string propertyName )
         {
             string tableName = mapping.TableName;
-            TableMapping.Column cn = mapping.FindColumnWithPropertyName( columnName );
+            TableMapping.Column cn = mapping.FindColumnWithPropertyName( propertyName );
 
             return await instance.GetContainedObjectsList<T>( parentId, tableName, cn.Name );
         }

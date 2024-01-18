@@ -67,7 +67,7 @@ namespace FleetPlanner.Services
             throw new NotImplementedException();
         }
 
-        public Task<List<Ship>> GetChildrenUsingId( int parentId, string columnName )
+        public Task<List<Ship>> GetChildrenUsingPropertyName( int parentId, string columnName )
         {
             throw new NotImplementedException();
         }

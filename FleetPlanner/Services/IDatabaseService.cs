@@ -38,7 +38,7 @@ namespace FleetPlanner.Services
         /// <param name="parentId"></param>
         /// <param name="columnName"></param>
         /// <returns></returns>
-        public Task<List<T>> GetChildrenUsingId( int parentId, string columnName );
+        public Task<List<T>> GetChildrenUsingPropertyName( int parentId, string columnName );
 
         /// <summary>
         /// Inserts a row into the database table matching the item type

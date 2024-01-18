@@ -262,7 +262,7 @@ namespace FleetPlanner.MVVM.ViewModels
         {
             TaskGroupDatabaseService dbService = await ServiceProvider.GetTaskGroupDatabaseServiceAsync();
 
-            List<TaskGroup> tgs = await dbService.GetChildrenUsingId( id, nameof( TaskGroup.FleetId ) );
+            List<TaskGroup> tgs = await dbService.GetChildrenUsingPropertyName( id, nameof( TaskGroup.FleetId ) );
 
             TaskGroups.Clear();
             TaskGroups.AddRange( tgs );
