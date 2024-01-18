@@ -8,25 +8,42 @@
     <ContentPage.BindingContext>
         <viewmodels:FleetViewModel/>
     </ContentPage.BindingContext>
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Edit" Command="{Binding GoToEditPage}"/>
+    </ContentPage.ToolbarItems>
     <StackLayout>
-        <Frame>
+        <Frame Margin="2.5">
             <Label Text="{Binding Affiliation}"/>
-        </Frame> 
-        <Frame>
+        </Frame>
+        <Frame Margin="2.5">
             <Label Text="{Binding AreaOfOperation}"/>
         </Frame>
-        <Frame>
+        <Frame Margin="2.5">
             <Label Text="{Binding Manifesto}"/>
         </Frame>
-        
 
-        <CollectionView ItemsSource="{Binding TaskGroups}" EmptyView="Nothing to Display...">
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Label Text="{Binding Name}"/>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-            
+        <Frame Margin="2.5">
+            <CollectionView ItemsSource="{Binding TaskGroups}" HeightRequest="400">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Label Text="{Binding Name}"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                <CollectionView.EmptyView>
+                    <ContentView>
+                        <VerticalStackLayout HorizontalOptions="CenterAndExpand"
+                                         VerticalOptions="CenterAndExpand">
+                            <Label Text="Noting to Display..."/>
+                        </VerticalStackLayout>
+                    </ContentView>
+                </CollectionView.EmptyView>
+            </CollectionView>
+        </Frame>
+        
+        <Button StyleClass="TertiaryElevatedButton" 
+                Text="Add New Task Group"
+                Margin="2.5"
+                Command="{Binding GoToAddNewTaskGroupCommand}"
+                CommandParameter="{Binding Id}"/>
     </StackLayout>
 </ContentPage>

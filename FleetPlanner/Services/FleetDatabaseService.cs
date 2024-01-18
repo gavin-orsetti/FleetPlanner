@@ -10,19 +10,15 @@ using System.Threading.Tasks;
 
 namespace FleetPlanner.Services
 {
-    public class FleetDatabaseService : IDatabaseService<FleetDatabaseService, Fleet>
+    public class FleetDatabaseService : DatabaseService<FleetDatabaseService, Fleet>
     {
-
-        private static FleetDatabaseService service;
-        private static TableMapping mapping;
-        private static DatabaseService instance;
-
-        private FleetDatabaseService()
-        {
-        }
+        /// <summary>
+        /// Private constructor prevents instantiation except through the Create() method.
+        /// </summary>
+        private FleetDatabaseService() { }
 
         #region Initialization
-        public static async Task<FleetDatabaseService> Create()
+        new public static async Task<FleetDatabaseService> Create()
         {
             if( service != null )
                 return service;
@@ -32,9 +28,9 @@ namespace FleetPlanner.Services
             return service;
         }
 
-        async Task Init()
+        protected override async Task Init()
         {
-            instance = await DatabaseService.Instance();
+            instance = DatabaseAccess.Instance();
 
             try
             {
@@ -51,77 +47,28 @@ namespace FleetPlanner.Services
 
         #region Create Data
 
-        public async Task<bool> Insert( Fleet f )
-        {
-            try
-            {
-                return await instance.Insert( f );
-            }
-            catch( Exception )
-            {
+        //new public async Task<bool> Insert( Fleet f )
+        //{
+        //    try
+        //    {
+        //        return await instance.Insert( f );
+        //    }
+        //    catch( Exception )
+        //    {
 
-                throw;
-            }
-        }
+        //        throw;
+        //    }
+        //}
 
         #endregion Create Data
 
         #region Read Data
-
-        /// <summary>
-        /// Gets all the records in the table.
-        /// </summary>
-        /// <returns>A list of all records</returns>
-        public async Task<List<Fleet>> GetAll()
-        {
-            return await instance.GetAll<Fleet>();
-        }
-
-        public async Task Test()
-        {
-            string tName = mapping.TableName;
-            TableMapping.Column column = mapping.FindColumnWithPropertyName( "Id" );
-
-            List<Fleet> f = await instance.GetContainedObjectsList<Fleet>( 7, tName, column.Name );
-
-            foreach( Fleet fitem in f )
-            {
-                Console.WriteLine( $"Fleet: {fitem.Name}\nID:{fitem.Id}" );
-            }
-        }
-
-        /// <summary>
-        /// Gets all the Fleets with the associated Id
-        /// </summary>
-        /// <param name="range"></param>
-        /// <returns> List of Fleet objects where the ids match those passed in.</returns>
-        public async Task<List<Fleet>> GetRange( List<int> range )
-        {
-            List<Fleet> result = await GetAll();
-
-            return result.Where( x => range.Contains( x.Id ) ) as List<Fleet>;
-        }
-
-        /// <summary>
-        /// This uses the "FindAsync" method of the SQLite-net project which means it can return null. Make sure to do a null check.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns>The Fleet with the associated id or null</returns>
-        public async Task<Fleet> GetRow( int id )
-        {
-            return await instance.FindRow<Fleet>( id );
-        }
         #endregion Read Data
 
         #region Update Data
         #endregion Update Data
 
         #region Delete Data
-        public async Task<bool> DeleteAsync<T>( int id )
-        {
-            return await instance.DeleteRowAsync<T>( id );
-        }
-
         #endregion Delete Data
 
         #endregion Database Operations

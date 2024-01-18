@@ -1,9 +1,6 @@
-﻿using FleetPlanner.Helpers;
-using FleetPlanner.MVVM.Models;
+﻿using FleetPlanner.MVVM.Models;
 
 using SQLite;
-
-using SQLiteNetExtensions.Extensions;
 
 using System;
 using System.Collections.Generic;
@@ -13,94 +10,88 @@ using System.Threading.Tasks;
 
 namespace FleetPlanner.Services
 {
-    public class DatabaseService
+    public abstract class DatabaseService<S, T> : IDatabaseService<S, T> where T : IStorable, new()
+                                                                         where S : class
     {
-        private SQLiteAsyncConnection db;
 
-        private static DatabaseService instance;
+        protected static S service;
+        protected TableMapping mapping;
+        protected DatabaseAccess instance;
 
-        #region Start Up
-        public static async Task<DatabaseService> Instance()
+        protected abstract Task Init();
+
+
+        public static Task<S> Create()
         {
-            if( instance == null )
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Gets all the records in the table.
+        /// </summary>
+        /// <returns>A list of all records</returns>
+        public async Task<List<T>> GetAll()
+        {
+            return await instance.GetAll<T>();
+        }
+
+        /// <summary>
+        /// Gets all the objects of type T with the associated Id
+        /// </summary>
+        /// <param name="range"></param>
+        /// <returns> List of T objects where the ids match those passed in.</returns>
+        public async Task<List<T>> GetRange( List<int> range )
+        {
+            List<T> items = await GetAll();
+
+            return items.Where( x => range.Contains( x.Id ) ) as List<T>;
+        }
+
+        public async Task<List<T>> GetChildrenUsingId( int parentId, string columnName )
+        {
+            string tableName = mapping.TableName;
+            TableMapping.Column cn = mapping.FindColumnWithPropertyName( columnName );
+
+            return await instance.GetContainedObjectsList<T>( parentId, tableName, cn.Name );
+        }
+
+        /// <summary>
+        /// This uses the "FindAsync" method of the SQLite-net project which means it can return null. Make sure to do a null check.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns>The Fleet with the associated id or null</returns>
+        public async Task<T> GetRow( int id )
+        {
+            return await instance.FindRow<T>( id );
+        }
+
+        /// <summary>
+        /// Attempts to insert an item into the database table that matches type T
+        /// </summary>
+        /// <param name="item">The item to insert</param>
+        /// <returns>true on success, false on failure</returns>
+        public async Task<bool> Insert( T item )
+        {
+            try
             {
-                await Create();
+                return await instance.Insert( item );
             }
-
-            return instance;
-        }
-
-        private static async Task<DatabaseService> Create()
-        {
-            if( instance == null )
-                await Init();
-
-            return instance;
-        }
-
-        private static async Task Init()
-        {
-            instance = new DatabaseService
+            catch( Exception )
             {
-                db = new SQLiteAsyncConnection( Config.DatabasePath, Config.Flags )
-            };
+
+                throw;
+            }
         }
 
-        #endregion Start Up
-
-        #region Operations
-
-        #region Create
-
-        public async Task<TableMapping> CreateTable<T>() where T : IStorable, new()
+        /// <summary>
+        /// Deletes the row with the specified id from the table mathing type T
+        /// </summary>
+        /// <typeparam name="T">The table type to delete a row from</typeparam>
+        /// <param name="id">Id of the row to delete</param>
+        /// <returns>true on success, false on failure</returns>
+        public async Task<bool> DeleteAsync<T>( int id )
         {
-            if( db.Table<T>() != null )
-                await db.GetMappingAsync<T>();
-
-            await db.CreateTableAsync<T>();
-
-            return await db.GetMappingAsync<T>();
+            return await instance.DeleteRowAsync<T>( id );
         }
-
-        public async Task<bool> Insert<T>( T item ) where T : IStorable, new()
-        {
-            return await db.InsertAsync( item, typeof( T ) ) >= 1;
-        }
-
-        #endregion Create
-        #region Read
-        public async Task<List<T>> GetAll<T>() where T : IStorable, new()
-        {
-            List<T> results = await db.Table<T>().ToListAsync();
-            return [ .. results.OrderBy( x => x.Id ) ];
-        }
-
-        public async Task<T> FindRow<T>( int id ) where T : IStorable, new()
-        {
-            return await db.GetAsync<T>( id );
-        }
-
-        public async Task<List<T>> GetContainedObjectsList<T>( int parentId, string tableName, string columnName ) where T : IStorable, new()
-        {
-            string query = $"{Constants.SELECT_ALL} {Constants.FROM} {tableName} {Constants.WHERE} {columnName} {Constants.EQUALS} ?";
-            List<T> items = await db.QueryAsync<T>( query, [ parentId ] );
-
-            return items;
-        }
-        #endregion Read
-
-        #region Update
-        #endregion
-
-        #region Delete
-        public async Task<bool> DeleteRowAsync<T>( int id )
-        {
-            int i = await db.DeleteAsync<T>( id );
-
-            return i > 0;
-        }
-        #endregion Delete
-
-        #endregion Operations
     }
 }

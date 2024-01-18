@@ -66,5 +66,20 @@ namespace FleetPlanner.Services
         {
             throw new NotImplementedException();
         }
+
+        public Task<List<Ship>> GetChildrenUsingId( int parentId, string columnName )
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> Insert( Ship item )
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> DeleteAsync<T>( int id )
+        {
+            throw new NotImplementedException();
+        }
     }
 }

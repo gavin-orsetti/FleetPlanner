@@ -17,13 +17,14 @@ namespace FleetPlanner.MVVM.Models
         public string AreaOfOperation { get; set; }
 
         public int Integrality { get; set; }
-        public int ProfitHourly { get; set; }
+        public long ProfitHourly { get; set; }
         public int CrewCount_Full { get; set; }
         public int CrewCount_Min { get; set; }
         public int CrewCount_NPC { get; set; }
         public int ShipCount { get; set; }
+        public string Notes { get; set; }
 
-        //public List<ShipDetail> Ships { get; set; }
+
 
     }
 }

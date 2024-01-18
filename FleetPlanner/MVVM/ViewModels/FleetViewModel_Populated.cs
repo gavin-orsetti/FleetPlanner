@@ -59,10 +59,12 @@ namespace FleetPlanner.MVVM.ViewModels
         private ObservableRangeCollection<TaskGroup> taskGroups;
         new public ObservableRangeCollection<TaskGroup> TaskGroups
         {
-            get => taskGroups ??= [ .. Fleet.TaskGroups ];
+            get => taskGroups ??= [];
             private set => SetProperty( ref taskGroups, value );
         }
 
+        //private AsyncCommand<int> goToEditFleetCommand;
+        //new public AsyncCommand<int> GoToEditFleetCommand => goToEditFleetCommand ??= new AsyncCommand<int>( GoToEditFleet );
 
         private AsyncCommand<int> goToFleetCommand;
         public AsyncCommand<int> GoToFleetCommand => goToFleetCommand ??= new AsyncCommand<int>( GoToFleet );
@@ -77,12 +79,5 @@ namespace FleetPlanner.MVVM.ViewModels
             await Shell.Current.GoToAsync( $"{Routes.FleetPage_PageName}", queryParams );
         }
 
-        private AsyncCommand<int> goToEditFleetCommand;
-        public AsyncCommand<int> GoToEditFleetCommand => goToEditFleetCommand ??= new AsyncCommand<int>( GoToEditFleet );
-
-        private async Task GoToEditFleet( int id )
-        {
-            await Shell.Current.GoToAsync( $"{Routes.EditFleetPage_PageName}" );
-        }
     }
 }

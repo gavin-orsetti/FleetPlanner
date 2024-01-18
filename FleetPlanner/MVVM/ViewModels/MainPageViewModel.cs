@@ -73,17 +73,7 @@ namespace FleetPlanner.MVVM.ViewModels
                 FleetViewModel_Populated fvm_p = new( fleet );
                 fvm_p.RefreshParentView = new AsyncCommand( Refresh );
                 Fleets.Add( fvm_p );
-                Console.WriteLine( fvm_p.Name );
             }
-
-            Console.WriteLine( "*****************************************************" );
-            await dbService.Test();
-            Console.WriteLine( "*****************************************************" );
-
-
-            Console.WriteLine( "--------------" );
-
-            Console.WriteLine( "Fleets Loaded" );
         }
 
         private async Task GoToFleetNewPage()

@@ -7,9 +7,10 @@ public partial class AppShell : Shell
         InitializeComponent();
 
         #region Routes
-        #region Fleet Routes
         // Home Page
         Routing.RegisterRoute( Routes.MainPage_PageName, Routes.MainPage_PageType );
+
+        #region Fleet
 
         // Create New Fleet
         Routing.RegisterRoute( Routes.MyFleets_NewFleet_PageName, Routes.MyFleets_NewFleet_PageType );
@@ -19,7 +20,12 @@ public partial class AppShell : Shell
 
         // Edit Fleet Page
         Routing.RegisterRoute( Routes.EditFleetPage_PageName, Routes.EditFleetPage_PageType );
-        #endregion Fleet Routes
+        #endregion Fleet
+
+        #region Task Group
+        // New Page
+        Routing.RegisterRoute( Routes.TaskGroup_AddNew_PageName, Routes.TaskGroup_AddNew_PageType );
+        #endregion Task Group
         #endregion Routes
 
         #region Theme Settings

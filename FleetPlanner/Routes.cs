@@ -16,6 +16,11 @@ namespace FleetPlanner
         public const string BackTwo = "../../";
         public const string BackThree = "../../../";
 
+        public class CommonQueryParams
+        {
+            public const string Id = "Id";
+        }
+
 
         #endregion Basic
 
@@ -36,20 +41,33 @@ namespace FleetPlanner
         public const string EditFleetPage_PageName = nameof( Fleet_Edit_Page );
         public static readonly Type EditFleetPage_PageType = typeof( Fleet_Edit_Page );
 
-        #region Query Parameters
 
-        public class CommonQueryParams
-        {
-            public const string id = "id";
-        }
+
+        #region Query Parameters
 
         public class FleetQueryParams : CommonQueryParams
         {
             public const string PopulatedViewModel = "PopulatedViewModel";
+            public const string EditViewModel = "EditViewModel";
         }
 
         #endregion
 
         #endregion Fleets
+
+        #region Task Groups
+        // Add New Task Group
+        public const string TaskGroup_AddNew_PageName = nameof( TaskGroup_AddNew_Page );
+        public static readonly Type TaskGroup_AddNew_PageType = typeof( TaskGroup_AddNew_Page );
+
+        #region Query Parameters
+        public class TaskGroupQueryParams : CommonQueryParams
+        {
+            public const string FleetId = "FleetId";
+            public const string Fleet = "Fleet";
+        }
+        #endregion Query Parameters
+
+        #endregion Task Groups
     }
 }

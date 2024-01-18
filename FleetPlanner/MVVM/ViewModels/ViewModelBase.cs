@@ -1,4 +1,5 @@
 ﻿using MvvmHelpers;
+using MvvmHelpers.Commands;
 
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,14 @@ namespace FleetPlanner.MVVM.ViewModels
 {
     public class ViewModelBase : BaseViewModel, IQueryAttributable
     {
+        private AsyncCommand backCommand;
+        public AsyncCommand BackCommand => backCommand ??= new AsyncCommand( Back );
+
+        public virtual async Task Back()
+        {
+            await Shell.Current.GoToAsync( Routes.BackOne );
+        }
+
         public virtual async void ApplyQueryAttributes( IDictionary<string, object> query )
         {
             foreach( KeyValuePair<string, object> kvp in query )

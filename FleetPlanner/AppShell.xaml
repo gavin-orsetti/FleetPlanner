@@ -10,8 +10,7 @@
 
     <ShellContent
         Title="Fleets"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+        ContentTemplate="{DataTemplate local:MainPage}" />
 
     <Shell.FlyoutHeader>
         <VerticalStackLayout StyleClass="FlyoutHeader" Padding="20">

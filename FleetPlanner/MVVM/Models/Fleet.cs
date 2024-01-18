@@ -32,20 +32,82 @@ namespace FleetPlanner.MVVM.Models
             get; set;
         }
 
-        public string Manifesto
-        {
-            get; set;
-        }
-
         public string AreaOfOperation
         {
             get; set;
         }
 
-        [OneToMany( CascadeOperations = CascadeOperation.CascadeRead )]
-        public List<TaskGroup> TaskGroups
+        public string Manifesto
         {
             get; set;
         }
+
+        public int CrewTotalMax
+        {
+            get;
+            set;
+        }
+
+        public int CrewTotalMin
+        {
+            get;
+            set;
+        }
+
+        public int NpcCrewMin
+        {
+            get;
+            set;
+        }
+
+        public int NpcCrewMax
+        {
+            get;
+            set;
+        }
+
+        public long ExpectedProfit
+        {
+            get;
+            set;
+        }
+
+        public int TaskGroupCount
+        {
+            get;
+            set;
+        }
+
+        public int ShipCount
+        {
+            get;
+            set;
+        }
+
+        public int ShipsOwned
+        {
+            get;
+            set;
+        }
+
+        public int ShipsActive
+        {
+            get;
+            set;
+        }
+
+        public int ShipsInactive
+        {
+            get;
+            set;
+        }
+
+        public string Notes
+        {
+            get;
+            set;
+        }
+
+
     }
 }
