@@ -2,6 +2,7 @@
 using FleetPlanner.Services;
 
 using MvvmHelpers;
+using MvvmHelpers.Commands;
 
 using System;
 using System.Collections.Generic;
@@ -35,38 +36,40 @@ namespace FleetPlanner.MVVM.ViewModels
             }
         }
 
-        private ObservableRangeCollection<ShipViewModel> ships;
-        public ObservableRangeCollection<ShipViewModel> Ships => ships ??= [];
+        private ObservableRangeCollection<SelectableShipViewModel> ships;
+        public ObservableRangeCollection<SelectableShipViewModel> Ships => ships ??= [];
 
-        private ObservableRangeCollection<ShipViewModel> displayedShips;
-        public ObservableRangeCollection<ShipViewModel> DisplayedShips => displayedShips ??= [];
+        private ObservableRangeCollection<SelectableShipViewModel> displayedShips;
+        public ObservableRangeCollection<SelectableShipViewModel> DisplayedShips => displayedShips ??= [];
 
-        private List<string> shipNames;
-        public List<string> ShipNames => shipNames ??= [];
-
-
+        private AsyncCommand saveCommand;
+        public AsyncCommand SaveCommand => saveCommand ??= new AsyncCommand( Save );
 
         #region Methods
+
+        private async Task Save()
+        {
+            Console.WriteLine( Ships.Where( x => x.Selected ).Count() );
+        }
 
         private async Task LoadShips()
         {
             ShipDatabaseService shipDbService = await Services.ServiceProvider.GetShipDatabaseServiceAsync();
             List<Ship> shipModels = await shipDbService.GetAll();
-            List<ShipViewModel> svms = [];
-            ShipNames.Clear();
+            List<SelectableShipViewModel> ssvms = [];
 
             foreach( Ship s in shipModels )
             {
-                ShipViewModel svm = new( s );
-                svms.Add( svm );
-                ShipNames.Add( s.Name );
-
-                Console.WriteLine( s.Name );
+                SelectableShipViewModel ssvm = new( s );
+                ssvms.Add( ssvm );
             }
 
             Ships.Clear();
-            Ships.AddRange( svms );
-            DisplayedShips.AddRange( svms );
+            Ships.AddRange( ssvms );
+
+            DisplayedShips.Clear();
+            DisplayedShips.AddRange( ssvms );
+
         }
 
         #region Query Handling

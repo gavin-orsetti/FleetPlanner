@@ -498,6 +498,9 @@
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnWarning}, Dark={StaticResource OnWarningDark}}"/>
     </Style>
 
+    <Style TargetType="Button" Class="TransparentButton">
+        <Setter Property="BackgroundColor" Value="Transparent"/>
+    </Style>
 
     <!--VerticalStackLayout-->
 
