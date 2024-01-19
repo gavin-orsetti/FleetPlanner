@@ -52,14 +52,9 @@ namespace FleetPlanner.Services
             throw new NotImplementedException();
         }
 
-        public Task<List<Ship>> GetRange( IEnumerable<int> range )
+        public async Task<List<Ship>> GetAll()
         {
-            throw new NotImplementedException();
-        }
-
-        public Task<List<Ship>> GetAll()
-        {
-            throw new NotImplementedException();
+            return Db.Values.ToList();
         }
 
         public Task<List<Ship>> GetRange( List<int> range )

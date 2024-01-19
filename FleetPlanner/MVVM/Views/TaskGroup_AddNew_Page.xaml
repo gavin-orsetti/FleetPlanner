@@ -2,16 +2,52 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:FleetPlanner.MVVM.ViewModels"
+             xmlns:uCore="http://schemas.enisn-projects.io/dotnet/maui/uraniumui"
+             xmlns:u="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+             xmlns:m="clr-namespace:UraniumUI.Icons.MaterialIcons;assembly=UraniumUI.Icons.MaterialIcons"
+             xmlns:validation="clr-namespace:InputKit.Shared.Validations;assembly=InputKit.Maui"
              x:Class="FleetPlanner.MVVM.Views.TaskGroup_AddNew_Page"
              Title="TaskGroup_AddNew_Page">
     <ContentPage.BindingContext>
-        <viewmodels:TaskGroupViewModel/>
+        <viewmodels:NewTaskGroupViewModel/>
     </ContentPage.BindingContext>
 
-        <VerticalStackLayout>
-        <Label 
-            Text="New Task Group Page"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
+    <VerticalStackLayout>
+        <Grid MaximumHeightRequest="325" Margin="2.5">
+            <ScrollView>
+                <VerticalStackLayout>
+                    <u:TextField Title="Name"
+                             Text="{Binding Name}"
+                             Margin="2.5"/>
+                    <u:TextField Title="Area of Operation"
+                             Text="{Binding AreaOfOperation}"
+                             Margin="2.5"/>
+                    <u:EditorField Title="Objective"
+                             Text="{Binding Objective}"
+                               Margin="2.5"/>
+                    <u:TextField Title="Integrality"
+                             Text="{Binding Integrality}"
+                             Keyboard="Numeric" 
+                             Margin="2.5"/>
+
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+
+        <u:AutoCompleteTextField x:Name="SearchBar"
+                                 Title="Search" 
+                                 Text="{Binding SearchString}"
+                                 ItemsSource="{Binding ShipNames}"
+                                 Margin="2.5"/>
+
+        <Frame HeightRequest="350" Margin="2.5">
+            <CollectionView ItemsSource="{Binding DisplayedShips}" SelectionMode="Multiple" >
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Label Text="{Binding Name}"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Frame>
     </VerticalStackLayout>
 </ContentPage>

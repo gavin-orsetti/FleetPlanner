@@ -65,6 +65,8 @@ namespace FleetPlanner
         {
             public const string FleetId = "FleetId";
             public const string Fleet = "Fleet";
+            public const string TaskGroup = "TaskGroup";
+            public const string TaskGroupId = "TaskGroupId";
         }
         #endregion Query Parameters
 

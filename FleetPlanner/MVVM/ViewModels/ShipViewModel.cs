@@ -1,16 +1,16 @@
-﻿using System;
+﻿using FleetPlanner.MVVM.Models;
+
+using MvvmHelpers;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using FleetPlanner.MVVM.Models;
-
-using MvvmHelpers;
-
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class ShipViewModel( Ship ship ) : BaseViewModel
+    public class ShipViewModel( Ship ship ) : ViewModelBase
     {
         readonly Ship ship = ship;
         public Ship Ship => ship;
