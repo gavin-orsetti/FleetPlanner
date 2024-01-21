@@ -8,23 +8,29 @@ public partial class AppShell : Shell
 
         #region Routes
         // Home Page
-        Routing.RegisterRoute( Routes.MainPage_PageName, Routes.MainPage_PageType );
+        Routing.RegisterRoute( Routes.Main_Page_PageName, Routes.Main_Page_PageType );
 
         #region Fleet
 
         // Create New Fleet
-        Routing.RegisterRoute( Routes.MyFleets_NewFleet_PageName, Routes.MyFleets_NewFleet_PageType );
+        Routing.RegisterRoute( Routes.MyFleets_NewFleetPage_PageName, Routes.MyFleets_NewFleetPage_PageType );
 
         // Fleet Page
-        Routing.RegisterRoute( Routes.FleetPage_PageName, Routes.FleetPage_PageType );
+        Routing.RegisterRoute( Routes.Fleet_Page_PageName, Routes.Fleet_Page_PageType );
 
         // Edit Fleet Page
-        Routing.RegisterRoute( Routes.EditFleetPage_PageName, Routes.EditFleetPage_PageType );
+        Routing.RegisterRoute( Routes.Fleet_EditPage_PageName, Routes.Fleet_EditPage_PageType );
         #endregion Fleet
 
         #region Task Group
         // New Page
-        Routing.RegisterRoute( Routes.TaskGroup_AddNew_PageName, Routes.TaskGroup_AddNew_PageType );
+        Routing.RegisterRoute( Routes.TaskGroup_AddNewPage_PageName, Routes.TaskGroup_AddNewPage_PageType );
+
+        // Task Group Page
+        Routing.RegisterRoute( Routes.TaskGroup_Page_PageName, Routes.TaskGroup_Page_PageType );
+
+        // Edit Page
+        Routing.RegisterRoute( Routes.TaskGroup_EditPage_PageName, Routes.TaskGroup_EditPage_PageType );
         #endregion Task Group
         #endregion Routes
 

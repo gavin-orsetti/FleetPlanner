@@ -78,7 +78,7 @@ namespace FleetPlanner.MVVM.ViewModels
 
         private async Task GoToFleetNewPage()
         {
-            await Shell.Current.GoToAsync( Routes.MyFleets_NewFleet_PageName );
+            await Shell.Current.GoToAsync( Routes.MyFleets_NewFleetPage_PageName );
         }
         #endregion Methods
 

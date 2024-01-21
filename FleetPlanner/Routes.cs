@@ -26,20 +26,20 @@ namespace FleetPlanner
 
         #region Fleets
         // Home Page
-        public const string MainPage_PageName = nameof( MainPage );
-        public static readonly Type MainPage_PageType = typeof( MainPage );
+        public const string Main_Page_PageName = nameof( MainPage );
+        public static readonly Type Main_Page_PageType = typeof( MainPage );
 
         // New Fleet Page
-        public const string MyFleets_NewFleet_PageName = nameof( MyFleets_AddNew_Page );
-        public static readonly Type MyFleets_NewFleet_PageType = typeof( MyFleets_AddNew_Page );
+        public const string MyFleets_NewFleetPage_PageName = nameof( MyFleets_AddNew_Page );
+        public static readonly Type MyFleets_NewFleetPage_PageType = typeof( MyFleets_AddNew_Page );
 
         // Fleet Page
-        public const string FleetPage_PageName = nameof( FleetPage );
-        public static readonly Type FleetPage_PageType = typeof( FleetPage );
+        public const string Fleet_Page_PageName = nameof( FleetPage );
+        public static readonly Type Fleet_Page_PageType = typeof( FleetPage );
 
         // Edit Fleet Page
-        public const string EditFleetPage_PageName = nameof( Fleet_Edit_Page );
-        public static readonly Type EditFleetPage_PageType = typeof( Fleet_Edit_Page );
+        public const string Fleet_EditPage_PageName = nameof( Fleet_Edit_Page );
+        public static readonly Type Fleet_EditPage_PageType = typeof( Fleet_Edit_Page );
 
 
 
@@ -57,15 +57,23 @@ namespace FleetPlanner
 
         #region Task Groups
         // Add New Task Group
-        public const string TaskGroup_AddNew_PageName = nameof( TaskGroup_AddNew_Page );
-        public static readonly Type TaskGroup_AddNew_PageType = typeof( TaskGroup_AddNew_Page );
+        public const string TaskGroup_AddNewPage_PageName = nameof( TaskGroup_AddNew_Page );
+        public static readonly Type TaskGroup_AddNewPage_PageType = typeof( TaskGroup_AddNew_Page );
+
+        // Task Group Page
+        public const string TaskGroup_Page_PageName = nameof( TaskGroupPage );
+        public static readonly Type TaskGroup_Page_PageType = typeof( TaskGroupPage );
+
+        // Task Group Page
+        public const string TaskGroup_EditPage_PageName = nameof( TaskGroup_Edit_Page );
+        public static readonly Type TaskGroup_EditPage_PageType = typeof( TaskGroup_Edit_Page );
 
         #region Query Parameters
         public class TaskGroupQueryParams : CommonQueryParams
         {
             public const string FleetId = "FleetId";
             public const string Fleet = "Fleet";
-            public const string TaskGroup = "TaskGroup";
+            public const string TaskGroup = "Task_Group";
             public const string TaskGroupId = "TaskGroupId";
         }
         #endregion Query Parameters

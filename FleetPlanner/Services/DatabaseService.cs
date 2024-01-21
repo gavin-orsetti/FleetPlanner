@@ -47,6 +47,11 @@ namespace FleetPlanner.Services
             return items.Where( x => range.Contains( x.Id ) ) as List<T>;
         }
 
+        public async Task<T> GetLastInsert()
+        {
+            return await instance.GetLastRow<T>();
+        }
+
         public async Task<List<T>> GetChildrenUsingPropertyName( int parentId, string propertyName )
         {
             string tableName = mapping.TableName;
@@ -81,6 +86,18 @@ namespace FleetPlanner.Services
 
                 throw;
             }
+        }
+
+        public async Task<bool> InsertMultiple( List<T> items )
+        {
+            bool allSuccess = false;
+
+            foreach( T item in items )
+            {
+                allSuccess = await Insert( item );
+            }
+
+            return allSuccess;
         }
 
         /// <summary>

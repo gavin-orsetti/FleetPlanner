@@ -76,7 +76,7 @@ namespace FleetPlanner.MVVM.ViewModels
                 { Routes.FleetQueryParams.PopulatedViewModel, Fleet }
             };
 
-            await Shell.Current.GoToAsync( $"{Routes.FleetPage_PageName}", queryParams );
+            await Shell.Current.GoToAsync( $"{Routes.Fleet_Page_PageName}", queryParams );
         }
 
     }

@@ -1,5 +1,7 @@
 ﻿using FleetPlanner.MVVM.Models;
 
+using MvvmHelpers.Commands;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,39 +13,46 @@ namespace FleetPlanner.MVVM.ViewModels
     public class TaskGroupViewModel : ViewModelBase
     {
         private TaskGroup taskGroup;
-        public TaskGroup TaskGroup { get { return taskGroup; } }
+        public TaskGroup Task_Group { get => taskGroup; protected set => SetProperty( ref taskGroup, value ); }
+
+        private int? id;
+        public int Id
+        {
+            get => id ??= Task_Group.Id;
+            private set => SetProperty( ref id, value );
+        }
 
         private string name;
         public string Name
         {
-            get => name ??= string.Empty;
+            get => name ??= Task_Group.Name ??= string.Empty;
             set => SetProperty( ref name, value );
         }
-        private int fleetId;
+        private int? fleetId;
         public int FleetId
         {
-            get => fleetId;
+            get => fleetId ??= Task_Group.FleetId;
             set => SetProperty( ref fleetId, value );
         }
 
         private string objective;
         public string Objective
         {
-            get => objective ??= string.Empty;
+            get => objective ??= Task_Group.Objective ??= string.Empty;
             set => SetProperty( ref objective, value );
         }
 
         private string areaOfOperation;
         public string AreaOfOperation
         {
-            get => areaOfOperation ??= string.Empty;
+            get => areaOfOperation ??= Task_Group.AreaOfOperation ??= string.Empty;
             set => SetProperty( ref areaOfOperation, value );
         }
 
-        private int integrality;
+        private int? integrality;
         public int Integrality
         {
-            get => integrality;
+            get => integrality ??= Task_Group.Integrality;
             set => SetProperty( ref integrality, value );
         }
 
@@ -85,19 +94,49 @@ namespace FleetPlanner.MVVM.ViewModels
         private string notes;
         public string Notes
         {
-            get => notes ??= string.Empty;
+            get => notes ??= Task_Group.Notes ??= string.Empty;
             set => SetProperty( ref notes, value );
         }
 
+        #region Commands
+
+        private AsyncCommand<int> goToTaskGroupCommand;
+        public AsyncCommand<int> GoToTaskGroupCommand => goToTaskGroupCommand ??= new AsyncCommand<int>( GoToTaskGroup );
+
+        private AsyncCommand<int> goToEditTaskGroupCommand;
+        public AsyncCommand<int> GoToEditTaskGroupCommand => goToEditTaskGroupCommand ??= new AsyncCommand<int>( GoToEditTaskGroup );
+        #endregion Commands
 
         #region Methods
+
+
+        private async Task GoToTaskGroup( int id )
+        {
+            Dictionary<string, object> queryParams = new()
+            {
+                { Routes.TaskGroupQueryParams.TaskGroup, Task_Group }
+            };
+
+            await Shell.Current.GoToAsync( Routes.TaskGroup_Page_PageName, queryParams );
+        }
+
+        private async Task GoToEditTaskGroup( int id )
+        {
+            Dictionary<string, object> queryParams = new()
+            {
+                { Routes.TaskGroupQueryParams.TaskGroup, Task_Group }
+            };
+
+            await Shell.Current.GoToAsync( Routes.TaskGroup_EditPage_PageName, queryParams );
+        }
+
         #region Query Handling
         private protected override async Task EvaluateQueryParams( KeyValuePair<string, object> kvp )
         {
             switch( kvp.Key )
             {
                 case Routes.TaskGroupQueryParams.TaskGroupId:
-                    Console.WriteLine( "TaskGroup Id Passed" );
+                    Console.WriteLine( "Task_Group Id Passed" );
                     break;
                 case Routes.TaskGroupQueryParams.TaskGroup:
                     Console.WriteLine( "Task Group Passed" );

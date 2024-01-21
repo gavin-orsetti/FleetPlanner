@@ -62,6 +62,11 @@ namespace FleetPlanner.Services
             throw new NotImplementedException();
         }
 
+        public Task<Ship> GetLastInsert()
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<List<Ship>> GetChildrenUsingPropertyName( int parentId, string columnName )
         {
             throw new NotImplementedException();
@@ -73,6 +78,11 @@ namespace FleetPlanner.Services
         }
 
         public Task<bool> DeleteAsync<T>( int id )
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> InsertMultiple( List<Ship> Items )
         {
             throw new NotImplementedException();
         }

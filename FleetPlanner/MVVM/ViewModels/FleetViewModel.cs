@@ -142,8 +142,8 @@ namespace FleetPlanner.MVVM.ViewModels
             set => SetProperty( ref notes, value );
         }
 
-        private ObservableRangeCollection<TaskGroup> taskGroups;
-        public ObservableRangeCollection<TaskGroup> TaskGroups
+        private ObservableRangeCollection<TaskGroupViewModel> taskGroups;
+        public ObservableRangeCollection<TaskGroupViewModel> TaskGroups
         {
             get => taskGroups ??= [];
             set => SetProperty( ref taskGroups, value );
@@ -159,6 +159,7 @@ namespace FleetPlanner.MVVM.ViewModels
 
         private AsyncCommand<int> goToAddddNewTaskGroupCommand;
         public AsyncCommand<int> GoToAddNewTaskGroupCommand => goToAddddNewTaskGroupCommand ??= new AsyncCommand<int>( GoToAddNewTaskGroup );
+
 
         #endregion Properties & Commands
 
@@ -207,7 +208,7 @@ namespace FleetPlanner.MVVM.ViewModels
                     { Routes.FleetQueryParams.EditViewModel, id }
                 };
 
-            await Shell.Current.GoToAsync( $"{Routes.EditFleetPage_PageName}", queryParams );
+            await Shell.Current.GoToAsync( $"{Routes.Fleet_EditPage_PageName}", queryParams );
         }
 
         private async Task GoToAddNewTaskGroup( int id )
@@ -217,8 +218,9 @@ namespace FleetPlanner.MVVM.ViewModels
                 { Routes.TaskGroupQueryParams.FleetId, id }
             };
 
-            await Shell.Current.GoToAsync( Routes.TaskGroup_AddNew_PageName, queryParams );
+            await Shell.Current.GoToAsync( Routes.TaskGroup_AddNewPage_PageName, queryParams );
         }
+
 
         #region Query Handling
 
@@ -263,9 +265,15 @@ namespace FleetPlanner.MVVM.ViewModels
             TaskGroupDatabaseService dbService = await ServiceProvider.GetTaskGroupDatabaseServiceAsync();
 
             List<TaskGroup> tgs = await dbService.GetChildrenUsingPropertyName( id, nameof( TaskGroup.FleetId ) );
+            List<TaskGroupViewModel_Populated> tg_ps = new();
+            foreach( TaskGroup taskGroup in tgs )
+            {
+                TaskGroupViewModel_Populated taskGroupViewModel = new TaskGroupViewModel_Populated( taskGroup );
+                tg_ps.Add( taskGroupViewModel );
+            }
 
             TaskGroups.Clear();
-            TaskGroups.AddRange( tgs );
+            TaskGroups.AddRange( tg_ps );
         }
 
         #endregion Query Handling

@@ -33,6 +33,12 @@ namespace FleetPlanner.Services
         public Task<List<T>> GetAll();
 
         /// <summary>
+        /// Gets the last row of the table (the one with the highest id and therefore most recently added) and returns it.
+        /// </summary>
+        /// <returns></returns>
+        Task<T> GetLastInsert();
+
+        /// <summary>
         /// Gets all the objects from the database table matching Type <typeparamref name="T"/> that have the parentID in the passed in column
         /// </summary>
         /// <param name="parentId"></param>
@@ -46,6 +52,13 @@ namespace FleetPlanner.Services
         /// <param name="item"> The item to insert</param>
         /// <returns>true if item was inserted successfully</returns>
         Task<bool> Insert( T item );
+
+        /// <summary>
+        /// Inserts a list of objects to the database
+        /// </summary>
+        /// <param name="Items"></param>
+        /// <returns>True if all succeeded, false if one or more failed</returns>
+        Task<bool> InsertMultiple( List<T> Items );
 
         /// <summary>
         /// Deletes the item with the passed in Id from the table matching type T

@@ -10,6 +10,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using static FleetPlanner.Helpers.Constants;
+
 namespace FleetPlanner.MVVM.ViewModels
 {
     public class NewTaskGroupViewModel : TaskGroupViewModel
@@ -36,6 +38,8 @@ namespace FleetPlanner.MVVM.ViewModels
             }
         }
 
+        private List<SelectableShipViewModel> selectedShips => Ships.Where( x => x.Selected ).ToList();
+
         private ObservableRangeCollection<SelectableShipViewModel> ships;
         public ObservableRangeCollection<SelectableShipViewModel> Ships => ships ??= [];
 
@@ -49,7 +53,92 @@ namespace FleetPlanner.MVVM.ViewModels
 
         private async Task Save()
         {
-            Console.WriteLine( Ships.Where( x => x.Selected ).Count() );
+            TaskGroupDatabaseService taskGroupDbs = await Services.ServiceProvider.GetTaskGroupDatabaseServiceAsync();
+            ShipDetailDatabaseService shipDetailDbs = await Services.ServiceProvider.GetShipDetailDatabaseServiceAsync();
+            Task_Group = CreateTaskGroup();
+            await taskGroupDbs.Insert( Task_Group );
+            Task_Group = await taskGroupDbs.GetLastInsert();
+
+            List<ShipDetail> shipDetails = CreateShipDetails();
+            await shipDetailDbs.InsertMultiple( shipDetails );
+
+            await Shell.Current.GoToAsync( Routes.BackOne );
+        }
+
+        private List<ShipDetail> CreateShipDetails()
+        {
+            List<ShipDetail> shipDetails = [];
+
+            foreach( SelectableShipViewModel ssvm in selectedShips )
+            {
+                for( int i = ssvm.Quantity; i > 0; i-- )
+                {
+                    shipDetails.Add( new ShipDetail
+                    {
+                        ShipId = ssvm.Id,
+                        FleetId = FleetId,
+                        TaskGroupId = Task_Group.Id,
+                        Callsign = ssvm.Name, // TODO: Make this generate a random name (like 'Iron Donkey') based off a list of words
+                        Assignment = string.Empty,
+                        PersonalAttachmentRating = 0,
+                        Integrality = 0,
+                        Notes = string.Empty,
+                        NpcCrewMax = 0,
+                        NpcCrewMin = 0,
+                        PlayerCrewMax = ssvm.Crew_max,
+                        PlayerCrewMin = ssvm.Crew_min,
+                        CrewTotalMax = ssvm.Crew_max,
+                        CrewTotalMin = ssvm.Crew_min,
+                        HourlyIncome = 0,
+                        ExpectedProfit = 0,
+                        Purchased = false,
+                        Currency = (int)Currency.UEC,
+                        CashPurchase = false,
+                        MeltValue = 0,
+                        InsuranceType = (int)InsuranceType.Three_Month,
+                        AnnualInsuranceCost = 0
+                    } );
+                }
+            }
+
+            return shipDetails;
+        }
+
+        private TaskGroup CreateTaskGroup()
+        {
+            return new TaskGroup()
+            {
+                Name = Name,
+                FleetId = FleetId,
+                Objective = Objective,
+                AreaOfOperation = AreaOfOperation,
+                Integrality = Integrality,
+                ProfitHourly = 0,
+                CrewCount_Max = CalculateMaxCrewCount(),
+                CrewCount_Min = CalculateMinCrewCount(),
+                CrewCount_NPC = 0,
+                ShipCount = selectedShips.Count(),
+                Notes = string.Empty
+            };
+        }
+
+        private int CalculateMaxCrewCount()
+        {
+            int count = 0;
+            foreach( SelectableShipViewModel ship in selectedShips )
+            {
+                count += ship.Crew_max;
+            }
+            return count;
+        }
+        private int CalculateMinCrewCount()
+        {
+            int count = 0;
+            foreach( SelectableShipViewModel ship in selectedShips )
+            {
+                count += ship.Crew_min;
+            }
+            return count;
         }
 
         private async Task LoadShips()

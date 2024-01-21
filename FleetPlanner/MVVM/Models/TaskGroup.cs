@@ -18,7 +18,7 @@ namespace FleetPlanner.MVVM.Models
 
         public int Integrality { get; set; }
         public long ProfitHourly { get; set; }
-        public int CrewCount_Full { get; set; }
+        public int CrewCount_Max { get; set; }
         public int CrewCount_Min { get; set; }
         public int CrewCount_NPC { get; set; }
         public int ShipCount { get; set; }
