@@ -1,5 +1,6 @@
 ﻿using FleetPlanner.MVVM.Models;
 
+using MvvmHelpers;
 using MvvmHelpers.Commands;
 
 using System;
@@ -12,14 +13,14 @@ namespace FleetPlanner.MVVM.ViewModels
 {
     public class TaskGroupViewModel : ViewModelBase
     {
-        private TaskGroup taskGroup;
+        private TaskGroup taskGroup = new();
         public TaskGroup Task_Group { get => taskGroup; protected set => SetProperty( ref taskGroup, value ); }
 
         private int? id;
         public int Id
         {
             get => id ??= Task_Group.Id;
-            private set => SetProperty( ref id, value );
+            protected set => SetProperty( ref id, value );
         }
 
         private string name;
@@ -28,6 +29,7 @@ namespace FleetPlanner.MVVM.ViewModels
             get => name ??= Task_Group.Name ??= string.Empty;
             set => SetProperty( ref name, value );
         }
+
         private int? fleetId;
         public int FleetId
         {
@@ -98,6 +100,8 @@ namespace FleetPlanner.MVVM.ViewModels
             set => SetProperty( ref notes, value );
         }
 
+
+
         #region Commands
 
         private AsyncCommand<int> goToTaskGroupCommand;
@@ -114,7 +118,7 @@ namespace FleetPlanner.MVVM.ViewModels
         {
             Dictionary<string, object> queryParams = new()
             {
-                { Routes.TaskGroupQueryParams.TaskGroup, Task_Group }
+                { Routes.TaskGroupQueryParams.TaskGroupId, id }
             };
 
             await Shell.Current.GoToAsync( Routes.TaskGroup_Page_PageName, queryParams );

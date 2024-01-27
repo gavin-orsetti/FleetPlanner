@@ -79,5 +79,33 @@ namespace FleetPlanner
         #endregion Query Parameters
 
         #endregion Task Groups
+
+        #region Ship Detail
+        // Ship Detail Page
+        public const string ShipDetail_Page_PageName = nameof( ShipDetailPage );
+        public static readonly Type ShipDetail_Page_PageType = typeof( ShipDetailPage );
+
+        // Edit Ship Detail Page
+        public const string ShipDetail_EditPage_PageName = nameof( ShipDetail_Edit_Page );
+        public static readonly Type ShipDetail_EditPage_PageType = typeof( ShipDetail_Edit_Page );
+
+        #region Query Parameters
+        public class ShipDetailQueryParams : CommonQueryParams
+        {
+
+        }
+        #endregion Query Parameters
+        #endregion Ship Detail
+
+        #region Re-Task
+        // Re-Task Ship Page
+        public const string ReTaskShip_Page_PageName = nameof( RetaskShipPage );
+        public static readonly Type RetaskShip_Page_PageType = typeof( RetaskShipPage );
+
+        #region Query Parameters
+        public class ReTaskQueryParams : CommonQueryParams { }
+        #endregion Query Parameters
+        #endregion Re-Task
+
     }
 }

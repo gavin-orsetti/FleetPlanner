@@ -28,6 +28,8 @@ namespace FleetPlanner.Services
             };
         }
 
+
+
         #endregion Start Up
 
         #region Operations
@@ -36,17 +38,12 @@ namespace FleetPlanner.Services
 
         public async Task<TableMapping> CreateTable<T>() where T : IStorable, new()
         {
-            if( db.Table<T>() != null )
-                await db.GetMappingAsync<T>();
-
             await db.CreateTableAsync<T>();
-
             return await db.GetMappingAsync<T>();
         }
 
         public async Task<bool> Insert<T>( T item ) where T : IStorable, new()
         {
-            // I must be accidentally trying to insert an IStorable here, not a ShipDetail, when creating a new taskGroup. It's throwing an error.
             return await db.InsertAsync( item, typeof( T ) ) >= 1;
         }
 

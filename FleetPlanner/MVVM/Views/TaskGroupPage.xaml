@@ -1,17 +1,274 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="FleetPlanner.MVVM.Views.TaskGroupPage"
+             xmlns:uCore="http://schemas.enisn-projects.io/dotnet/maui/uraniumui"
+             xmlns:u="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+             xmlns:m="clr-namespace:UraniumUI.Icons.MaterialIcons;assembly=UraniumUI.Icons.MaterialIcons"
              xmlns:viewmodels="clr-namespace:FleetPlanner.MVVM.ViewModels"
+             x:Class="FleetPlanner.MVVM.Views.TaskGroupPage"
              Title="{Binding Name}">
     <ContentPage.BindingContext>
         <viewmodels:ViewTaskGroupViewModel/>
     </ContentPage.BindingContext>
-    
-    <VerticalStackLayout>
-        <Label 
-            Text="Task Group Page"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="2*"/>
+        </Grid.RowDefinitions>
+        <ScrollView Grid.Row="0">
+
+            <VerticalStackLayout>
+                <Frame StyleClass="OnBackgroundFrame">
+                    <VerticalStackLayout>
+                        <Label Text="Objective"
+                       HorizontalTextAlignment="Center"
+                       HorizontalOptions="Center"/>
+                        <BoxView StyleClass="Divider"/>
+                        <Label Text="{Binding Objective}"/>
+                    </VerticalStackLayout>
+                </Frame>
+                <Frame StyleClass="OnBackgroundFrame">
+                    <HorizontalStackLayout>
+                        <Label Text="Area of Operation: "/>
+                        <Label Text="{Binding AreaOfOperation}"/>
+                    </HorizontalStackLayout>
+                </Frame>
+                <Frame StyleClass="OnBackgroundFrame">
+                    <HorizontalStackLayout>
+                        <Label Text="Integrality: "/>
+                        <Label Text="{Binding Integrality, StringFormat='{0}/10'}"/>
+                    </HorizontalStackLayout>
+                </Frame>
+                <Frame StyleClass="OnBackgroundFrame">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <VerticalStackLayout Grid.Row="0"
+                                             Grid.Column="0"
+                                             Grid.ColumnSpan="3">
+                            <Label Text="Crew Counts"
+                                   HorizontalOptions="Center"
+                                   HorizontalTextAlignment="Center"/>
+                            <BoxView StyleClass="Divider"/>
+                        </VerticalStackLayout>
+
+                        <Label Text="Players Only"
+                                   TextDecorations="Underline"
+                                   Grid.Column="1"
+                               Grid.Row="1"
+                                   HorizontalOptions="Center"/>
+
+                        <Label Text="With NPCs"
+                                   TextDecorations="Underline"
+                                   Grid.Column="2"
+                               Grid.Row="1"
+                                   HorizontalOptions="Center"/>
+
+                        <Label Text="Full Crew:"
+                               Grid.Row="2"
+                               Grid.Column="0"/>
+
+                        <Label Text="{Binding CrewCount_Max}"
+                               HorizontalOptions="Center"
+                               Grid.Row="2"
+                               Grid.Column="1"/>
+
+                        <Label Text="{Binding CrewCount_MaxPlusNPC}"
+                               Grid.Row="2"
+                               Grid.Column="2"
+                               HorizontalOptions="Center"/>
+
+
+                        <Label Text="Skeleton Crew: "
+                               Grid.Row="3"
+                               Grid.Column="0"/>
+                        <Label Text="{Binding CrewCount_Min}"
+                               HorizontalOptions="Center"
+                               Grid.Row="3"
+                               Grid.Column="1"/>
+
+                        <Label Text="{Binding CrewCount_MinPlusNPC}"
+                               HorizontalOptions="Center"
+                               Grid.Row="3"
+                               Grid.Column="2"/>
+
+                    </Grid>
+                </Frame>
+                <Frame StyleClass="OnBackgroundFrame">
+                    <HorizontalStackLayout>
+                        <Label Text="{Binding ProfitHourly, StringFormat='Estimated Hourly Profit: {0} UEC'}"/>
+                    </HorizontalStackLayout>
+                </Frame>
+
+                <Frame StyleClass="OnBackgroundFrame">
+                    <VerticalStackLayout>
+                        <Label Text="Notes"
+                               HorizontalTextAlignment="Center"
+                               HorizontalOptions="Center"/>
+                        <BoxView StyleClass="Divider"/>
+                        <Label Text="{Binding Notes}"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+            </VerticalStackLayout>
+        </ScrollView>
+        <Grid Grid.Row="1">
+            <CollectionView ItemsSource="{Binding ShipDetailShips}"
+                            Grid.Row="1">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems >
+                                    <SwipeItem IconImageSource="{FontImageSource FontFamily=MaterialSharp,
+                                                        Glyph={x:Static m:MaterialSharp.Clear}}"
+                                                BackgroundColor="{AppThemeBinding Light={StaticResource Error}, Dark={StaticResource Error}}"
+                                                Command="{Binding DeleteCommand}"
+                                                CommandParameter="{Binding Id}"/>
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+                            <Grid StyleClass="ExpanderViewContainer">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <uCore:ExpanderView Padding="0, 13.5"
+                                                    Grid.Row="0">
+                                    <uCore:ExpanderView.Header>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition/>
+                                                <ColumnDefinition/>
+                                            </Grid.ColumnDefinitions>
+                                            <Label Text="{Binding Callsign}" StyleClass="OnPrimaryLabel"
+                                                   Grid.Row="0"
+                                                   Grid.Column="0"
+                                                   Grid.ColumnSpan="2"
+                                                   HorizontalOptions="Center"/>
+                                            <Label Text="{Binding Make, StringFormat='Make: {0}'}" 
+                                                   StyleClass="OnPrimaryLabel"
+                                                   FontSize="Micro"
+                                                   Grid.Row="1"
+                                                   Grid.Column="0"
+                                                   HorizontalOptions="Center"/>
+                                            <Label Text="{Binding Model, StringFormat='Model: {0}'}" 
+                                                   StyleClass="OnPrimaryLabel"
+                                                   FontSize="Micro"
+                                                   Grid.Row="1"
+                                                   Grid.Column="1"
+                                                   HorizontalOptions="Center"/>
+                                        </Grid>
+                                    </uCore:ExpanderView.Header>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+
+                                        <Label Text="{Binding NpcCrewMin, StringFormat='Min NPC Crew: {0}'}" 
+                                                StyleClass="OnPrimaryLabel"
+                                                FontSize="Micro"
+                                                HorizontalOptions="CenterAndExpand"
+                                                Grid.Column="0"
+                                                Grid.Row="0"/>
+                                        <Label Text="{Binding PlayerCrewMin, StringFormat='Min Player Crew: {0}'}"
+                                                StyleClass="OnPrimaryLabel"
+                                                FontSize="Micro"
+                                                HorizontalOptions="CenterAndExpand"
+                                                Grid.Column="1"
+                                                Grid.Row="0"/>
+                                        <Label Text="{Binding Role, StringFormat='Role: {0}'}"
+                                                StyleClass="OnPrimaryLabel"
+                                                FontSize="Micro"
+                                                HorizontalOptions="CenterAndExpand"
+                                                Grid.Column="2"
+                                                Grid.Row="0"/>
+                                        <Label Text="{Binding Integrality, StringFormat='Integrality: {0}'}"
+                                                StyleClass="OnPrimaryLabel"
+                                                FontSize="Micro"
+                                                HorizontalOptions="CenterAndExpand"
+                                                Grid.Column="3"
+                                                Grid.Row="0"/>
+                                        
+                                        <Grid Grid.Column="0" 
+                                               Grid.ColumnSpan="3"
+                                               Grid.Row="1"
+                                               Grid.RowSpan="3">
+
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition/>
+                                            </Grid.RowDefinitions>
+                                            <VerticalStackLayout>
+                                                <Label Text="Responsibility" 
+                                                        StyleClass="OnPrimaryLabel"
+                                                        HorizontalTextAlignment="Center"/>
+                                                <BoxView StyleClass="Divider"/>
+                                                <Label Text="{Binding Responsibility}" 
+                                                       StyleClass="OnPrimaryLabel"/>
+                                            </VerticalStackLayout>
+
+                                        </Grid>
+
+                                        <Grid Grid.Column="4"
+                                               Grid.Row="1"
+                                               Grid.RowSpan="2"
+                                               VerticalOptions="Start">
+
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition/>
+                                                <RowDefinition/>
+                                            </Grid.RowDefinitions>
+
+                                            <Button StyleClass="TertiaryElevatedButton" Text="Details"
+                                                     Command="{Binding GoToShipDetailCommand}"
+                                                     CommandParameter="{Binding Id}"
+                                                     Grid.Row="0"
+                                                     Margin="0,2.5"
+                                                     VerticalOptions="StartAndExpand"/>
+
+                                            <Button StyleClass="WarningElevatedButton" Text="Edit"
+                                                     Command="{Binding GoToEditShipDetailCommand}"
+                                                     CommandParameter="{Binding Id}"
+                                                     Grid.Row="1"
+                                                     Margin="0,2.5"
+                                                     VerticalOptions="StartAndExpand"/>
+
+                                        </Grid>
+                                    </Grid>
+                                </uCore:ExpanderView>
+                            </Grid>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                <CollectionView.EmptyView>
+                    <Label Text="Nothing to Display..."/>
+                </CollectionView.EmptyView>
+            </CollectionView>
+        </Grid>
+    </Grid>
 </ContentPage>

@@ -47,9 +47,9 @@ namespace FleetPlanner.Services
             }
         }
 
-        public Task<Ship> GetRow( int id )
+        public async Task<Ship> GetRow( int id )
         {
-            throw new NotImplementedException();
+            return Db[ id ];
         }
 
         public async Task<List<Ship>> GetAll()

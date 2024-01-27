@@ -64,7 +64,7 @@ namespace FleetPlanner.Services
         /// This uses the "FindAsync" method of the SQLite-net project which means it can return null. Make sure to do a null check.
         /// </summary>
         /// <param name="id"></param>
-        /// <returns>The Fleet with the associated id or null</returns>
+        /// <returns>The item of type T with the associated id or null</returns>
         public async Task<T> GetRow( int id )
         {
             return await instance.FindRow<T>( id );

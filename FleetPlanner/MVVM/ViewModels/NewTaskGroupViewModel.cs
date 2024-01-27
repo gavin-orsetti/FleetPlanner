@@ -1,4 +1,5 @@
-﻿using FleetPlanner.MVVM.Models;
+﻿using FleetPlanner.Helpers;
+using FleetPlanner.MVVM.Models;
 using FleetPlanner.Services;
 
 using MvvmHelpers;
@@ -25,7 +26,7 @@ namespace FleetPlanner.MVVM.ViewModels
                 if( value != string.Empty || value != null )
                 {
                     DisplayedShips.Clear();
-                    DisplayedShips.AddRange( Ships.Where( x => x.Name.ToLower().Contains( value.ToLower() ) ) );
+                    DisplayedShips.AddRange( Ships.Where( x => x.Model.ToLower().Contains( value.ToLower() ) ) );
                 }
 
                 if( value == string.Empty || value == null )
@@ -78,8 +79,8 @@ namespace FleetPlanner.MVVM.ViewModels
                         ShipId = ssvm.Id,
                         FleetId = FleetId,
                         TaskGroupId = Task_Group.Id,
-                        Callsign = ssvm.Name, // TODO: Make this generate a random name (like 'Iron Donkey') based off a list of words
-                        Assignment = string.Empty,
+                        Callsign = GetName(),
+                        Responsibility = string.Empty,
                         PersonalAttachmentRating = 0,
                         Integrality = 0,
                         Notes = string.Empty,
@@ -95,13 +96,20 @@ namespace FleetPlanner.MVVM.ViewModels
                         Currency = (int)Currency.UEC,
                         CashPurchase = false,
                         MeltValue = 0,
-                        InsuranceType = (int)InsuranceType.Three_Month,
+                        InsuranceType = (int)InsuranceType.ThreeMonth,
                         AnnualInsuranceCost = 0
                     } );
                 }
             }
 
             return shipDetails;
+        }
+
+        private string GetName()
+        {
+            string name = NameGenerator.GetRandomIdentifier();
+
+            return name;
         }
 
         private TaskGroup CreateTaskGroup()
@@ -117,7 +125,7 @@ namespace FleetPlanner.MVVM.ViewModels
                 CrewCount_Max = CalculateMaxCrewCount(),
                 CrewCount_Min = CalculateMinCrewCount(),
                 CrewCount_NPC = 0,
-                ShipCount = selectedShips.Count(),
+                ShipCount = CountShips(),
                 Notes = string.Empty
             };
         }
@@ -138,6 +146,18 @@ namespace FleetPlanner.MVVM.ViewModels
             {
                 count += ship.Crew_min;
             }
+            return count;
+        }
+
+        private int CountShips()
+        {
+            int count = 0;
+
+            foreach( SelectableShipViewModel ship in selectedShips )
+            {
+                count += ship.Quantity;
+            }
+
             return count;
         }
 
@@ -167,8 +187,9 @@ namespace FleetPlanner.MVVM.ViewModels
             switch( kvp.Key )
             {
                 case Routes.TaskGroupQueryParams.FleetId:
+                    Console.WriteLine( "Fleet Id Passed" );
                     await LoadShips();
-                    FleetId = Convert.ToInt32( kvp.Value );
+                    FleetId = (int)kvp.Value;
                     break;
                 case Routes.TaskGroupQueryParams.Fleet:
                     Console.WriteLine( "Fleet Passed" );

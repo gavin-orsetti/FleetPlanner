@@ -521,5 +521,19 @@
         </Setter>
     </Style>
 
+    
+    <!-- Frame -->
+    <Style TargetType="Frame" Class="OnBackgroundFrame">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}"/>
+        <Setter Property="CornerRadius" Value="0"/>
+        <Setter Property="Margin" Value="2.5"/>
+        <Setter Property="t:CascadingStyle.Resources">
+            <ResourceDictionary>
+                <Style TargetType="Label">
+                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurface}, Dark={StaticResource OnSurfaceDark}}"/>
+                </Style>
+            </ResourceDictionary>
+        </Setter>
+    </Style>
 
 </ResourceDictionary>

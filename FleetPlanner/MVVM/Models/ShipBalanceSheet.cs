@@ -12,7 +12,8 @@ namespace FleetPlanner.MVVM.Models
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
-        public int ShipId { get; set; }
+        [Indexed]
+        public int ShipDetailId { get; set; }
         public string Key { get; set; }
         public uint Value { get; set; }
         public bool IsPositive { get; set; }

@@ -21,27 +21,27 @@ namespace FleetPlanner.Helpers
         public enum QueryFlag { Async, Sycn }
         public enum Currency { UEC, USD, GBP, EUR }
 
-        public enum InsuranceType { Lifetime, Three_Month, Six_Month, Twelve_Month, One_Hundred_Twenty_Month }
+        public enum InsuranceType { ThreeMonth, SixMonth, TwelveMonth, OneHundredTwentyMonth, Lifetime }
 
         public enum ShipManufacturer
         {
-            Aegis_Dynamics,
-            Anvil_Aerospace,
-            Aopoa,
-            Argo_Astronautics,
-            Banu,
-            Consolidated_Outland,
-            Crusader_Industries,
-            Drake_Interplanetary,
-            Esperia,
-            Gatac_Manufacture,
-            Greycat_Industrial,
-            Kruger_Intergalactic,
-            Mirai,
-            MISC,
-            Origin_Jumpworks,
-            Roberts_Space_Industries,
-            Tumbril_Land_Systems,
+            AegisDynamics = 1,
+            Anvil = 2,
+            Aopoa = 3,
+            Argo = 4,
+            Banu = 5,
+            ConsolidatedOutland = 6,
+            Crusader = 7,
+            Drake = 8,
+            Esperia = 9,
+            Gatac = 10,
+            Greycat = 11,
+            Kruger = 12,
+            Mirai = 13,
+            MISC = 14,
+            Origin = 15,
+            RSI = 16,
+            Tumbril = 17
         }
         #endregion
 

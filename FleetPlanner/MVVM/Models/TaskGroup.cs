@@ -1,6 +1,5 @@
 ﻿using SQLite;
 
-using SQLiteNetExtensions.Attributes;
 
 namespace FleetPlanner.MVVM.Models
 {
@@ -9,13 +8,11 @@ namespace FleetPlanner.MVVM.Models
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
 
+        [Indexed]
         public int FleetId { get; set; }
-
         public string Name { get; set; }
         public string Objective { get; set; }
-
         public string AreaOfOperation { get; set; }
-
         public int Integrality { get; set; }
         public long ProfitHourly { get; set; }
         public int CrewCount_Max { get; set; }

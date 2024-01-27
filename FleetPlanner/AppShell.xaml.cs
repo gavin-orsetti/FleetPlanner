@@ -32,6 +32,19 @@ public partial class AppShell : Shell
         // Edit Page
         Routing.RegisterRoute( Routes.TaskGroup_EditPage_PageName, Routes.TaskGroup_EditPage_PageType );
         #endregion Task Group
+
+        #region ShipDetail
+        // Ship Detail Page
+        Routing.RegisterRoute( Routes.ShipDetail_Page_PageName, Routes.ShipDetail_Page_PageType );
+
+        // Edit Page
+        Routing.RegisterRoute( Routes.ShipDetail_EditPage_PageName, Routes.ShipDetail_EditPage_PageType );
+        #endregion ShipDetail
+
+        #region Re-Task Ship
+        // Re-Task Ship Page
+        Routing.RegisterRoute( Routes.ReTaskShip_Page_PageName, Routes.RetaskShip_Page_PageType );
+        #endregion Re-Task Ship
         #endregion Routes
 
         #region Theme Settings

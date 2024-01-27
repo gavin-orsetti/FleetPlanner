@@ -14,6 +14,7 @@ namespace FleetPlanner.Services
         private static FleetDatabaseService fleetDb;
         private static TaskGroupDatabaseService taskGroupDb;
         private static ShipDetailDatabaseService shipDetailDb;
+        private static ShipBalanceSheetDatabaseService shipBalanceSheetDb;
 
         public static async Task<ShipDatabaseService> GetShipDatabaseServiceAsync()
         {
@@ -33,6 +34,11 @@ namespace FleetPlanner.Services
         public static async Task<ShipDetailDatabaseService> GetShipDetailDatabaseServiceAsync()
         {
             return shipDetailDb ??= await ShipDetailDatabaseService.Create();
+        }
+
+        public static async Task<ShipBalanceSheetDatabaseService> GetShipBalanceSheetDatabaseServiceAsync()
+        {
+            return shipBalanceSheetDb ??= await ShipBalanceSheetDatabaseService.Create();
         }
 
     }

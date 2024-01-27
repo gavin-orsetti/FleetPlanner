@@ -22,18 +22,18 @@ namespace FleetPlanner.MVVM.ViewModels
             private set => SetProperty( ref id, value );
         }
 
-        private string name;
-        public string Name
+        private string model;
+        public string Model
         {
-            get => name ??= Ship.Name;
-            private set => SetProperty( ref name, value );
+            get => model ??= Ship.Model;
+            private set => SetProperty( ref model, value );
         }
 
-        private int? manufacturer;
-        public int Manufacturer
+        private int? make;
+        public int Make
         {
-            get => manufacturer ??= Ship.Manufacturer;
-            private set => SetProperty( ref manufacturer, value );
+            get => make ??= Ship.Make;
+            private set => SetProperty( ref make, value );
         }
 
         private string description;
@@ -60,14 +60,14 @@ namespace FleetPlanner.MVVM.ViewModels
         private int? crew_min;
         public int Crew_min
         {
-            get => crew_min ??= Ship.Crew_min;
+            get => crew_min ??= Ship.Crew_Min;
             private set => SetProperty( ref crew_min, value );
         }
 
         private int? crew_max;
         public int Crew_max
         {
-            get => crew_max ??= Ship.Crew_max;
+            get => crew_max ??= Ship.Crew_Max;
             private set => SetProperty( ref crew_max, value );
         }
 

@@ -1,10 +1,5 @@
 ﻿using SQLite;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FleetPlanner.MVVM.Models
 {
@@ -12,11 +7,13 @@ namespace FleetPlanner.MVVM.Models
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
+        [Indexed]
         public int FleetId { get; set; }
+        [Indexed]
         public int TaskGroupId { get; set; }
         public int ShipId { get; set; }
         public string Callsign { get; set; }
-        public string Assignment { get; set; }
+        public string Responsibility { get; set; }
         public int PersonalAttachmentRating { get; set; }
         public int Integrality { get; set; }
         public string Notes { get; set; }

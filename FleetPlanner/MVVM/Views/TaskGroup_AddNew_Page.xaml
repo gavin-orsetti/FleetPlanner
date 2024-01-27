@@ -8,10 +8,11 @@
              xmlns:validation="clr-namespace:InputKit.Shared.Validations;assembly=InputKit.Maui"
              x:Class="FleetPlanner.MVVM.Views.TaskGroup_AddNew_Page"
              Title="New Task Group">
+
     <ContentPage.BindingContext>
         <viewmodels:NewTaskGroupViewModel/>
     </ContentPage.BindingContext>
-
+    
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Save" Command="{Binding SaveCommand}"/>
     </ContentPage.ToolbarItems>
@@ -92,7 +93,7 @@
                                       HorizontalOptions="Start"
                                       VerticalOptions="CenterAndExpand"/>
 
-                            <Label Text="{Binding Name}"
+                            <Label Text="{Binding Model}"
                                    Grid.Column="1"
                                    HorizontalTextAlignment="Start"
                                    HorizontalOptions="StartAndExpand"

@@ -10,9 +10,31 @@ namespace FleetPlanner.Services
 {
     public class ShipBalanceSheetDatabaseService : DatabaseService<ShipBalanceSheetDatabaseService, ShipBalanceSheet>
     {
-        protected override Task Init()
+
+        new public static async Task<ShipBalanceSheetDatabaseService> Create()
         {
-            throw new NotImplementedException();
+            if( service != null )
+            {
+                return service;
+            }
+
+            service = new ShipBalanceSheetDatabaseService();
+            await service.Init();
+            return service;
+        }
+        protected override async Task Init()
+        {
+            instance = DatabaseAccess.Instance();
+
+            try
+            {
+                mapping = await instance.CreateTable<ShipBalanceSheet>();
+            }
+            catch( Exception e )
+            {
+
+                throw e.InnerException;
+            }
         }
     }
 }

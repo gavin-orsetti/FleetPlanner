@@ -13,145 +13,170 @@
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Edit" Command="{Binding GoToEditPage}"/>
     </ContentPage.ToolbarItems>
-    <StackLayout>
-        <Frame Margin="2.5">
-            <Label Text="{Binding Affiliation}"/>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="8*"/>
+        </Grid.RowDefinitions>
+        <Frame Margin="2.5"
+                   Grid.Row="0">
+            <HorizontalStackLayout>
+                <Label Text="Affiliation: "/>
+                <Label Text="{Binding Affiliation}"/>
+            </HorizontalStackLayout>
         </Frame>
-        <Frame Margin="2.5">
-            <Label Text="{Binding AreaOfOperation}"/>
+        <Frame Margin="2.5"
+               Grid.Row="1">
+            <HorizontalStackLayout>
+                <Label Text="Area of Operation: "/>
+                <Label Text="{Binding AreaOfOperation}"/>
+            </HorizontalStackLayout>
         </Frame>
-        <Frame Margin="2.5">
-            <Label Text="{Binding Manifesto}"/>
+        <Frame Margin="2.5"
+                   Grid.Row="2">
+            <ScrollView>
+                <VerticalStackLayout>
+                    <Label Text="Manifesto"
+                       HorizontalOptions="Center"
+                       HorizontalTextAlignment="Center"/>
+                    <BoxView StyleClass="Divider"/>
+                    <Label Text="{Binding Manifesto}"/>
+                </VerticalStackLayout>
+            </ScrollView>
         </Frame>
 
-        <Frame Margin="2.5">
-            <CollectionView ItemsSource="{Binding TaskGroups}" HeightRequest="400">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <SwipeView>
-                            <SwipeView.RightItems>
-                                <SwipeItems >
-                                    <SwipeItem IconImageSource="{FontImageSource FontFamily=MaterialSharp,
+        <VerticalStackLayout Grid.Row="3">
+            <Frame Margin="2.5">
+                <CollectionView ItemsSource="{Binding TaskGroups}" HeightRequest="400">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <SwipeView>
+                                <SwipeView.RightItems>
+                                    <SwipeItems >
+                                        <SwipeItem IconImageSource="{FontImageSource FontFamily=MaterialSharp,
                                    Glyph={x:Static m:MaterialSharp.Clear}}"
                            BackgroundColor="{AppThemeBinding Light={StaticResource Error}, Dark={StaticResource Error}}"
                            Command="{Binding DeleteCommand}"
                            CommandParameter="{Binding Id}"/>
-                                </SwipeItems>
-                            </SwipeView.RightItems>
-                            <Grid StyleClass="ExpanderViewContainer">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition/>
-                                </Grid.RowDefinitions>
+                                    </SwipeItems>
+                                </SwipeView.RightItems>
+                                <Grid StyleClass="ExpanderViewContainer">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition/>
+                                    </Grid.RowDefinitions>
 
-                                <uCore:ExpanderView Padding="0, 13.5"
+                                    <uCore:ExpanderView Padding="0, 13.5"
                                 Grid.Row="0">
-                                    <uCore:ExpanderView.Header>
-                                        <Label Text="{Binding Name}" StyleClass="OnPrimaryLabel"/>
-                                    </uCore:ExpanderView.Header>
+                                        <uCore:ExpanderView.Header>
+                                            <Label Text="{Binding Name}" StyleClass="OnPrimaryLabel"/>
+                                        </uCore:ExpanderView.Header>
 
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="*"/>
-                                            <RowDefinition Height="*"/>
-                                        </Grid.RowDefinitions>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="*"/>
+                                                <RowDefinition Height="*"/>
+                                            </Grid.RowDefinitions>
 
-                                        <Label Text="NPC Crew:" 
+                                            <Label Text="NPC Crew:" 
                                                StyleClass="OnPrimaryLabel"
                                                FontSize="Micro"
                                                HorizontalOptions="CenterAndExpand"
                                                Grid.Column="0"
                                                Grid.Row="0"/>
-                                        <Label Text="Player Crew:"
+                                            <Label Text="Player Crew:"
                                                StyleClass="OnPrimaryLabel"
                                                FontSize="Micro"
                                                HorizontalOptions="CenterAndExpand"
                                                Grid.Column="1"
                                                Grid.Row="0"/>
-                                        <Label Text="Profit:"
+                                            <Label Text="Profit:"
                                                StyleClass="OnPrimaryLabel"
                                                FontSize="Micro"
                                                HorizontalOptions="CenterAndExpand"
                                                Grid.Column="2"
                                                Grid.Row="0"/>
-                                        <Label Text="Ships:"
+                                            <Label Text="Ships:"
                                                StyleClass="OnPrimaryLabel"
                                                FontSize="Micro"
                                                HorizontalOptions="CenterAndExpand"
                                                Grid.Column="3"
                                                Grid.Row="0"/>
-                                        <Grid Grid.Column="0" 
+                                            <Grid Grid.Column="0" 
                                               Grid.ColumnSpan="3"
                                               Grid.Row="1"
                                               Grid.RowSpan="3">
 
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition/>
-                                            </Grid.RowDefinitions>
-                                            <VerticalStackLayout>
-                                                <Label Text="Objective" 
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition/>
+                                                </Grid.RowDefinitions>
+                                                <VerticalStackLayout>
+                                                    <Label Text="Objective" 
                                                        StyleClass="OnPrimaryLabel"
                                                        HorizontalTextAlignment="Center"/>
-                                                <BoxView StyleClass="Divider"/>
-                                                <Label Text="{Binding Objective}" 
+                                                    <BoxView StyleClass="Divider"/>
+                                                    <Label Text="{Binding Objective}" 
                                                        StyleClass="OnPrimaryLabel"/>
-                                            </VerticalStackLayout>
+                                                </VerticalStackLayout>
 
-                                        </Grid>
+                                            </Grid>
 
-                                        <Grid Grid.Column="4"
+                                            <Grid Grid.Column="4"
                                               Grid.Row="1"
                                               Grid.RowSpan="2"
                                               VerticalOptions="Start">
 
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition/>
-                                                <RowDefinition/>
-                                            </Grid.RowDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition/>
+                                                    <RowDefinition/>
+                                                </Grid.RowDefinitions>
 
-                                            <Button StyleClass="TertiaryElevatedButton" Text="Details"
+                                                <Button StyleClass="TertiaryElevatedButton" Text="Details"
                                 Command="{Binding GoToTaskGroupCommand}"
                                 CommandParameter="{Binding Id}"
                                 Grid.Row="0"
                                 Margin="0,2.5"
                                 VerticalOptions="StartAndExpand"/>
 
-                                            <Button StyleClass="WarningElevatedButton" Text="Edit"
+                                                <Button StyleClass="WarningElevatedButton" Text="Edit"
                                 Command="{Binding GoToEditTaskGroupCommand}"
                                 CommandParameter="{Binding Id}"
                                 Grid.Row="1"
                                 Margin="0,2.5"
                                 VerticalOptions="StartAndExpand"/>
 
+                                            </Grid>
                                         </Grid>
-                                    </Grid>
-                                </uCore:ExpanderView>
-                            </Grid>
-                        </SwipeView>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-                <CollectionView.EmptyView>
-                    <ContentView>
-                        <VerticalStackLayout HorizontalOptions="CenterAndExpand"
+                                    </uCore:ExpanderView>
+                                </Grid>
+                            </SwipeView>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                    <CollectionView.EmptyView>
+                        <ContentView>
+                            <VerticalStackLayout HorizontalOptions="CenterAndExpand"
                                          VerticalOptions="CenterAndExpand">
-                            <Label Text="Noting to Display..."/>
-                        </VerticalStackLayout>
-                    </ContentView>
-                </CollectionView.EmptyView>
-            </CollectionView>
-        </Frame>
+                                <Label Text="Noting to Display..."/>
+                            </VerticalStackLayout>
+                        </ContentView>
+                    </CollectionView.EmptyView>
+                </CollectionView>
+            </Frame>
 
-        <Button StyleClass="TertiaryElevatedButton" 
+            <Button StyleClass="TertiaryElevatedButton" 
                 Text="Add New Task Group"
                 Margin="2.5"
                 Command="{Binding GoToAddNewTaskGroupCommand}"
                 CommandParameter="{Binding Id}"/>
-    </StackLayout>
+        </VerticalStackLayout>
+    </Grid>
 </ContentPage>

@@ -30,10 +30,10 @@ namespace FleetPlanner.Services
             {
                 mapping = await instance.CreateTable<ShipDetail>();
             }
-            catch( Exception )
+            catch( Exception e )
             {
 
-                throw;
+                throw e.InnerException;
             }
         }
         #endregion Initialization

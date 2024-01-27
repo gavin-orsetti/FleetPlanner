@@ -13,12 +13,12 @@ namespace FleetPlanner.MVVM.Models
             get; set;
         }
 
-        public string Name
+        public string Model
         {
             get; set;
         }
 
-        public int Manufacturer
+        public int Make
         {
             get; set;
         }
@@ -38,12 +38,12 @@ namespace FleetPlanner.MVVM.Models
             get; set;
         }
 
-        public int Crew_min
+        public int Crew_Min
         {
             get; set;
         }
 
-        public int Crew_max
+        public int Crew_Max
         {
             get; set;
         }
