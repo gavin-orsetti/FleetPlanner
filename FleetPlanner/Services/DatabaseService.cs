@@ -88,6 +88,11 @@ namespace FleetPlanner.Services
             }
         }
 
+        /// <summary>
+        /// Inserts all the items in the list to the database.
+        /// </summary>
+        /// <param name="items"></param>
+        /// <returns></returns>
         public async Task<bool> InsertMultiple( List<T> items )
         {
             bool allSuccess = false;
@@ -98,6 +103,16 @@ namespace FleetPlanner.Services
             }
 
             return allSuccess;
+        }
+
+        public async Task Update( T item )
+        {
+            await instance.UpdateRow( item );
+        }
+
+        public async Task UpdateMultiple( List<T> items )
+        {
+            await instance.UpdateMultiple( items );
         }
 
         /// <summary>

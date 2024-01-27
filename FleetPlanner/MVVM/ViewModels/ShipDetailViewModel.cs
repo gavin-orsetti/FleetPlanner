@@ -154,11 +154,19 @@ namespace FleetPlanner.MVVM.ViewModels
             set => SetProperty( ref purchased, value );
         }
 
-        private string currency;
+        private Currency currency;
+        protected Currency CurrencyAsEnum => currency;
         public string Currency
         {
-            get => currency ??= string.Empty;
-            set => SetProperty( ref currency, value );
+            get => currency.ToSplitString();
+            set
+            {
+                string v = value.RemoveSpaces();
+                if( Enum.TryParse( v, out Currency c ) )
+                {
+                    SetProperty( ref currency, c );
+                }
+            }
         }
 
         private bool cashPurchase;
@@ -175,11 +183,17 @@ namespace FleetPlanner.MVVM.ViewModels
             set => SetProperty( ref meltValue, value );
         }
 
-        private string insuranceType;
+        private InsuranceType insuranceType;
+        protected InsuranceType InsuranceTypeAsEnum => insuranceType;
         public string InsuranceType
         {
-            get => insuranceType ??= string.Empty;
-            set => SetProperty( ref insuranceType, value );
+            get => insuranceType.ToSplitString();
+            set
+            {
+                string v = value.RemoveSpaces();
+                if( Enum.TryParse( v, out InsuranceType t ) )
+                    SetProperty( ref insuranceType, t );
+            }
         }
 
         private int annualInsuranceCost;
@@ -191,10 +205,18 @@ namespace FleetPlanner.MVVM.ViewModels
             set => SetProperty( ref annualInsuranceCost, value );
         }
 
+        private ObservableRangeCollection<ShipBalanceSheetViewModel> balanceSheet;
+
+        /// <summary>
+        /// This is empty unless you specifically populate it by adding the List of balance sheet items returned from calling GetShipBalanceSheetItemViewModels
+        /// </summary>
+        public ObservableRangeCollection<ShipBalanceSheetViewModel> BalanceSheet => balanceSheet ??= new();
+
         private AsyncCommand<int> goToShipDetailCommand;
         public AsyncCommand<int> GoToShipDetailCommand => goToShipDetailCommand ??= new AsyncCommand<int>( GoToShipDetail );
 
         private AsyncCommand<int> goToEditShipDetailCommand;
+
         public AsyncCommand<int> GoToEditShipDetailCommand => goToEditShipDetailCommand ??= new AsyncCommand<int>( GoToEditShipDetail );
 
 
@@ -264,9 +286,25 @@ namespace FleetPlanner.MVVM.ViewModels
             Currency = ( (Currency)ShipDetail.Currency ).ToString();
             CashPurchase = ShipDetail.CashPurchase;
             MeltValue = ShipDetail.MeltValue;
-            InsuranceType = ( (InsuranceType)ShipDetail.InsuranceType ).ToString().SplitCamelCase();
+            InsuranceType = ( (InsuranceType)ShipDetail.InsuranceType ).ToString();
             AnnualInsuranceCost = ShipDetail.AnnualInsuranceCost;
 
+        }
+
+        protected async Task<List<ShipBalanceSheetViewModel>> GetShipBalanceSheetItemViewModels()
+        {
+            ShipBalanceSheetDatabaseService shipBalanceSheetDbs = await ServiceProvider.GetShipBalanceSheetDatabaseServiceAsync();
+            List<ShipBalanceSheet> sheetItems = await shipBalanceSheetDbs.GetChildrenUsingPropertyName( ShipDetail.Id, nameof( ShipBalanceSheet.ShipDetailId ) );
+
+            List<ShipBalanceSheetViewModel> bsVms = new();
+
+            foreach( ShipBalanceSheet sheetItem in sheetItems )
+            {
+                ShipBalanceSheetViewModel bsvm = new ShipBalanceSheetViewModel( sheetItem );
+                bsVms.Add( bsvm );
+            }
+
+            return bsVms;
         }
 
         #endregion Query Handling

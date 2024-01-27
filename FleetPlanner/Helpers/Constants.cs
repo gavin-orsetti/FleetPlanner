@@ -23,6 +23,8 @@ namespace FleetPlanner.Helpers
 
         public enum InsuranceType { ThreeMonth, SixMonth, TwelveMonth, OneHundredTwentyMonth, Lifetime }
 
+
+
         public enum ShipManufacturer
         {
             AegisDynamics = 1,

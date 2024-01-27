@@ -41,9 +41,6 @@ namespace FleetPlanner.MVVM.ViewModels
             set => SetProperty( ref model, value );
         }
 
-        private ObservableRangeCollection<ShipBalanceSheetViewModel> balanceSheet;
-        public ObservableRangeCollection<ShipBalanceSheetViewModel> BalanceSheet => balanceSheet ??= new();
-
         private AsyncCommand<int> goToReTaskCommand;
         public AsyncCommand<int> GoToReTaskCommand => goToReTaskCommand ??= new AsyncCommand<int>( GoToReTask );
 
@@ -78,7 +75,6 @@ namespace FleetPlanner.MVVM.ViewModels
             await base.Populate( id );
 
             ShipDatabaseService shipDbs = await ServiceProvider.GetShipDatabaseServiceAsync();
-            ShipBalanceSheetDatabaseService shipBalanceSheetDbs = await ServiceProvider.GetShipBalanceSheetDatabaseServiceAsync();
 
             Ship s = await shipDbs.GetRow( ShipDetail.ShipId );
 
@@ -88,18 +84,10 @@ namespace FleetPlanner.MVVM.ViewModels
             Model = shipViewModel.Model;
             Role = shipViewModel.Role;
 
-            List<ShipBalanceSheet> sheetItems = await shipBalanceSheetDbs.GetChildrenUsingPropertyName( ShipDetail.Id, nameof( ShipBalanceSheet.ShipDetailId ) );
-
-            List<ShipBalanceSheetViewModel> bsVms = new();
-
-            foreach( ShipBalanceSheet sheetItem in sheetItems )
-            {
-                ShipBalanceSheetViewModel bsvm = new ShipBalanceSheetViewModel( sheetItem );
-                bsVms.Add( bsvm );
-            }
+            List<ShipBalanceSheetViewModel> sbsVMs = await GetShipBalanceSheetItemViewModels();
 
             BalanceSheet.Clear();
-            BalanceSheet.AddRange( bsVms );
+            BalanceSheet.AddRange( sbsVMs );
         }
         #endregion Query Handling
         #endregion Methods

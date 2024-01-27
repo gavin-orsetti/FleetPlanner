@@ -41,11 +41,6 @@ namespace FleetPlanner.Helpers
         private static List<string> usedNamedProfessionalAnimals = [];
         private static List<string> usedIdentifiers = [];
 
-        public static string SplitCamelCase( this string source, char delimiter = ' ' )
-        {
-            return string.Join( delimiter, Regex.Split( source, @"(?<!^)(?=[A-Z])" ) );
-        }
-
         public static string GetRandomFirstName( bool useOnce = false )
         {
             int random = rand.Next( maxValue: FirstNamesCount );

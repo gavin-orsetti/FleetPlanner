@@ -78,6 +78,16 @@ namespace FleetPlanner.Services
         #endregion Read
 
         #region Update
+        public async Task UpdateRow<T>( T item ) where T : IStorable, new()
+        {
+            await db.UpdateAsync( item );
+        }
+
+        public async Task UpdateMultiple<T>( List<T> items ) where T : IStorable, new()
+        {
+            await db.UpdateAllAsync( items );
+        }
+
         #endregion
 
         #region Delete
