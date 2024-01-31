@@ -19,6 +19,7 @@ namespace FleetPlanner
         public class CommonQueryParams
         {
             public const string Id = "Id";
+            public const string Refresh = "Refresh";
         }
 
 
@@ -92,7 +93,7 @@ namespace FleetPlanner
         #region Query Parameters
         public class ShipDetailQueryParams : CommonQueryParams
         {
-
+            public const string Object = "Object";
         }
         #endregion Query Parameters
         #endregion Ship Detail

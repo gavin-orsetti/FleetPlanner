@@ -62,7 +62,12 @@ namespace FleetPlanner.MVVM.ViewModels
             switch( kvp.Key )
             {
                 case Routes.ShipDetailQueryParams.Id:
-                    Console.WriteLine( "Id Passed to View Ship Detail Page" );
+                    await Populate( (int)kvp.Value );
+                    break;
+                case Routes.ShipDetailQueryParams.Object:
+                    await Populate( (ShipDetail)kvp.Value );
+                    break;
+                case Routes.CommonQueryParams.Refresh:
                     await Populate( (int)kvp.Value );
                     break;
                 default:
@@ -74,15 +79,19 @@ namespace FleetPlanner.MVVM.ViewModels
         {
             await base.Populate( id );
 
-            ShipDatabaseService shipDbs = await ServiceProvider.GetShipDatabaseServiceAsync();
+            (Make, Model, Role) = await GetShipViewModel( ShipDetail.ShipId );
 
-            Ship s = await shipDbs.GetRow( ShipDetail.ShipId );
+            List<ShipBalanceSheetViewModel> sbsVMs = await GetShipBalanceSheetItemViewModels();
 
-            shipViewModel = new ShipViewModel( s );
+            BalanceSheet.Clear();
+            BalanceSheet.AddRange( sbsVMs );
+        }
 
-            Make = ( (ShipManufacturer)shipViewModel.Make ).ToString().SplitCamelCase();
-            Model = shipViewModel.Model;
-            Role = shipViewModel.Role;
+        new private async Task Populate( ShipDetail sd )
+        {
+            await base.Populate( sd );
+
+            (Make, Model, Role) = await GetShipViewModel( ShipDetail.ShipId );
 
             List<ShipBalanceSheetViewModel> sbsVMs = await GetShipBalanceSheetItemViewModels();
 

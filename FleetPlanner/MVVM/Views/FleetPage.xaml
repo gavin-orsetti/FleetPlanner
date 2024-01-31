@@ -11,7 +11,7 @@
         <viewmodels:FleetViewModel/>
     </ContentPage.BindingContext>
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Edit" Command="{Binding GoToEditPage}"/>
+        <ToolbarItem Text="Edit" Command="{Binding GoToEditFleetCommand}" CommandParameter="{Binding Id}"/>
     </ContentPage.ToolbarItems>
     <Grid>
         <Grid.RowDefinitions>

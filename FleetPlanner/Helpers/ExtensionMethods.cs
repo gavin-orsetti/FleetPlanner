@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FleetPlanner.Helpers
 {
-    public static class ExtensionMethods
+    public static partial class ExtensionMethods
     {
         /// <summary>
         /// Returns a string representation of the insurance type with each word split out.
@@ -26,7 +26,7 @@ namespace FleetPlanner.Helpers
         /// <returns></returns>
         public static string RemoveSpaces( this string s )
         {
-            return s.Replace( " ", "" );
+            return s.Replace( " ", "" ).Trim();
         }
 
         /// <summary>
@@ -37,9 +37,10 @@ namespace FleetPlanner.Helpers
         /// <returns></returns>
         public static string SplitCamelCase( this string source, char delimiter = ' ' )
         {
-            return string.Join( delimiter, Regex.Split( source, @"(?<!^)(?=[A-Z])" ) );
+            return string.Join( delimiter, SplitOnCapitalLetters().Split( source ) );
         }
 
-
+        [GeneratedRegex( @"(?<!^)(?=[A-Z])" )]
+        private static partial Regex SplitOnCapitalLetters();
     }
 }

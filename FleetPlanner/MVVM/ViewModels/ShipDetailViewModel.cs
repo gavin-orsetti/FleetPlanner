@@ -95,28 +95,48 @@ namespace FleetPlanner.MVVM.ViewModels
         public int NpcCrewMax
         {
             get => npcCrewMax;
-            set => SetProperty( ref npcCrewMax, value );
+            set
+            {
+                SetProperty( ref npcCrewMax, value );
+
+                CrewTotalMax = npcCrewMax + PlayerCrewMax;
+            }
         }
 
         private int npcCrewMin;
         public int NpcCrewMin
         {
             get => npcCrewMin;
-            set => SetProperty( ref npcCrewMin, value );
+            set
+            {
+                SetProperty( ref npcCrewMin, value );
+
+                CrewTotalMin = npcCrewMin + PlayerCrewMin;
+            }
         }
 
         private int playerCrewMin;
         public int PlayerCrewMin
         {
             get => playerCrewMin;
-            set => SetProperty( ref playerCrewMin, value );
+            set
+            {
+                SetProperty( ref playerCrewMin, value );
+
+                CrewTotalMin = PlayerCrewMin + npcCrewMin;
+            }
         }
 
         private int playerCrewMax;
         public int PlayerCrewMax
         {
             get => playerCrewMax;
-            set => SetProperty( ref playerCrewMax, value );
+            set
+            {
+                SetProperty( ref playerCrewMax, value );
+
+                CrewTotalMax = PlayerCrewMax + npcCrewMax;
+            }
         }
 
         private int crewTotalMin;
@@ -155,17 +175,25 @@ namespace FleetPlanner.MVVM.ViewModels
         }
 
         private Currency currency;
-        protected Currency CurrencyAsEnum => currency;
+        protected Currency CurrencyAsEnum
+        {
+            get => currency;
+            set
+            {
+                Currency = value.ToString();
+            }
+        }
         public string Currency
         {
-            get => currency.ToSplitString();
+            get
+            {
+                return currency.ToString();
+            }
             set
             {
                 string v = value.RemoveSpaces();
                 if( Enum.TryParse( v, out Currency c ) )
-                {
                     SetProperty( ref currency, c );
-                }
             }
         }
 
@@ -184,7 +212,11 @@ namespace FleetPlanner.MVVM.ViewModels
         }
 
         private InsuranceType insuranceType;
-        protected InsuranceType InsuranceTypeAsEnum => insuranceType;
+        protected InsuranceType InsuranceTypeAsEnum
+        {
+            get => insuranceType;
+            set => SetProperty( ref insuranceType, value );
+        }
         public string InsuranceType
         {
             get => insuranceType.ToSplitString();
@@ -192,7 +224,12 @@ namespace FleetPlanner.MVVM.ViewModels
             {
                 string v = value.RemoveSpaces();
                 if( Enum.TryParse( v, out InsuranceType t ) )
+                {
                     SetProperty( ref insuranceType, t );
+                }
+                else
+                {
+                }
             }
         }
 
@@ -210,7 +247,7 @@ namespace FleetPlanner.MVVM.ViewModels
         /// <summary>
         /// This is empty unless you specifically populate it by adding the List of balance sheet items returned from calling GetShipBalanceSheetItemViewModels
         /// </summary>
-        public ObservableRangeCollection<ShipBalanceSheetViewModel> BalanceSheet => balanceSheet ??= new();
+        public ObservableRangeCollection<ShipBalanceSheetViewModel> BalanceSheet => balanceSheet ??= [];
 
         private AsyncCommand<int> goToShipDetailCommand;
         public AsyncCommand<int> GoToShipDetailCommand => goToShipDetailCommand ??= new AsyncCommand<int>( GoToShipDetail );
@@ -226,7 +263,7 @@ namespace FleetPlanner.MVVM.ViewModels
         {
             Dictionary<string, object> queryParams = new()
             {
-                { Routes.ShipDetailQueryParams.Id, id }
+                { Routes.ShipDetailQueryParams.Object, ShipDetail }
             };
 
             await Shell.Current.GoToAsync( Routes.ShipDetail_Page_PageName, queryParams );
@@ -237,7 +274,7 @@ namespace FleetPlanner.MVVM.ViewModels
         {
             Dictionary<string, object> queryParams = new()
             {
-                { Routes.ShipDetailQueryParams.Id, id }
+                { Routes.ShipDetailQueryParams.Object, ShipDetail }
             };
 
             await Shell.Current.GoToAsync( Routes.ShipDetail_EditPage_PageName, queryParams );
@@ -249,11 +286,6 @@ namespace FleetPlanner.MVVM.ViewModels
         {
             switch( kvp.Key )
             {
-                case Routes.ShipDetailQueryParams.Id:
-                    Console.WriteLine( "Id Passed to Ship Detail Page" );
-
-                    await Populate( (int)kvp.Value );
-                    break;
                 default:
                     break;
             }
@@ -283,10 +315,38 @@ namespace FleetPlanner.MVVM.ViewModels
             HourlyIncome = ShipDetail.HourlyIncome;
             ExpectedProfit = ShipDetail.ExpectedProfit;
             Purchased = ShipDetail.Purchased;
-            Currency = ( (Currency)ShipDetail.Currency ).ToString();
+            CurrencyAsEnum = (Currency)ShipDetail.Currency;
             CashPurchase = ShipDetail.CashPurchase;
             MeltValue = ShipDetail.MeltValue;
-            InsuranceType = ( (InsuranceType)ShipDetail.InsuranceType ).ToString();
+            InsuranceTypeAsEnum = (InsuranceType)ShipDetail.InsuranceType;
+            AnnualInsuranceCost = ShipDetail.AnnualInsuranceCost;
+
+        }
+        protected async Task Populate( ShipDetail sd )
+        {
+            ShipDetail = sd;
+            Id = ShipDetail.Id;
+            FleetId = ShipDetail.FleetId;
+            TaskGroupId = ShipDetail.TaskGroupId;
+            ShipId = ShipDetail.ShipId;
+            Callsign = ShipDetail.Callsign;
+            Responsibility = ShipDetail.Responsibility;
+            PersonalAttachmentRating = ShipDetail.PersonalAttachmentRating;
+            Integrality = ShipDetail.Integrality;
+            Notes = ShipDetail.Notes;
+            NpcCrewMax = ShipDetail.NpcCrewMax;
+            NpcCrewMin = ShipDetail.NpcCrewMin;
+            PlayerCrewMax = ShipDetail.PlayerCrewMax;
+            PlayerCrewMin = ShipDetail.PlayerCrewMin;
+            CrewTotalMax = ShipDetail.CrewTotalMax;
+            CrewTotalMin = ShipDetail.CrewTotalMin;
+            HourlyIncome = ShipDetail.HourlyIncome;
+            ExpectedProfit = ShipDetail.ExpectedProfit;
+            Purchased = ShipDetail.Purchased;
+            CurrencyAsEnum = (Currency)ShipDetail.Currency;
+            CashPurchase = ShipDetail.CashPurchase;
+            MeltValue = ShipDetail.MeltValue;
+            InsuranceTypeAsEnum = (InsuranceType)ShipDetail.InsuranceType;
             AnnualInsuranceCost = ShipDetail.AnnualInsuranceCost;
 
         }
@@ -296,15 +356,26 @@ namespace FleetPlanner.MVVM.ViewModels
             ShipBalanceSheetDatabaseService shipBalanceSheetDbs = await ServiceProvider.GetShipBalanceSheetDatabaseServiceAsync();
             List<ShipBalanceSheet> sheetItems = await shipBalanceSheetDbs.GetChildrenUsingPropertyName( ShipDetail.Id, nameof( ShipBalanceSheet.ShipDetailId ) );
 
-            List<ShipBalanceSheetViewModel> bsVms = new();
+            List<ShipBalanceSheetViewModel> bsVms = [];
 
             foreach( ShipBalanceSheet sheetItem in sheetItems )
             {
-                ShipBalanceSheetViewModel bsvm = new ShipBalanceSheetViewModel( sheetItem );
+                ShipBalanceSheetViewModel bsvm = new( sheetItem );
                 bsVms.Add( bsvm );
             }
 
             return bsVms;
+        }
+
+        protected async Task<(string, string, string)> GetShipViewModel( int id )
+        {
+            ShipDatabaseService shipDbs = await ServiceProvider.GetShipDatabaseServiceAsync();
+
+            Ship s = await shipDbs.GetRow( id );
+
+            shipViewModel = new ShipViewModel( s );
+
+            return (( (ShipManufacturer)shipViewModel.Make ).ToString().SplitCamelCase(), shipViewModel.Model, shipViewModel.Role);
         }
 
         #endregion Query Handling
