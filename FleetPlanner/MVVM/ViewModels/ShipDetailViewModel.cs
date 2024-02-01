@@ -178,10 +178,7 @@ namespace FleetPlanner.MVVM.ViewModels
         protected Currency CurrencyAsEnum
         {
             get => currency;
-            set
-            {
-                Currency = value.ToString();
-            }
+            set => Currency = value.ToString();
         }
         public string Currency
         {
@@ -215,7 +212,7 @@ namespace FleetPlanner.MVVM.ViewModels
         protected InsuranceType InsuranceTypeAsEnum
         {
             get => insuranceType;
-            set => SetProperty( ref insuranceType, value );
+            set => InsuranceType = value.ToString();
         }
         public string InsuranceType
         {
@@ -224,12 +221,7 @@ namespace FleetPlanner.MVVM.ViewModels
             {
                 string v = value.RemoveSpaces();
                 if( Enum.TryParse( v, out InsuranceType t ) )
-                {
                     SetProperty( ref insuranceType, t );
-                }
-                else
-                {
-                }
             }
         }
 

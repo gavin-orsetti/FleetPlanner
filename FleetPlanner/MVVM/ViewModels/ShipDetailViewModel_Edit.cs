@@ -48,8 +48,21 @@ namespace FleetPlanner.MVVM.ViewModels
             Constants.Currency.UEC.ToString()
         ];
 
+        private ObservableRangeCollection<string> insuranceTypes;
+        public ObservableRangeCollection<string> InsuranceTypes => insuranceTypes ??=
+        [
+            Constants.InsuranceType.ThreeMonth.ToSplitString(),
+            Constants.InsuranceType.SixMonth.ToSplitString(),
+            Constants.InsuranceType.TwelveMonth.ToSplitString(),
+            Constants.InsuranceType.OneHundredTwentyMonth.ToSplitString(),
+            Constants.InsuranceType.Lifetime.ToSplitString()
+        ];
+
         private AsyncCommand saveCommand;
         public AsyncCommand SaveCommand => saveCommand ??= new AsyncCommand( Save );
+
+        private AsyncCommand addNewBalanceSheetItemCommand;
+        public AsyncCommand AddNewBalanceSheetItemCommand => addNewBalanceSheetItemCommand ??= new AsyncCommand( AddNewBalanceSheetItem );
 
         #region Methods
 
@@ -63,6 +76,31 @@ namespace FleetPlanner.MVVM.ViewModels
             {
                 throw new Exception( "Trying to update Ship Detail that does not exist in db" );
             }
+        }
+
+        private async Task AddNewBalanceSheetItem()
+        {
+            ShipBalanceSheetDatabaseService shipBalanceSheetDbs = await ServiceProvider.GetShipBalanceSheetDatabaseServiceAsync();
+
+            ShipBalanceSheet sbs = new()
+            {
+                ShipDetailId = Id,
+                Key = Constants.DefaultBalanceSheetItemKey,
+                Value = 0,
+                IsPositive = false
+            };
+
+            if( await shipBalanceSheetDbs.Insert( sbs ) )
+            {
+                Console.WriteLine( sbs.Id );
+                if( sbs.Id > 0 )
+                {
+                    ShipBalanceSheetViewModel sbsvm = new ShipBalanceSheetViewModel( sbs );
+
+                    BalanceSheet.Add( sbsvm );
+                }
+            }
+
         }
 
         private async Task Update()
@@ -83,13 +121,16 @@ namespace FleetPlanner.MVVM.ViewModels
             ShipDetail.HourlyIncome = HourlyIncome;
             ShipDetail.ExpectedProfit = ExpectedProfit;
             ShipDetail.Purchased = Purchased;
-            Console.WriteLine( CurrencyAsEnum.ToString() );
-            Console.WriteLine( (int)CurrencyAsEnum );
             ShipDetail.Currency = (int)CurrencyAsEnum;
             ShipDetail.CashPurchase = CashPurchase;
             ShipDetail.MeltValue = MeltValue;
             ShipDetail.InsuranceType = (int)InsuranceTypeAsEnum;
             ShipDetail.AnnualInsuranceCost = AnnualInsuranceCost;
+
+            foreach( ShipBalanceSheetViewModel sbsvm in BalanceSheet )
+            {
+                await sbsvm.UpdateCommand.ExecuteAsync();
+            }
 
             await shipDetailDbs.Update( ShipDetail );
 
@@ -107,12 +148,10 @@ namespace FleetPlanner.MVVM.ViewModels
             switch( kvp.Key )
             {
                 case Routes.ShipDetailQueryParams.Id:
-                    Console.WriteLine( "--------------------------------------------- EDIT SHIP DETAIL PAGE ---------------------------------------------" );
                     await Populate( (int)kvp.Value );
                     break;
                 case Routes.ShipDetailQueryParams.Object:
                     await Populate( (ShipDetail)kvp.Value );
-                    Console.WriteLine( "--------------------------------------------- EDIT SHIP DETAIL PAGE ---------------------------------------------" );
                     break;
                 default:
                     break;

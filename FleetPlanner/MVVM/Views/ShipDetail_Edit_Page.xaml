@@ -26,7 +26,7 @@
         <Grid Grid.Row="0">
             <ScrollView>
                 <!--Grid has 18 rows-->
-                <Grid  RowDefinitions="60,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50,50">
+                <Grid  RowDefinitions="60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60,60">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
                         <ColumnDefinition/>
@@ -49,7 +49,7 @@
                                  Grid.Row="2"
                                  VerticalOptions="Center"
                                  Padding="5"/>
-                    
+
                     <Grid Grid.ColumnSpan="2" 
                           Grid.Row="3" 
                           Grid.RowSpan="5">
@@ -120,12 +120,18 @@
                                    SelectedItem="{Binding Currency, Mode=TwoWay}"
                                    Grid.Row="16"
                                    Grid.Column="0"
-                                   Grid.ColumnSpan="2"/>
+                                   Grid.ColumnSpan="2"
+                                   Padding="5"
+                                   AllowClear="False"/>
 
-                    <Label Text="{Binding InsuranceType, StringFormat='Insurance Type: {0}'}"
-                           Grid.Row="17"
-                           Grid.Column="0"
-                           Grid.ColumnSpan="2"/>
+                    <u:PickerField Title="Insurance Type"
+                                   ItemsSource="{Binding InsuranceTypes}"
+                                   SelectedItem="{Binding InsuranceType, Mode=TwoWay}"
+                                   Grid.Row="17"
+                                   Grid.Column="0"
+                                   Grid.ColumnSpan="2"
+                                   Padding="5"
+                                   AllowClear="False"/>
                 </Grid>
             </ScrollView>
         </Grid>
@@ -144,6 +150,7 @@
                             EmptyView="Nothing to show. Tap Edit in the title bar to add data.">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
+
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition/>
@@ -151,11 +158,31 @@
                                 <ColumnDefinition/>
                             </Grid.ColumnDefinitions>
 
-                            <Label Text="{Binding Key}"
-                                   Grid.Column="0"/>
+                            <u:TextField Title="Line Item" 
+                                             Text="{Binding Key}"
+                                             Grid.Column="0"
+                                             Padding="5"
+                                             AllowClear="True"/>
 
-                            <Label Text="{Binding Value}"
-                                   Grid.Column="2"/>
+                            <SwipeView Grid.Column="2"
+                                       Margin="5">
+                                <SwipeView.RightItems>
+                                    <SwipeItems>
+                                        <SwipeItem Text="-/+"
+                                                   BackgroundColor="{AppThemeBinding Light={StaticResource Warning}, 
+                                                                                     Dark={StaticResource Warning}}"
+                                                   Command="{Binding FlipSignCommand}"/>
+                                    </SwipeItems>
+                                </SwipeView.RightItems>
+
+                                <u:TextField Title="Value" 
+                                                 Text="{Binding Value}"
+                                                 TextColor="{Binding TextColor}"
+                                                 Keyboard="Numeric"
+                                                 BorderThickness="5"
+                                                 InputBackgroundColor="{Binding Color}"
+                                                 />
+                            </SwipeView>
                         </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
@@ -164,10 +191,9 @@
         </Grid>
 
         <Button Text="Add Line Item"
-                StyleClass="WarningElevatedButton"
+                StyleClass="TertiaryElevatedButton"
                 Grid.Row="2"
                 Margin="5"
-                Command="{Binding GoToReTaskCommand}"
-                CommandParameter="{Binding Id}"/>
+                Command="{Binding AddNewBalanceSheetItemCommand}"/>
     </Grid>
 </ContentPage>

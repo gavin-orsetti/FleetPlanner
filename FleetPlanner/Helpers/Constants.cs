@@ -15,7 +15,15 @@ namespace FleetPlanner.Helpers
         public const string DefaultAreaOfOperation = "Stanton";
         public const string DefaultManifesto = "Replace me";
         #endregion Fleet Defaults
+
+        #region Ship Balance Sheet Defaults
+        public const string DefaultBalanceSheetItemKey = "New Item";
+        #endregion Ship Balance Sheet Defaults
         #endregion Strings
+
+        #region Fix Me Colors
+        public static readonly Color ColorResourceLookupFailed = Colors.HotPink;
+        #endregion Fix Me Colors
 
         #region Enums
         public enum QueryFlag { Async, Sycn }

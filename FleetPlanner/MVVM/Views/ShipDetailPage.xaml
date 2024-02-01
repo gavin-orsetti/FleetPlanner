@@ -9,7 +9,9 @@
     </ContentPage.BindingContext>
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Edit" Command="{Binding GoToEditShipDetailCommand}" CommandParameter="{Binding Id}"/>
+        <ToolbarItem Text="Edit" 
+                     Command="{Binding GoToEditShipDetailCommand}" 
+                     CommandParameter="{Binding Id}"/>
     </ContentPage.ToolbarItems>
     
     <Grid>
@@ -32,17 +34,21 @@
                     <Label Text="{Binding Callsign, StringFormat='Callsign: {0}'}"
                            Grid.ColumnSpan="2"
                            Grid.Row="0"
-                           VerticalOptions="Center"/>
+                           VerticalOptions="Center"
+                           Padding="5"/>
 
                     <Label Text="{Binding Role, StringFormat='Role: {0}'}"
                            Grid.ColumnSpan="2"
                            Grid.Row="1"
-                           VerticalOptions="Center"/>
+                           VerticalOptions="Center"
+                           Padding="5"/>
 
                     <Label Text="{Binding Responsibility, StringFormat='Responsibility: {0}'}"
                            Grid.ColumnSpan="2"
                            Grid.Row="2"
-                           VerticalOptions="Center"/>
+                           VerticalOptions="Center"
+                           Padding="5"/>
+                    
                     <Grid Grid.ColumnSpan="2" 
                           Grid.Row="3" 
                           Grid.RowSpan="7">
@@ -57,13 +63,15 @@
                         <BoxView StyleClass="Divider"
                                  Grid.Row="1"/>
                         <ScrollView Grid.Row="2">
-                            <Label Text="{Binding Notes}"/>
+                            <Label Text="{Binding Notes}"
+                                   Padding="5"/>
                         </ScrollView>
                     </Grid>
 
                     <VerticalStackLayout Grid.Row="9"
                                          Grid.RowSpan="4"
-                                         Grid.Column="0">
+                                         Grid.Column="0"
+                                         Padding="5">
                         <Label Text="Full Crew:"/>
                         <Label Text="{Binding PlayerCrewMax, StringFormat='Players: {0}'}"/>
                         <Label Text="{Binding NpcCrewMax, StringFormat='NPCs: {0}'}"/>
@@ -72,7 +80,8 @@
                     
                     <VerticalStackLayout Grid.Row="9"
                                          Grid.RowSpan="4"
-                                         Grid.Column="1">
+                                         Grid.Column="1"
+                                         Padding="5">
                         <Label Text="Skeleton Crew:"/>
                         <Label Text="{Binding PlayerCrewMin, StringFormat='Players: {0}'}"/>
                         <Label Text="{Binding NpcCrewMin, StringFormat='NPCs: {0}'}"/>
@@ -81,28 +90,35 @@
 
                     <Label Text="{Binding PersonalAttachmentRating, StringFormat='Personal Attachment Rating (PAR): {0}'}"
                            Grid.ColumnSpan="2"
-                           Grid.Row="13"/>
+                           Grid.Row="13"
+                           Padding="5"/>
+                    
                     <Label Text="{Binding Integrality, StringFormat='Task Unit Integrality: {0}'}"
                            Grid.ColumnSpan="2"
-                           Grid.Row="14"/>
+                           Grid.Row="14"
+                           Padding="5"/>
 
                     <Label Text="{Binding Purchased, StringFormat='Purchased: {0}'}"
                            Grid.Row="15"
-                           Grid.Column="0"/>
+                           Grid.Column="0"
+                           Padding="5"/>
                     
                     <Label Text="{Binding MeltValue, StringFormat='Melt Value: {0}'}"
                            Grid.Row="15"
-                           Grid.Column="1"/>
+                           Grid.Column="1"
+                           Padding="5"/>
                     
                     <Label Text="{Binding Currency, StringFormat='Preffered Purchase Currency: {0}'}"
                            Grid.Row="16"
                            Grid.Column="0"
-                           Grid.ColumnSpan="2"/>
+                           Grid.ColumnSpan="2"
+                           Padding="5"/>
 
                     <Label Text="{Binding InsuranceType, StringFormat='Insurance Type: {0}'}"
                            Grid.Row="17"
                            Grid.Column="0"
-                           Grid.ColumnSpan="2"/>
+                           Grid.ColumnSpan="2"
+                           Padding="5"/>
                 </Grid>
             </ScrollView>
         </Grid>
@@ -115,7 +131,8 @@
             </Grid.RowDefinitions>
 
             <Label Text="{Binding ExpectedProfit, StringFormat='Expected Profit: {0} UEC/hour'}"
-                   Grid.Row="0"/>
+                   Grid.Row="0"
+                   Padding="5"/>
             <CollectionView Grid.Row="1" 
                             ItemsSource="{Binding BalanceSheet}"
                             EmptyView="Nothing to show. Tap Edit in the title bar to add data.">

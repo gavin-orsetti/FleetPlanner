@@ -10,6 +10,7 @@ namespace FleetPlanner.Services
 {
     public class ShipBalanceSheetDatabaseService : DatabaseService<ShipBalanceSheetDatabaseService, ShipBalanceSheet>
     {
+        private ShipBalanceSheetDatabaseService() { }
 
         new public static async Task<ShipBalanceSheetDatabaseService> Create()
         {
