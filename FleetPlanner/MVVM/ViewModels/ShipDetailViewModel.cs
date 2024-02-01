@@ -272,6 +272,37 @@ namespace FleetPlanner.MVVM.ViewModels
             await Shell.Current.GoToAsync( Routes.ShipDetail_EditPage_PageName, queryParams );
         }
 
+        protected async Task DeleteBalanceSheetItem( int id )
+        {
+            ShipBalanceSheetDatabaseService sbsDbs = await ServiceProvider.GetShipBalanceSheetDatabaseServiceAsync();
+
+            ShipBalanceSheetViewModel sbsvm = BalanceSheet.Where( x => x.Id == id ).FirstOrDefault();
+            BalanceSheet.Remove( sbsvm );
+
+            _ = sbsDbs.DeleteAsync( id );
+        }
+
+        protected void BalanceSheetValueUpdated()
+        {
+            long eProfit = 0;
+
+            foreach( ShipBalanceSheetViewModel item in BalanceSheet )
+            {
+                switch( item.IsPositive )
+                {
+                    case true:
+                        eProfit += item.Value;
+                        break;
+                    case false:
+                        eProfit -= item.Value;
+                        break;
+                }
+            }
+
+            ExpectedProfit = eProfit;
+        }
+
+
         #region Query Handling
 
         private protected override async Task EvaluateQueryParams( KeyValuePair<string, object> kvp )
@@ -352,7 +383,8 @@ namespace FleetPlanner.MVVM.ViewModels
 
             foreach( ShipBalanceSheet sheetItem in sheetItems )
             {
-                ShipBalanceSheetViewModel bsvm = new( sheetItem );
+                ShipBalanceSheetViewModel bsvm = new( sheetItem, DeleteBalanceSheetItem );
+                bsvm.ValueUpdated += BalanceSheetValueUpdated;
                 bsVms.Add( bsvm );
             }
 
@@ -369,7 +401,6 @@ namespace FleetPlanner.MVVM.ViewModels
 
             return (( (ShipManufacturer)shipViewModel.Make ).ToString().SplitCamelCase(), shipViewModel.Model, shipViewModel.Role);
         }
-
         #endregion Query Handling
         #endregion Methods
     }

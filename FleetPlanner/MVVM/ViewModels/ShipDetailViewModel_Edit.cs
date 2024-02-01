@@ -95,8 +95,8 @@ namespace FleetPlanner.MVVM.ViewModels
                 Console.WriteLine( sbs.Id );
                 if( sbs.Id > 0 )
                 {
-                    ShipBalanceSheetViewModel sbsvm = new ShipBalanceSheetViewModel( sbs );
-
+                    ShipBalanceSheetViewModel sbsvm = new( sbs, DeleteBalanceSheetItem );
+                    sbsvm.ValueUpdated += BalanceSheetValueUpdated;
                     BalanceSheet.Add( sbsvm );
                 }
             }
@@ -180,6 +180,8 @@ namespace FleetPlanner.MVVM.ViewModels
 
             BalanceSheet.Clear();
             BalanceSheet.AddRange( sbsVMs );
+
+            BalanceSheetValueUpdated();
         }
 
         #endregion Query Handling

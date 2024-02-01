@@ -77,7 +77,7 @@ namespace FleetPlanner.Services
             throw new NotImplementedException();
         }
 
-        public Task<bool> DeleteAsync<T>( int id )
+        public Task<bool> DeleteAsync( int id )
         {
             throw new NotImplementedException();
         }

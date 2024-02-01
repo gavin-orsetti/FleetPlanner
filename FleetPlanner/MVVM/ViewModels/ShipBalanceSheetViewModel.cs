@@ -19,7 +19,7 @@ namespace FleetPlanner.MVVM.ViewModels
 {
     public class ShipBalanceSheetViewModel : ViewModelBase
     {
-        public ShipBalanceSheetViewModel( ShipBalanceSheet bs )
+        public ShipBalanceSheetViewModel( ShipBalanceSheet bs, Func<int, Task> delete )
         {
             balanceSheet = bs;
             Id = bs.Id;
@@ -27,6 +27,14 @@ namespace FleetPlanner.MVVM.ViewModels
             Key = bs.Key;
             Value = bs.Value;
             IsPositive = bs.IsPositive;
+
+            deleteCommand = new AsyncCommand<int>( delete );
+        }
+        private Action valueUpdated;
+        public Action ValueUpdated
+        {
+            get => valueUpdated ??= () => { }; // We need this empty lambda because we call ValueUpdated from our property setters, which are triggered before we add anything to the action and throw a NullReferenceException if we try and call an empty action.
+            set => SetProperty( ref valueUpdated, value );
         }
 
         private ShipBalanceSheet balanceSheet;
@@ -56,7 +64,11 @@ namespace FleetPlanner.MVVM.ViewModels
         public uint Value
         {
             get => storedValue;
-            set => SetProperty( ref storedValue, value );
+            set
+            {
+                SetProperty( ref storedValue, value );
+                ValueUpdated.Invoke();
+            }
         }
 
         private bool isPositive;
@@ -68,6 +80,7 @@ namespace FleetPlanner.MVVM.ViewModels
                 SetProperty( ref isPositive, value );
                 Color = value ? TertiaryColor : ErrorColor;
                 TextColor = value ? OnTertiaryColor : OnErrorColor;
+                Sign = value ? NegativeSign : PositiveSign; // if the value is positive we want to show the negative sign so the user knows that tapping the icon will make the number negative and visa versa
             }
         }
 
@@ -149,26 +162,61 @@ namespace FleetPlanner.MVVM.ViewModels
             set => SetProperty( ref tertiaryColor, value );
         }
 
+        private FontImageSource sign;
+        public FontImageSource Sign
+        {
+            get => sign;
+            set => SetProperty( ref sign, value );
+        }
+
+        private FontImageSource negativeSign;
+        public FontImageSource NegativeSign
+        {
+            get
+            {
+                if( negativeSign != null )
+                    return negativeSign;
+
+                FontImageSource fis = new FontImageSource();
+                fis.FontFamily = "MaterialSharp";
+                fis.Glyph = UraniumUI.Icons.MaterialIcons.MaterialSharp.Exposure;
+                NegativeSign = fis;
+                return fis;
+            }
+            set => SetProperty( ref negativeSign, value );
+
+        }
+
+        private FontImageSource positiveSign;
+        public FontImageSource PositiveSign
+        {
+            get
+            {
+                if( positiveSign != null )
+                    return positiveSign;
+
+                FontImageSource fis = new FontImageSource();
+                fis.FontFamily = "MaterialSharp";
+                fis.Glyph = UraniumUI.Icons.MaterialIcons.MaterialSharp.Iso;
+                PositiveSign = fis;
+                return fis;
+            }
+            set => SetProperty( ref positiveSign, value );
+        }
+
         private AsyncCommand updateCommand;
         public AsyncCommand UpdateCommand => updateCommand ??= new AsyncCommand( Update );
 
         private Command flipSignCommand;
         public Command FlipSignCommand => flipSignCommand ??= new Command( FlipSign );
 
+        private AsyncCommand<int> deleteCommand;
+        public AsyncCommand<int> DeleteCommand => deleteCommand;
+
         private void FlipSign()
         {
             IsPositive = !IsPositive;
-
-            if( IsPositive )
-            {
-                Color = TertiaryColor;
-                TextColor = OnTertiaryColor;
-            }
-            else
-            {
-                Color = ErrorColor;
-                TextColor = OnErrorColor;
-            }
+            ValueUpdated.Invoke();
         }
 
         private async Task Update()

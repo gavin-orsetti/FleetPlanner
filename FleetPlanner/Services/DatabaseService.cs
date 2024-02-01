@@ -116,12 +116,12 @@ namespace FleetPlanner.Services
         }
 
         /// <summary>
-        /// Deletes the row with the specified id from the table mathing type T
+        /// Deletes the row with the specified id from the table matching type T
         /// </summary>
         /// <typeparam name="T">The table type to delete a row from</typeparam>
         /// <param name="id">Id of the row to delete</param>
         /// <returns>true on success, false on failure</returns>
-        public async Task<bool> DeleteAsync<T>( int id )
+        public async Task<bool> DeleteAsync( int id )
         {
             return await instance.DeleteRowAsync<T>( id );
         }

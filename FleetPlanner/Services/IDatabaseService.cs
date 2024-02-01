@@ -63,9 +63,8 @@ namespace FleetPlanner.Services
         /// <summary>
         /// Deletes the item with the passed in Id from the table matching type T
         /// </summary>
-        /// <typeparam name="T">The Type of the item to delete</typeparam>
         /// <param name="id">the id of the item to delete</param>
         /// <returns>true on successs false on failure</returns>
-        Task<bool> DeleteAsync<T>( int id );
+        Task<bool> DeleteAsync( int id );
     }
 }

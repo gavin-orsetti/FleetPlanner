@@ -174,7 +174,7 @@ namespace FleetPlanner.MVVM.ViewModels
 
             FleetDatabaseService dBService = await ServiceProvider.GetFleetDatabaseServiceAsync();
 
-            if( await dBService.DeleteAsync<Fleet>( id ) )
+            if( await dBService.DeleteAsync( id ) )
             {
                 if( RefreshParentView != null )
                 {
