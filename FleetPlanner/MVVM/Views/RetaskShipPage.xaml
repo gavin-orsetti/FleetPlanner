@@ -1,12 +1,47 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:FleetPlanner.MVVM.ViewModels"
+             xmlns:uCore="http://schemas.enisn-projects.io/dotnet/maui/uraniumui"
+             xmlns:u="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+             xmlns:m="clr-namespace:UraniumUI.Icons.MaterialIcons;assembly=UraniumUI.Icons.MaterialIcons"
              x:Class="FleetPlanner.MVVM.Views.RetaskShipPage"
              Title="RetaskShipPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Retask Ship Page"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+    <ContentPage.BindingContext>
+        <viewmodels:ReTaskViewModel />
+    </ContentPage.BindingContext>
+    <Grid>
+        <u:DataGrid ItemsSource="{Binding TaskGroups}"
+                    UseAutoColumns="False">
+            <u:DataGrid.Columns>
+                <u:DataGridColumn Title="Selection">
+                    <u:DataGridColumn.CellItemTemplate>
+                        <DataTemplate>
+                            <u:RadioButton IsChecked="{Binding IsChecked}"
+                                           ClickCommand="{Binding SelectionChangedCommand}"
+                                           CommandParameter="{Binding Id}" />
+                        </DataTemplate>
+                    </u:DataGridColumn.CellItemTemplate>
+                </u:DataGridColumn>
+                <u:DataGridColumn Title="Name">
+                    <u:DataGridColumn.CellItemTemplate>
+                        <DataTemplate>
+                            <Label Text="{Binding Name}" />
+                        </DataTemplate>
+                    </u:DataGridColumn.CellItemTemplate>
+                </u:DataGridColumn>
+                <u:DataGridColumn Title="Ship Count">
+                    <u:DataGridColumn.CellItemTemplate>
+                        <DataTemplate>
+                            <HorizontalStackLayout>
+                                <Label Text="{Binding ShipCount}"
+                                       HorizontalOptions="Center"
+                                       HorizontalTextAlignment="Center" />
+                            </HorizontalStackLayout>
+                        </DataTemplate>
+                    </u:DataGridColumn.CellItemTemplate>
+                </u:DataGridColumn>
+            </u:DataGrid.Columns>
+        </u:DataGrid>
+    </Grid>
 </ContentPage>

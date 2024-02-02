@@ -50,7 +50,7 @@ namespace FleetPlanner.MVVM.ViewModels
         {
             Dictionary<string, object> queryParams = new()
             {
-                { Routes.ReTaskQueryParams.Id, id }
+                { Routes.ReTaskQueryParams.Ship, ShipDetail }
             };
 
             await Shell.Current.GoToAsync( Routes.ReTaskShip_Page_PageName, queryParams );

@@ -14,5 +14,12 @@ namespace FleetPlanner.MVVM.ViewModels
         {
             Task_Group = tg;
         }
+
+        private bool isChecked;
+        public bool IsChecked
+        {
+            get => isChecked;
+            set => SetProperty( ref isChecked, value );
+        }
     }
 }

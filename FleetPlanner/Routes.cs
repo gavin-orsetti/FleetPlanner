@@ -104,7 +104,10 @@ namespace FleetPlanner
         public static readonly Type RetaskShip_Page_PageType = typeof( RetaskShipPage );
 
         #region Query Parameters
-        public class ReTaskQueryParams : CommonQueryParams { }
+        public class ReTaskQueryParams : CommonQueryParams
+        {
+            public const string Ship = "Ship";
+        }
         #endregion Query Parameters
         #endregion Re-Task
 

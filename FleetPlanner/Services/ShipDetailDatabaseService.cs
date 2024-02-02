@@ -10,6 +10,8 @@ namespace FleetPlanner.Services
 {
     public class ShipDetailDatabaseService : DatabaseService<ShipDetailDatabaseService, ShipDetail>
     {
+        private ShipDetailDatabaseService() { }
+
         #region Initialization
         new public static async Task<ShipDetailDatabaseService> Create()
         {
