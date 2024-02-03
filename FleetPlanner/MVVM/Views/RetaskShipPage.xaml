@@ -12,7 +12,8 @@
     </ContentPage.BindingContext>
     <Grid>
         <u:DataGrid ItemsSource="{Binding TaskGroups}"
-                    UseAutoColumns="False">
+                    UseAutoColumns="False"
+                    HorizontalOptions="Center">
             <u:DataGrid.Columns>
                 <u:DataGridColumn Title="Selection">
                     <u:DataGridColumn.CellItemTemplate>
@@ -29,18 +30,22 @@
                             <Label Text="{Binding Name}" />
                         </DataTemplate>
                     </u:DataGridColumn.CellItemTemplate>
+
                 </u:DataGridColumn>
+
                 <u:DataGridColumn Title="Ship Count">
                     <u:DataGridColumn.CellItemTemplate>
                         <DataTemplate>
                             <HorizontalStackLayout>
                                 <Label Text="{Binding ShipCount}"
-                                       HorizontalOptions="Center"
-                                       HorizontalTextAlignment="Center" />
+                          HorizontalOptions="Center"
+                          HorizontalTextAlignment="Center" />
                             </HorizontalStackLayout>
                         </DataTemplate>
                     </u:DataGridColumn.CellItemTemplate>
+
                 </u:DataGridColumn>
+
             </u:DataGrid.Columns>
         </u:DataGrid>
     </Grid>

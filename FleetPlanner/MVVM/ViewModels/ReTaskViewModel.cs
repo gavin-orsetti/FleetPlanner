@@ -20,16 +20,20 @@ namespace FleetPlanner.MVVM.ViewModels
         private ObservableRangeCollection<TaskGroupViewModel_Populated> taskGroups;
         public ObservableRangeCollection<TaskGroupViewModel_Populated> TaskGroups => taskGroups ??= new();
 
-
-        private AsyncCommand<int> selectionChangedCommand;
-        public AsyncCommand<int> SelectionChangedCommand => selectionChangedCommand ??= new AsyncCommand<int>( SelectionChanged );
-
+        private bool isInvoking = false;
         #region Methods
-        private async Task SelectionChanged( int id )
+        private void SelectionChanged( int id )
         {
-            foreach( TaskGroupViewModel_Populated taskGroup in TaskGroups )
+            if( !isInvoking )
             {
-                taskGroup.IsChecked = id == taskGroup.Id;
+                isInvoking = true;
+
+                foreach( TaskGroupViewModel_Populated taskGroup in TaskGroups )
+                {
+                    taskGroup.IsChecked = id == taskGroup.Id;
+                }
+
+                isInvoking = false;
             }
         }
 
@@ -60,7 +64,7 @@ namespace FleetPlanner.MVVM.ViewModels
                 if( t.Id == shipDetail.TaskGroupId )
                     continue;
 
-                TaskGroupViewModel_Populated tgVm = new TaskGroupViewModel_Populated( t );
+                TaskGroupViewModel_Populated tgVm = new TaskGroupViewModel_Populated( t, SelectionChanged );
                 tgVms.Add( tgVm );
             }
 
