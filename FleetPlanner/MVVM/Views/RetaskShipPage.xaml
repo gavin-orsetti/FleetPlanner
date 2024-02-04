@@ -11,42 +11,117 @@
         <viewmodels:ReTaskViewModel />
     </ContentPage.BindingContext>
     <Grid>
-        <u:DataGrid ItemsSource="{Binding TaskGroups}"
-                    UseAutoColumns="False"
-                    HorizontalOptions="Center">
-            <u:DataGrid.Columns>
-                <u:DataGridColumn Title="Selection">
-                    <u:DataGridColumn.CellItemTemplate>
-                        <DataTemplate>
-                            <u:RadioButton IsChecked="{Binding IsChecked}"
-                                           ClickCommand="{Binding SelectionChangedCommand}"
-                                           CommandParameter="{Binding Id}" />
-                        </DataTemplate>
-                    </u:DataGridColumn.CellItemTemplate>
-                </u:DataGridColumn>
-                <u:DataGridColumn Title="Name">
-                    <u:DataGridColumn.CellItemTemplate>
-                        <DataTemplate>
-                            <Label Text="{Binding Name}" />
-                        </DataTemplate>
-                    </u:DataGridColumn.CellItemTemplate>
+        <CollectionView ItemsSource="{Binding TaskGroups}"
+                        HorizontalOptions="Center">
 
-                </u:DataGridColumn>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid StyleClass="ExpanderViewContainer">
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
 
-                <u:DataGridColumn Title="Ship Count">
-                    <u:DataGridColumn.CellItemTemplate>
-                        <DataTemplate>
-                            <HorizontalStackLayout>
-                                <Label Text="{Binding ShipCount}"
-                          HorizontalOptions="Center"
-                          HorizontalTextAlignment="Center" />
-                            </HorizontalStackLayout>
-                        </DataTemplate>
-                    </u:DataGridColumn.CellItemTemplate>
+                        <uCore:ExpanderView Padding="0, 13.5"
+                                            Grid.Row="0"
+                                            IsExpanded="{Binding IsChecked, Mode=TwoWay}">
+                            <uCore:ExpanderView.Header>
+                                <Label Text="{Binding Name}"
+                                       StyleClass="OnPrimaryLabel" />
+                            </uCore:ExpanderView.Header>
 
-                </u:DataGridColumn>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
 
-            </u:DataGrid.Columns>
-        </u:DataGrid>
+                                <Label Text="NPC Crew:"
+                                       StyleClass="OnPrimaryLabel"
+                                       FontSize="Micro"
+                                       HorizontalOptions="CenterAndExpand"
+                                       Grid.Column="0"
+                                       Grid.Row="0" />
+                                <Label Text="Player Crew:"
+                                       StyleClass="OnPrimaryLabel"
+                                       FontSize="Micro"
+                                       HorizontalOptions="CenterAndExpand"
+                                       Grid.Column="1"
+                                       Grid.Row="0" />
+                                <Label Text="Profit:"
+                                       StyleClass="OnPrimaryLabel"
+                                       FontSize="Micro"
+                                       HorizontalOptions="CenterAndExpand"
+                                       Grid.Column="2"
+                                       Grid.Row="0" />
+                                <Label Text="Ships:"
+                                       StyleClass="OnPrimaryLabel"
+                                       FontSize="Micro"
+                                       HorizontalOptions="CenterAndExpand"
+                                       Grid.Column="3"
+                                       Grid.Row="0" />
+                                <Grid Grid.Column="0"
+                                      Grid.ColumnSpan="4"
+                                      Grid.Row="1"
+                                      Grid.RowSpan="2">
+
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition />
+                                    </Grid.RowDefinitions>
+                                    <VerticalStackLayout>
+                                        <Label Text="Objective"
+                                               StyleClass="OnPrimaryLabel"
+                                               HorizontalTextAlignment="Center" />
+                                        <BoxView StyleClass="Divider" />
+                                        <Label Text="{Binding Objective}"
+                                               StyleClass="OnPrimaryLabel" />
+                                    </VerticalStackLayout>
+
+                                </Grid>
+
+                                <Button Text="Re-Task"
+                                        StyleClass="WarningElevatedButton"
+                                        Command="{Binding RetaskCommand}" 
+                                        Grid.Column="0"
+                                        Grid.ColumnSpan="4"
+                                        Grid.Row="3"/>
+
+                            </Grid>
+                        </uCore:ExpanderView>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
     </Grid>
 </ContentPage>
+                    <!--
+                <CollectionView.Header>
+                <Grid ColumnDefinitions="*,*,*">
+                    <Label Grid.Column="0"
+                           Text="Selection" />
+                    <Label Grid.Column="1"
+                           Text="Task Group" />
+                    <Label Grid.Column="2"
+                           Text="Ship Count" />
+                </Grid>
+            </CollectionView.Header>
+    <Grid ColumnDefinitions="*,*,*">
+                        <u:RadioButton IsChecked="{Binding IsChecked}"
+                                       ClickCommand="{Binding SelectionChangedCommand}"
+                                       CommandParameter="{Binding Id}"
+                                       Grid.Column="0" />
+                        <Label Text="{Binding Name}"
+                               Grid.Column="1" />
+
+                        <Label Text="{Binding ShipCount}"
+                               HorizontalOptions="Center"
+                               HorizontalTextAlignment="Center"
+                               Grid.Column="2" />
+                    </Grid>-->

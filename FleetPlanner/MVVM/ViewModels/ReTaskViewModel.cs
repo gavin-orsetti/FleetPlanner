@@ -19,22 +19,43 @@ namespace FleetPlanner.MVVM.ViewModels
         private ShipDetail shipDetail;
         private ObservableRangeCollection<TaskGroupViewModel_Populated> taskGroups;
         public ObservableRangeCollection<TaskGroupViewModel_Populated> TaskGroups => taskGroups ??= new();
+        private TaskGroupViewModel_Populated selectedTaskGroup;
 
         private bool isInvoking = false;
         #region Methods
-        private void SelectionChanged( int id )
+        private void SelectionChanged( TaskGroupViewModel_Populated selection )
         {
             if( !isInvoking )
             {
                 isInvoking = true;
 
-                foreach( TaskGroupViewModel_Populated taskGroup in TaskGroups )
+                if( selectedTaskGroup != null )
                 {
-                    taskGroup.IsChecked = id == taskGroup.Id;
+                    selectedTaskGroup.IsChecked = false;
                 }
+
+                selectedTaskGroup = selection;
 
                 isInvoking = false;
             }
+        }
+
+        private async Task Retask( int id )
+        {
+            if( shipDetail != null )
+            {
+
+                ShipDetailDatabaseService shipDetailDbs = await ServiceProvider.GetShipDetailDatabaseServiceAsync();
+                shipDetail.TaskGroupId = id;
+
+                await shipDetailDbs.Update( shipDetail );
+            }
+            else
+            {
+                Console.WriteLine( "SHIP DETAIL NULL!!!" );
+            }
+
+            await Shell.Current.GoToAsync( Routes.BackOne );
         }
 
         #region Query Handling
@@ -64,13 +85,12 @@ namespace FleetPlanner.MVVM.ViewModels
                 if( t.Id == shipDetail.TaskGroupId )
                     continue;
 
-                TaskGroupViewModel_Populated tgVm = new TaskGroupViewModel_Populated( t, SelectionChanged );
+                TaskGroupViewModel_Populated tgVm = new TaskGroupViewModel_Populated( t, SelectionChanged, Retask );
                 tgVms.Add( tgVm );
             }
 
             TaskGroups.Clear();
             TaskGroups.AddRange( tgVms );
-
         }
         #endregion Query Handling
         #endregion Methods

@@ -17,28 +17,36 @@ namespace FleetPlanner.MVVM.ViewModels
             Task_Group = tg;
         }
 
-        public TaskGroupViewModel_Populated( TaskGroup tg, Action<int> selectionChangedAction )
+        public TaskGroupViewModel_Populated( TaskGroup tg, Action<TaskGroupViewModel_Populated> selectionChangedAction, Func<int, Task> RetaskAction )
         {
             Task_Group = tg;
             _selectionChanged = selectionChangedAction;
+            _retaskAction = RetaskAction;
         }
 
-        private Action<int> _selectionChanged;
+        private Action<TaskGroupViewModel_Populated> _selectionChanged;
+        private Func<int, Task> _retaskAction;
 
         private bool isChecked;
         public bool IsChecked
         {
             get => isChecked;
-            set => SetProperty( ref isChecked, value );
+            set
+            {
+                SetProperty( ref isChecked, value );
+
+                if( value )
+                    _selectionChanged.Invoke( this );
+
+            }
         }
 
-        private AsyncCommand<int> selectionChangedCommand;
-        public AsyncCommand<int> SelectionChangedCommand => selectionChangedCommand ??= new AsyncCommand<int>( SelectionChanged );
+        private AsyncCommand retaskCommand;
+        public AsyncCommand RetaskCommand => retaskCommand ??= new AsyncCommand( ReTask );
 
-
-        private async Task SelectionChanged( int id )
+        private async Task ReTask()
         {
-            _selectionChanged.Invoke( id );
+            await _retaskAction.Invoke( Id );
         }
     }
 }
