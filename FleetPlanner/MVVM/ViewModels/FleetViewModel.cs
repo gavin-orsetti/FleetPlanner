@@ -142,8 +142,8 @@ namespace FleetPlanner.MVVM.ViewModels
             set => SetProperty( ref notes, value );
         }
 
-        private ObservableRangeCollection<TaskGroupViewModel> taskGroups;
-        public ObservableRangeCollection<TaskGroupViewModel> TaskGroups
+        private ObservableRangeCollection<TaskGroupViewModel_Populated> taskGroups;
+        public ObservableRangeCollection<TaskGroupViewModel_Populated> TaskGroups
         {
             get => taskGroups ??= [];
             set => SetProperty( ref taskGroups, value );
@@ -172,29 +172,32 @@ namespace FleetPlanner.MVVM.ViewModels
                 throw new Exception( "Error 0: Object does not exist in database" );
             }
 
-            FleetDatabaseService dBService = await ServiceProvider.GetFleetDatabaseServiceAsync();
+            FleetDatabaseService fleetDbs = await ServiceProvider.GetFleetDatabaseServiceAsync();
+            await fleetDbs.DeleteAsync( id );
 
-            if( await dBService.DeleteAsync( id ) )
+            if( RefreshParentView != null )
             {
-                if( RefreshParentView != null )
+                try
                 {
-                    try
-                    {
-                        await RefreshParentView.ExecuteAsync();
-                    }
-                    catch( Exception )
-                    {
+                    await RefreshParentView.ExecuteAsync();
+                }
+                catch( Exception )
+                {
 
-                        throw;
-                    }
+                    throw;
                 }
-                else
-                {
-                    await Shell.Current.GoToAsync( Routes.BackOne );
-                }
+            }
+            else
+            {
+                await Shell.Current.GoToAsync( Routes.BackOne );
             }
         }
 
+        private async Task DeleteTaskGroup( int id )
+        {
+            TaskGroupViewModel_Populated deleted = TaskGroups.Where( x => x.Id == id ).First();
+            TaskGroups.Remove( deleted );
+        }
 
         private async Task GoToEditFleet( int id )
         {
@@ -264,11 +267,11 @@ namespace FleetPlanner.MVVM.ViewModels
         {
             TaskGroupDatabaseService dbService = await ServiceProvider.GetTaskGroupDatabaseServiceAsync();
 
-            List<TaskGroup> tgs = await dbService.GetChildrenUsingPropertyName( id, nameof( TaskGroup.FleetId ) );
+            List<TaskGroup> tgs = await dbService.GetChildrenUsingPropertyNameAsync( id, nameof( TaskGroup.FleetId ) );
             List<TaskGroupViewModel_Populated> tg_ps = new();
             foreach( TaskGroup taskGroup in tgs )
             {
-                TaskGroupViewModel_Populated taskGroupViewModel = new TaskGroupViewModel_Populated( taskGroup );
+                TaskGroupViewModel_Populated taskGroupViewModel = new TaskGroupViewModel_Populated( taskGroup, DeleteTaskGroup );
                 tg_ps.Add( taskGroupViewModel );
             }
 

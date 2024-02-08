@@ -18,10 +18,13 @@ namespace FleetPlanner.MVVM.ViewModels
 {
     public class ShipDetailViewModel_Populated : ShipDetailViewModel
     {
-        public ShipDetailViewModel_Populated( ShipDetail ship )
+        public ShipDetailViewModel_Populated( ShipDetail ship, Action<int> deleteAction )
         {
             ShipDetail = ship;
+            _deleteAction = deleteAction;
         }
+
+        private Action<int> _deleteAction;
 
         private string make;
         public string Make
@@ -48,8 +51,17 @@ namespace FleetPlanner.MVVM.ViewModels
         private AsyncCommand populateCommand;
         public AsyncCommand PopulateCommand => populateCommand ??= new AsyncCommand( Populate );
 
+        private AsyncCommand<int> deleteShipDetailCommand;
+        public AsyncCommand<int> DeleteShipDetailCommand => deleteShipDetailCommand ??= new AsyncCommand<int>( DeleteYourself );
+
         #endregion Commands
         #region Methods
+
+        new protected async Task DeleteYourself( int id )
+        {
+            await base.DeleteYourself( id );
+            _deleteAction.Invoke( id );
+        }
 
         #region Async Initialization
         private async Task Populate()

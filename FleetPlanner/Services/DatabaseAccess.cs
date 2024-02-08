@@ -97,6 +97,22 @@ namespace FleetPlanner.Services
 
             return i > 0;
         }
+
+        public async Task DeleteRange<T>( List<int> ids ) where T : IStorable, new()
+        {
+            try
+            {
+                foreach( int id in ids )
+                {
+                    await db.DeleteAsync<T>( id );
+                }
+            }
+            catch( Exception )
+            {
+
+                throw;
+            }
+        }
         #endregion Delete
 
         #endregion Operations

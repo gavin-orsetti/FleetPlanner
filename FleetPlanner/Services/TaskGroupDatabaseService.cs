@@ -44,6 +44,23 @@ namespace FleetPlanner.Services
         #endregion Initialization
 
         #region Database Operations
+        new public async Task DeleteAsync( int id )
+        {
+            ShipDetailDatabaseService shipDetailDbs = await ServiceProvider.GetShipDetailDatabaseServiceAsync();
+            await shipDetailDbs.DeleteWithParentTaskGroupIdAsync( id );
+
+            await base.DeleteAsync( id );
+        }
+
+
+        public async Task DeleteWithFleetIdAsync( int id )
+        {
+            List<TaskGroup> taskGroups = await GetChildrenUsingPropertyNameAsync( id, nameof( TaskGroup.FleetId ) );
+            foreach( TaskGroup taskGroup in taskGroups )
+            {
+                await DeleteAsync( taskGroup.Id );
+            }
+        }
         #endregion Database Operations
     }
 }

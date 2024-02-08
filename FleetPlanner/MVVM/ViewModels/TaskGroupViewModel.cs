@@ -1,4 +1,5 @@
 ﻿using FleetPlanner.MVVM.Models;
+using FleetPlanner.Services;
 
 using MvvmHelpers;
 using MvvmHelpers.Commands;
@@ -8,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using ServiceProvider = FleetPlanner.Services.ServiceProvider;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
@@ -109,10 +112,21 @@ namespace FleetPlanner.MVVM.ViewModels
 
         private AsyncCommand<int> goToEditTaskGroupCommand;
         public AsyncCommand<int> GoToEditTaskGroupCommand => goToEditTaskGroupCommand ??= new AsyncCommand<int>( GoToEditTaskGroup );
+
+
+
         #endregion Commands
 
         #region Methods
 
+        protected async Task DeleteYourself( int id, bool navigateBack = true )
+        {
+            TaskGroupDatabaseService taskGroupDbs = await ServiceProvider.GetTaskGroupDatabaseServiceAsync();
+
+            await taskGroupDbs.DeleteAsync( id );
+            if( navigateBack )
+                await Shell.Current.GoToAsync( Routes.BackOne );
+        }
 
         private async Task GoToTaskGroup( int id )
         {

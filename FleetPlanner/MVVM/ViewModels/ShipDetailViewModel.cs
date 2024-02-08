@@ -248,7 +248,6 @@ namespace FleetPlanner.MVVM.ViewModels
 
         public AsyncCommand<int> GoToEditShipDetailCommand => goToEditShipDetailCommand ??= new AsyncCommand<int>( GoToEditShipDetail );
 
-
         #region Methods
 
         private async Task GoToShipDetail( int id )
@@ -270,6 +269,12 @@ namespace FleetPlanner.MVVM.ViewModels
             };
 
             await Shell.Current.GoToAsync( Routes.ShipDetail_EditPage_PageName, queryParams );
+        }
+
+        protected async Task DeleteYourself( int id )
+        {
+            ShipDetailDatabaseService shipDetailDbs = await ServiceProvider.GetShipDetailDatabaseServiceAsync();
+            await shipDetailDbs.DeleteAsync( id );
         }
 
         protected async Task DeleteBalanceSheetItem( int id )
@@ -377,7 +382,7 @@ namespace FleetPlanner.MVVM.ViewModels
         protected async Task<List<ShipBalanceSheetViewModel>> GetShipBalanceSheetItemViewModels()
         {
             ShipBalanceSheetDatabaseService shipBalanceSheetDbs = await ServiceProvider.GetShipBalanceSheetDatabaseServiceAsync();
-            List<ShipBalanceSheet> sheetItems = await shipBalanceSheetDbs.GetChildrenUsingPropertyName( ShipDetail.Id, nameof( ShipBalanceSheet.ShipDetailId ) );
+            List<ShipBalanceSheet> sheetItems = await shipBalanceSheetDbs.GetChildrenUsingPropertyNameAsync( ShipDetail.Id, nameof( ShipBalanceSheet.ShipDetailId ) );
 
             List<ShipBalanceSheetViewModel> bsVms = [];
 

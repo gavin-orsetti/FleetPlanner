@@ -134,7 +134,7 @@
                                     <SwipeItem IconImageSource="{FontImageSource FontFamily=MaterialSharp,
                                                         Glyph={x:Static m:MaterialSharp.Clear}}"
                                                BackgroundColor="{AppThemeBinding Light={StaticResource Error}, Dark={StaticResource Error}}"
-                                               Command="{Binding DeleteCommand}"
+                                               Command="{Binding DeleteShipDetailCommand}"
                                                CommandParameter="{Binding Id}" />
                                 </SwipeItems>
                             </SwipeView.RightItems>

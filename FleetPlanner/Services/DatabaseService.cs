@@ -52,7 +52,7 @@ namespace FleetPlanner.Services
             return await instance.GetLastRow<T>();
         }
 
-        public async Task<List<T>> GetChildrenUsingPropertyName( int parentId, string propertyName )
+        public async Task<List<T>> GetChildrenUsingPropertyNameAsync( int parentId, string propertyName )
         {
             string tableName = mapping.TableName;
             TableMapping.Column cn = mapping.FindColumnWithPropertyName( propertyName );

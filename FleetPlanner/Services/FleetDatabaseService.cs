@@ -69,6 +69,14 @@ namespace FleetPlanner.Services
         #endregion Update Data
 
         #region Delete Data
+        new public async Task DeleteAsync( int id )
+        {
+            TaskGroupDatabaseService taskGroupDbs = await ServiceProvider.GetTaskGroupDatabaseServiceAsync();
+            await taskGroupDbs.DeleteWithFleetIdAsync( id );
+
+            await base.DeleteAsync( id );
+        }
+
         #endregion Delete Data
 
         #endregion Database Operations

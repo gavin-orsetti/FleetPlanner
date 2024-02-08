@@ -37,5 +37,11 @@ namespace FleetPlanner.Services
                 throw e.InnerException;
             }
         }
+
+        public async Task DeleteWithShipIdAsync( int shipDetailId )
+        {
+            List<ShipBalanceSheet> sheets = await GetChildrenUsingPropertyNameAsync( shipDetailId, nameof( ShipBalanceSheet.ShipDetailId ) );
+            await instance.DeleteRange<ShipBalanceSheet>( sheets.Select( x => x.Id ).ToList() );
+        }
     }
 }

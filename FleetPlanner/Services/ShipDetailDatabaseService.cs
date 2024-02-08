@@ -39,5 +39,26 @@ namespace FleetPlanner.Services
             }
         }
         #endregion Initialization
+
+        #region Delete
+        new public async Task<bool> DeleteAsync( int id )
+        {
+            ShipBalanceSheetDatabaseService shipBalanceSheetDbs = await ServiceProvider.GetShipBalanceSheetDatabaseServiceAsync();
+
+            await shipBalanceSheetDbs.DeleteWithShipIdAsync( id );
+            return await base.DeleteAsync( id );
+        }
+
+        public async Task DeleteWithParentTaskGroupIdAsync( int id )
+        {
+            List<ShipDetail> shipDetails = await GetChildrenUsingPropertyNameAsync( id, nameof( ShipDetail.TaskGroupId ) );
+
+            foreach( ShipDetail shipDetail in shipDetails )
+            {
+                await DeleteAsync( shipDetail.Id );
+            }
+        }
+        #endregion Delete
+
     }
 }

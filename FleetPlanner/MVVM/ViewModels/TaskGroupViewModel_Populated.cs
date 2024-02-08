@@ -24,8 +24,15 @@ namespace FleetPlanner.MVVM.ViewModels
             _retaskAction = RetaskAction;
         }
 
+        public TaskGroupViewModel_Populated( TaskGroup tg, Func<int, Task> DeleteGroupAction )
+        {
+            Task_Group = tg;
+            _deleteGroup = DeleteGroupAction;
+        }
+
         private Action<TaskGroupViewModel_Populated> _selectionChanged;
         private Func<int, Task> _retaskAction;
+        private Func<int, Task> _deleteGroup;
 
         private bool isChecked;
         public bool IsChecked
@@ -44,9 +51,18 @@ namespace FleetPlanner.MVVM.ViewModels
         private AsyncCommand retaskCommand;
         public AsyncCommand RetaskCommand => retaskCommand ??= new AsyncCommand( ReTask );
 
+        private AsyncCommand<int> deleteCommand;
+        public AsyncCommand<int> DeleteCommand => deleteCommand ??= new AsyncCommand<int>( Delete );
+
         private async Task ReTask()
         {
             await _retaskAction.Invoke( Id );
+        }
+
+        private async Task Delete( int id )
+        {
+            await DeleteYourself( id, false );
+            await _deleteGroup.Invoke( id );
         }
     }
 }

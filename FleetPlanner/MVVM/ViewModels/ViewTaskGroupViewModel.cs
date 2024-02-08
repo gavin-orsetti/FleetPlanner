@@ -2,6 +2,7 @@
 using FleetPlanner.Services;
 
 using MvvmHelpers;
+using MvvmHelpers.Commands;
 
 using System;
 using System.Collections.Generic;
@@ -36,7 +37,19 @@ namespace FleetPlanner.MVVM.ViewModels
             set => SetProperty( ref shipDetailShips, value );
         }
 
+
+        #region Commands
+        private Microsoft.Maui.Controls.Command<int> deleteShipDetailCommand;
+        public Microsoft.Maui.Controls.Command<int> DeleteShipDetailCommand => deleteShipDetailCommand ??= new Microsoft.Maui.Controls.Command<int>( DeleteShipDetail );
+        #endregion Commands
+
         #region Methods
+        private void DeleteShipDetail( int id )
+        {
+            ShipDetailViewModel_Populated sd = ShipDetailShips.Where( x => x.Id == id ).First();
+            ShipDetailShips.Remove( sd );
+        }
+
         #region Query Handling
         private protected override async Task EvaluateQueryParams( KeyValuePair<string, object> kvp )
         {
@@ -95,11 +108,11 @@ namespace FleetPlanner.MVVM.ViewModels
         private async Task GetShips()
         {
             ShipDetailDatabaseService shipDetailDbs = await ServiceProvider.GetShipDetailDatabaseServiceAsync();
-            List<ShipDetail> shps = await shipDetailDbs.GetChildrenUsingPropertyName( Task_Group.Id, nameof( ShipDetail.TaskGroupId ) );
+            List<ShipDetail> shps = await shipDetailDbs.GetChildrenUsingPropertyNameAsync( Task_Group.Id, nameof( ShipDetail.TaskGroupId ) );
             List<ShipDetailViewModel_Populated> sdvm_ps = [];
             foreach( ShipDetail shp in shps )
             {
-                ShipDetailViewModel_Populated sdvm_p = new ShipDetailViewModel_Populated( shp );
+                ShipDetailViewModel_Populated sdvm_p = new ShipDetailViewModel_Populated( shp, DeleteShipDetail );
                 await sdvm_p.PopulateCommand.ExecuteAsync();
                 sdvm_ps.Add( sdvm_p );
             }
