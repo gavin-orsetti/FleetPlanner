@@ -143,13 +143,20 @@
         <!--ShipBalanceSheet Collection-->
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="100" />
+                <RowDefinition Height="75" />
+                <RowDefinition Height="75" />
                 <RowDefinition />
             </Grid.RowDefinitions>
 
+            <u:TextField Title="Loops Per Hour"
+                         Text="{Binding LoopsPerHour}"
+                         Keyboard="Numeric"
+                         Grid.Row="0"
+                         Padding="5" />
+
             <Label Text="{Binding ExpectedProfit, StringFormat='Expected Profit: {0} UEC/hour'}"
-                   Grid.Row="0" />
-            <CollectionView Grid.Row="1"
+                   Grid.Row="1" />
+            <CollectionView Grid.Row="2"
                             ItemsSource="{Binding BalanceSheet}"
                             EmptyView="Nothing to show. Tap Edit in the title bar to add data.">
                 <CollectionView.ItemTemplate>

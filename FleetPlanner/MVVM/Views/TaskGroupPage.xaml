@@ -10,7 +10,11 @@
     <ContentPage.BindingContext>
         <viewmodels:ViewTaskGroupViewModel />
     </ContentPage.BindingContext>
-
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Edit"
+                     Command="{Binding GoToEditTaskGroupCommand}"
+                     CommandParameter="{Binding Id}" />
+    </ContentPage.ToolbarItems>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition />

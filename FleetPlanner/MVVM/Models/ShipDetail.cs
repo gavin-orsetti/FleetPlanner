@@ -23,7 +23,7 @@ namespace FleetPlanner.MVVM.Models
         public int PlayerCrewMax { get; set; }
         public int CrewTotalMin { get; set; }
         public int CrewTotalMax { get; set; }
-        public long HourlyIncome { get; set; }
+        public decimal LoopsPerHour { get; set; }
         public long ExpectedProfit { get; set; }
         public bool Purchased { get; set; }
         public int Currency { get; set; }

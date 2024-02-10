@@ -118,7 +118,7 @@ namespace FleetPlanner.MVVM.ViewModels
             ShipDetail.PlayerCrewMax = PlayerCrewMax;
             ShipDetail.CrewTotalMax = CrewTotalMax;
             ShipDetail.CrewTotalMin = CrewTotalMin;
-            ShipDetail.HourlyIncome = HourlyIncome;
+            ShipDetail.LoopsPerHour = LoopsPerHour;
             ShipDetail.ExpectedProfit = ExpectedProfit;
             ShipDetail.Purchased = Purchased;
             ShipDetail.Currency = (int)CurrencyAsEnum;

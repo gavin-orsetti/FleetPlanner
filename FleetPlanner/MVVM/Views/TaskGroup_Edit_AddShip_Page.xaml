@@ -1,12 +1,112 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:FleetPlanner.MVVM.ViewModels"
+             xmlns:uCore="http://schemas.enisn-projects.io/dotnet/maui/uraniumui"
+             xmlns:u="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+             xmlns:m="clr-namespace:UraniumUI.Icons.MaterialIcons;assembly=UraniumUI.Icons.MaterialIcons"
+             xmlns:validation="clr-namespace:InputKit.Shared.Validations;assembly=InputKit.Maui"
              x:Class="FleetPlanner.MVVM.Views.TaskGroup_Edit_AddShip_Page"
-             Title="TaskGroup_Edit_AddShip_Page">
-    <VerticalStackLayout>
-        <Label 
-            Text="Task Group Add Ship Page"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             Title="{Binding Name, StringFormat='Adding to: {0}'}">
+    <ContentPage.BindingContext>
+        <viewmodels:TaskGroupViewModel_Edit_AddShips />
+    </ContentPage.BindingContext>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Save"
+                     Command="{Binding SaveCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid Grid.Row="1">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="60" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <u:TextField Title="Search"
+                     Text="{Binding SearchString}"
+                     Margin="2.5"
+                     Grid.Row="0" />
+
+        <Grid Margin="2.5"
+              Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <CollectionView ItemsSource="{Binding DisplayedShips}"
+                            Grid.Row="0">
+
+                <CollectionView.EmptyView>
+                    <Label Text="Nothing to show..."
+                           VerticalOptions="CenterAndExpand"
+                           HorizontalOptions="CenterAndExpand" />
+                </CollectionView.EmptyView>
+                <CollectionView.HeaderTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Label Text="Name"
+                                   Grid.Column="1" />
+                            <Label Text="Quantity"
+                                   Grid.Column="2" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.HeaderTemplate>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="0.5*" />
+                                <ColumnDefinition Width="3*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <CheckBox IsChecked="{Binding Selected}"
+                                      Grid.Column="0"
+                                      HorizontalOptions="Start"
+                                      VerticalOptions="CenterAndExpand" />
+
+                            <Label Text="{Binding Model}"
+                                   Grid.Column="1"
+                                   HorizontalTextAlignment="Start"
+                                   HorizontalOptions="StartAndExpand"
+                                   VerticalOptions="CenterAndExpand" />
+
+                            <HorizontalStackLayout Grid.Column="2"
+                                                   HorizontalOptions="StartAndExpand"
+                                                   VerticalOptions="CenterAndExpand">
+                                <Button ImageSource="{FontImageSource FontFamily=MaterialSharp,
+                                                              Glyph={x:Static m:MaterialSharp.Remove_circle_outline},
+                                                              Color={StaticResource Tertiary}}"
+                                        Command="{Binding RemoveQuantityCommand}"
+                                        StyleClass="TransparentButton"
+                                        WidthRequest="30"
+                                        HeightRequest="30"
+                                        HorizontalOptions="Start" />
+
+                                <Label Text="{Binding Quantity}"
+                                       WidthRequest="20"
+                                       HorizontalTextAlignment="Center"
+                                       HorizontalOptions="CenterAndExpand"
+                                       VerticalOptions="CenterAndExpand" />
+
+                                <Button ImageSource="{FontImageSource FontFamily=MaterialSharp,
+                                                              Glyph={x:Static m:MaterialSharp.Add_circle_outline},
+                                                              Color={StaticResource Tertiary}}"
+                                        Command="{Binding AddQuantityCommand}"
+                                        StyleClass="TransparentButton"
+                                        WidthRequest="30"
+                                        HeightRequest="30"
+                                        HorizontalOptions="End" />
+
+                            </HorizontalStackLayout>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
+    </Grid>
 </ContentPage>

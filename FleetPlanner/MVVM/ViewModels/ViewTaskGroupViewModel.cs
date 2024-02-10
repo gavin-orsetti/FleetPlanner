@@ -71,7 +71,7 @@ namespace FleetPlanner.MVVM.ViewModels
             await base.EvaluateQueryParams( kvp );
         }
 
-        private async Task<TaskGroup> LoadTaskGroup( int id )
+        private protected async Task<TaskGroup> LoadTaskGroup( int id )
         {
             TaskGroupDatabaseService taskGroupDbs = await ServiceProvider.GetTaskGroupDatabaseServiceAsync();
             TaskGroup tg = await taskGroupDbs.GetRow( id );
@@ -84,7 +84,7 @@ namespace FleetPlanner.MVVM.ViewModels
             return tg;
         }
 
-        private async Task Populate()
+        private protected async Task Populate()
         {
             Id = Task_Group.Id;
 
@@ -105,7 +105,7 @@ namespace FleetPlanner.MVVM.ViewModels
             Notes = Task_Group.Notes;
         }
 
-        private async Task GetShips()
+        private protected async Task GetShips()
         {
             ShipDetailDatabaseService shipDetailDbs = await ServiceProvider.GetShipDetailDatabaseServiceAsync();
             List<ShipDetail> shps = await shipDetailDbs.GetChildrenUsingPropertyNameAsync( Task_Group.Id, nameof( ShipDetail.TaskGroupId ) );

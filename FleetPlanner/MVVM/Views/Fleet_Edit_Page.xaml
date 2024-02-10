@@ -1,12 +1,44 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:FleetPlanner.MVVM.ViewModels"
+             xmlns:uCore="http://schemas.enisn-projects.io/dotnet/maui/uraniumui"
+             xmlns:u="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+             xmlns:m="clr-namespace:UraniumUI.Icons.MaterialIcons;assembly=UraniumUI.Icons.MaterialIcons"
              x:Class="FleetPlanner.MVVM.Views.Fleet_Edit_Page"
-             Title="Fleet_Edit_Page">
-    <VerticalStackLayout>
-        <Label 
-            Text="Edit Fleet Page"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             Title="{Binding Name, StringFormat='Editing: {0}'}">
+    <ContentPage.BindingContext>
+        <viewmodels:FleetViewModel_Edit />
+    </ContentPage.BindingContext>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Save"
+                     Command="{Binding SaveCommand}" />
+    </ContentPage.ToolbarItems>
+    <ScrollView>
+        <VerticalStackLayout>
+
+            <u:TextField Title="Name"
+                         Text="{Binding Name}"
+                         Padding="10" />
+
+            <u:TextField Title="Affiliation"
+                         Text="{Binding Affiliation}"
+                         Padding="10" />
+
+            <u:TextField Title="Area Of Operation"
+                         Text="{Binding AreaOfOperation}"
+                         Padding="10" />
+
+            <u:EditorField Title="Manifesto"
+                           Text="{Binding Manifesto}"
+                           VerticalOptions="EndAndExpand"
+                           Padding="10" />
+
+            <u:EditorField Title="Notes"
+                           Text="{Binding Notes}"
+                           VerticalOptions="EndAndExpand"
+                           Padding="10" />
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

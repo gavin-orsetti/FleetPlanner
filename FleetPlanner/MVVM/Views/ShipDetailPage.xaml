@@ -127,13 +127,17 @@
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="100" />
+                <RowDefinition Height="100" />
                 <RowDefinition />
             </Grid.RowDefinitions>
 
-            <Label Text="{Binding ExpectedProfit, StringFormat='Expected Profit: {0} UEC/hour'}"
+            <Label Text="{Binding LoopsPerHour, StringFormat='Loops Per Hour: {0}'}"
                    Grid.Row="0"
                    Padding="5" />
-            <CollectionView Grid.Row="1"
+            <Label Text="{Binding ExpectedProfit, StringFormat='Expected Profit: {0} UEC/hour'}"
+                   Grid.Row="1"
+                   Padding="5" />
+            <CollectionView Grid.Row="2"
                             ItemsSource="{Binding BalanceSheet}"
                             EmptyView="Nothing to show. Tap Edit in the title bar to add data.">
                 <CollectionView.ItemTemplate>

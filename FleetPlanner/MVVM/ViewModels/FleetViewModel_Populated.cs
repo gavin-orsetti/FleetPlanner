@@ -13,8 +13,8 @@ namespace FleetPlanner.MVVM.ViewModels
 {
     public class FleetViewModel_Populated( Fleet fleet ) : FleetViewModel
     {
-        private readonly Fleet fleet_populated = fleet;
-        new public Fleet Fleet => fleet_populated;
+        new private protected Fleet fleet = fleet;
+        new public Fleet Fleet => fleet;
 
         private int? id;
         new public int Id

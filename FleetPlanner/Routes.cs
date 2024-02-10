@@ -69,6 +69,10 @@ namespace FleetPlanner
         public const string TaskGroup_EditPage_PageName = nameof( TaskGroup_Edit_Page );
         public static readonly Type TaskGroup_EditPage_PageType = typeof( TaskGroup_Edit_Page );
 
+        // Task Group Add Ships Page
+        public const string TaskGroup_Edit_AddShipsPage_PageName = nameof( TaskGroup_Edit_AddShip_Page );
+        public static readonly Type TaskGroup_Edit_AddShipsPage_PageType = typeof( TaskGroup_Edit_AddShip_Page );
+
         #region Query Parameters
         public class TaskGroupQueryParams : CommonQueryParams
         {
@@ -76,6 +80,7 @@ namespace FleetPlanner
             public const string Fleet = "Fleet";
             public const string TaskGroup = "Task_Group";
             public const string TaskGroupId = "TaskGroupId";
+            public const string AddShips = "AddShips";
         }
         #endregion Query Parameters
 

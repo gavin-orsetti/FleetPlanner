@@ -153,11 +153,11 @@ namespace FleetPlanner.MVVM.ViewModels
             set => SetProperty( ref crewTotalMax, value );
         }
 
-        private long hourlyIncome;
-        public long HourlyIncome
+        private decimal loopsPerHour;
+        public decimal LoopsPerHour
         {
-            get => hourlyIncome;
-            set => SetProperty( ref hourlyIncome, value );
+            get => loopsPerHour;
+            set => SetProperty( ref loopsPerHour, value );
         }
 
         private long expectedProfit;
@@ -304,7 +304,7 @@ namespace FleetPlanner.MVVM.ViewModels
                 }
             }
 
-            ExpectedProfit = eProfit;
+            ExpectedProfit = (long)( eProfit * LoopsPerHour );
         }
 
 
@@ -340,7 +340,7 @@ namespace FleetPlanner.MVVM.ViewModels
             PlayerCrewMin = ShipDetail.PlayerCrewMin;
             CrewTotalMax = ShipDetail.CrewTotalMax;
             CrewTotalMin = ShipDetail.CrewTotalMin;
-            HourlyIncome = ShipDetail.HourlyIncome;
+            LoopsPerHour = ShipDetail.LoopsPerHour;
             ExpectedProfit = ShipDetail.ExpectedProfit;
             Purchased = ShipDetail.Purchased;
             CurrencyAsEnum = (Currency)ShipDetail.Currency;
@@ -368,7 +368,7 @@ namespace FleetPlanner.MVVM.ViewModels
             PlayerCrewMin = ShipDetail.PlayerCrewMin;
             CrewTotalMax = ShipDetail.CrewTotalMax;
             CrewTotalMin = ShipDetail.CrewTotalMin;
-            HourlyIncome = ShipDetail.HourlyIncome;
+            LoopsPerHour = ShipDetail.LoopsPerHour;
             ExpectedProfit = ShipDetail.ExpectedProfit;
             Purchased = ShipDetail.Purchased;
             CurrencyAsEnum = (Currency)ShipDetail.Currency;

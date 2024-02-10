@@ -6,29 +6,31 @@
              x:Class="FleetPlanner.MVVM.Views.MyFleets_AddNew_Page"
              Title="New Fleet">
     <ContentPage.BindingContext>
-        <viewmodels:NewFleetViewModel/>
+        <viewmodels:NewFleetViewModel />
     </ContentPage.BindingContext>
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Save" Command="{Binding SaveCommand}"/>
+        <ToolbarItem Text="Save"
+                     Command="{Binding SaveCommand}" />
     </ContentPage.ToolbarItems>
     <VerticalStackLayout>
-    
-        <u:TextField Title="Name" 
+
+        <u:TextField Title="Name"
                      Text="{Binding Name}"
-                     Padding="10"/>
+                     Padding="10" />
 
         <u:TextField Title="Affiliation"
-               Text="{Binding Affiliation}"
-                     Padding="10"/>
+                     Text="{Binding Affiliation}"
+                     Padding="10" />
 
         <u:TextField Title="Area Of Operation"
-               Text="{Binding AreaOfOperation}"
-                     Padding="10"/>
+                     Text="{Binding AreaOfOperation}"
+                     Padding="10" />
 
         <u:EditorField Title="Manifesto"
-                Text="{Binding Manifesto}"
-				VerticalOptions="EndAndExpand"
-				MinimumHeightRequest="800"
-                       Padding="10"/>
+                       Text="{Binding Manifesto}"
+                       VerticalOptions="EndAndExpand"
+                       MinimumHeightRequest="800"
+                       Padding="10" />
+
     </VerticalStackLayout>
 </ContentPage>

@@ -6,10 +6,16 @@
              xmlns:m="clr-namespace:UraniumUI.Icons.MaterialIcons;assembly=UraniumUI.Icons.MaterialIcons"
              xmlns:viewmodels="clr-namespace:FleetPlanner.MVVM.ViewModels"
              x:Class="FleetPlanner.MVVM.Views.TaskGroup_Edit_Page"
-             Title="TaskGroup_Edit_Page">
+             Title="{Binding Name}">
     <ContentPage.BindingContext>
         <viewmodels:TaskGroupViewModel_Edit />
     </ContentPage.BindingContext>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Save"
+                     Command="{Binding UpdateCommand}" />
+
+    </ContentPage.ToolbarItems>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition />
@@ -17,114 +23,26 @@
         </Grid.RowDefinitions>
         <ScrollView Grid.Row="0">
 
-            <VerticalStackLayout>
-                <Frame StyleClass="OnBackgroundFrame">
-                    <VerticalStackLayout>
-                        <Label Text="Objective"
-                               HorizontalTextAlignment="Center"
-                               HorizontalOptions="Center" />
-                        <BoxView StyleClass="Divider" />
-                        <Label Text="{Binding Objective}" />
-                    </VerticalStackLayout>
-                </Frame>
-                <Frame StyleClass="OnBackgroundFrame">
-                    <HorizontalStackLayout>
-                        <Label Text="Area of Operation: " />
-                        <Label Text="{Binding AreaOfOperation}" />
-                    </HorizontalStackLayout>
-                </Frame>
-                <Frame StyleClass="OnBackgroundFrame">
-                    <HorizontalStackLayout>
-                        <Label Text="Integrality: " />
-                        <Label Text="{Binding Integrality, StringFormat='{0}/10'}" />
-                    </HorizontalStackLayout>
-                </Frame>
-                <Frame StyleClass="OnBackgroundFrame">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition />
-                            <RowDefinition />
-                            <RowDefinition />
-                            <RowDefinition />
-                        </Grid.RowDefinitions>
+            <VerticalStackLayout Spacing="5">
+                <u:EditorField  Title="Objective"
+                                Text="{Binding Objective}" />
+                <u:TextField Title="Area of Operation"
+                             Text="{Binding AreaOfOperation}" />
+                <u:TextField Title="Integrality"
+                             Text="{Binding Integrality}" />
 
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-
-                        <VerticalStackLayout Grid.Row="0"
-                                             Grid.Column="0"
-                                             Grid.ColumnSpan="3">
-                            <Label Text="Crew Counts"
-                                   HorizontalOptions="Center"
-                                   HorizontalTextAlignment="Center" />
-                            <BoxView StyleClass="Divider" />
-                        </VerticalStackLayout>
-
-                        <Label Text="Players Only"
-                               TextDecorations="Underline"
-                               Grid.Column="1"
-                               Grid.Row="1"
-                               HorizontalOptions="Center" />
-
-                        <Label Text="With NPCs"
-                               TextDecorations="Underline"
-                               Grid.Column="2"
-                               Grid.Row="1"
-                               HorizontalOptions="Center" />
-
-                        <Label Text="Full Crew:"
-                               Grid.Row="2"
-                               Grid.Column="0" />
-
-                        <Label Text="{Binding CrewCount_Max}"
-                               HorizontalOptions="Center"
-                               Grid.Row="2"
-                               Grid.Column="1" />
-
-                        <Label Text="{Binding CrewCount_MaxPlusNPC}"
-                               Grid.Row="2"
-                               Grid.Column="2"
-                               HorizontalOptions="Center" />
-
-                        <Label Text="Skeleton Crew: "
-                               Grid.Row="3"
-                               Grid.Column="0" />
-                        <Label Text="{Binding CrewCount_Min}"
-                               HorizontalOptions="Center"
-                               Grid.Row="3"
-                               Grid.Column="1" />
-
-                        <Label Text="{Binding CrewCount_MinPlusNPC}"
-                               HorizontalOptions="Center"
-                               Grid.Row="3"
-                               Grid.Column="2" />
-
-                    </Grid>
-                </Frame>
-                <Frame StyleClass="OnBackgroundFrame">
-                    <HorizontalStackLayout>
-                        <Label Text="{Binding ProfitHourly, StringFormat='Estimated Hourly Profit: {0} UEC'}" />
-                    </HorizontalStackLayout>
-                </Frame>
-
-                <Frame StyleClass="OnBackgroundFrame">
-                    <VerticalStackLayout>
-                        <Label Text="Notes"
-                               HorizontalTextAlignment="Center"
-                               HorizontalOptions="Center" />
-                        <BoxView StyleClass="Divider" />
-                        <Label Text="{Binding Notes}" />
-                    </VerticalStackLayout>
-                </Frame>
+                <u:EditorField Title="Notes"
+                               Text="{Binding Notes}" />
 
             </VerticalStackLayout>
         </ScrollView>
         <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition Height="50" />
+            </Grid.RowDefinitions>
             <CollectionView ItemsSource="{Binding ShipDetailShips}"
-                            Grid.Row="1">
+                            Grid.Row="0">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <SwipeView>
@@ -271,6 +189,12 @@
                     <Label Text="Nothing to Display..." />
                 </CollectionView.EmptyView>
             </CollectionView>
+            
+            <Button Text="Add Ships"
+                    StyleClass="PrimaryElevatedButton"
+                    Command="{Binding AddShipsCommand}"
+                    CommandParameter="{Binding Id}"
+                    Grid.Row="1"/>
         </Grid>
     </Grid>
 </ContentPage>

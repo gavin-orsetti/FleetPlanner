@@ -52,7 +52,7 @@ namespace FleetPlanner.MVVM.ViewModels
 
         #region Methods
 
-        private async Task Save()
+        private protected async Task Save()
         {
             TaskGroupDatabaseService taskGroupDbs = await Services.ServiceProvider.GetTaskGroupDatabaseServiceAsync();
             ShipDetailDatabaseService shipDetailDbs = await Services.ServiceProvider.GetShipDetailDatabaseServiceAsync();
@@ -66,7 +66,7 @@ namespace FleetPlanner.MVVM.ViewModels
             await Shell.Current.GoToAsync( Routes.BackOne );
         }
 
-        private List<ShipDetail> CreateShipDetails()
+        private protected List<ShipDetail> CreateShipDetails()
         {
             List<ShipDetail> shipDetails = [];
 
@@ -90,7 +90,7 @@ namespace FleetPlanner.MVVM.ViewModels
                         PlayerCrewMin = ssvm.Crew_min,
                         CrewTotalMax = ssvm.Crew_max,
                         CrewTotalMin = ssvm.Crew_min,
-                        HourlyIncome = 0,
+                        LoopsPerHour = 0,
                         ExpectedProfit = 0,
                         Purchased = false,
                         Currency = (int)Currency.UEC,
@@ -161,7 +161,7 @@ namespace FleetPlanner.MVVM.ViewModels
             return count;
         }
 
-        private async Task LoadShips()
+        private protected async Task LoadShips()
         {
             ShipDatabaseService shipDbService = await Services.ServiceProvider.GetShipDatabaseServiceAsync();
             List<Ship> shipModels = await shipDbService.GetAll();

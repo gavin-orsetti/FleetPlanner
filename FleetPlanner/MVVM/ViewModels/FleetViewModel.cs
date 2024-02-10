@@ -27,7 +27,7 @@ namespace FleetPlanner.MVVM.ViewModels
         #endregion Fields
 
         #region Properties & Commands
-        private Fleet fleet;
+        private protected Fleet fleet;
         public Fleet Fleet => fleet ??= new Fleet();
 
         private int id;
@@ -201,15 +201,15 @@ namespace FleetPlanner.MVVM.ViewModels
 
         private async Task GoToEditFleet( int id )
         {
-            Dictionary<string, object> queryParams = Fleet != null
-                ? new()
-                {
-                    { Routes.FleetQueryParams.PopulatedViewModel, Fleet}
-                }
-                : new()
-                {
-                    { Routes.FleetQueryParams.EditViewModel, id }
-                };
+
+            Dictionary<string, object> queryParams = Fleet.Id > 0 ? new()
+            {
+                { Routes.FleetQueryParams.EditViewModel, Fleet }
+            } :
+            new()
+            {
+                {Routes.FleetQueryParams.Id, id }
+            };
 
             await Shell.Current.GoToAsync( $"{Routes.Fleet_EditPage_PageName}", queryParams );
         }
@@ -241,7 +241,7 @@ namespace FleetPlanner.MVVM.ViewModels
             }
         }
 
-        private async Task Populate()
+        private protected async Task Populate()
         {
             await GetTaskGroups( Fleet.Id );
 

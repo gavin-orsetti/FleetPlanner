@@ -33,6 +33,9 @@ public partial class AppShell : Shell
         Routing.RegisterRoute( Routes.TaskGroup_EditPage_PageName, Routes.TaskGroup_EditPage_PageType );
         #endregion Task Group
 
+        // Edit Add Ships Page
+        Routing.RegisterRoute( Routes.TaskGroup_Edit_AddShipsPage_PageName, Routes.TaskGroup_Edit_AddShipsPage_PageType );
+
         #region ShipDetail
         // Ship Detail Page
         Routing.RegisterRoute( Routes.ShipDetail_Page_PageName, Routes.ShipDetail_Page_PageType );
