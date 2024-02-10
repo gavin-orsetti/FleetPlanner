@@ -48,6 +48,11 @@ public partial class AppShell : Shell
         // Re-Task Ship Page
         Routing.RegisterRoute( Routes.ReTaskShip_Page_PageName, Routes.RetaskShip_Page_PageType );
         #endregion Re-Task Ship
+
+        #region Shopping List
+        // Main Shopping List Page
+        Routing.RegisterRoute( Routes.ShoppingList_Page_PageName, Routes.ShoppingList_Page_PageType );
+        #endregion Shopping List
         #endregion Routes
 
         #region Theme Settings

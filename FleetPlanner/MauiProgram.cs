@@ -1,4 +1,7 @@
-﻿using UraniumUI;
+﻿using FleetPlanner.MVVM.ViewModels;
+using FleetPlanner.MVVM.Views;
+
+using UraniumUI;
 
 namespace FleetPlanner;
 
@@ -17,6 +20,11 @@ public static class MauiProgram
                 fonts.AddFont( "OpenSans-Semibold.ttf", "OpenSansSemibold" );
                 fonts.AddMaterialIconFonts();
             } );
+
+        #region Dependancies
+        builder.Services.AddTransient<ShoppingListViewModel>();
+        builder.Services.AddTransient<ShoppingListPage>();
+        #endregion Dependancies
 
         return builder.Build();
     }

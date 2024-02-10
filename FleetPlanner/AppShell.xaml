@@ -3,6 +3,7 @@
     x:Class="FleetPlanner.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewmodels="clr-namespace:FleetPlanner.MVVM.ViewModels"
     xmlns:local="clr-namespace:FleetPlanner"
     xmlns:views="clr-namespace:FleetPlanner.MVVM.Views"
     Shell.FlyoutBehavior="Flyout"
@@ -26,6 +27,7 @@
         </VerticalStackLayout>
     </Shell.FlyoutHeader>
 
+   
     <FlyoutItem Title="Shopping Lists">
         <Tab>
             <ShellContent ContentTemplate="{DataTemplate views:ShoppingListPage}"/>

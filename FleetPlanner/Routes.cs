@@ -116,5 +116,17 @@ namespace FleetPlanner
         #endregion Query Parameters
         #endregion Re-Task
 
+
+        #region Shopping List
+        public const string ShoppingList_Page_PageName = nameof( ShoppingListPage );
+        public static readonly Type ShoppingList_Page_PageType = typeof( ShoppingListPage );
+
+        #region Query Parameters
+        public class ShoppingListQueryParams : CommonQueryParams
+        {
+            public const string LoadList = "LoadList";
+        }
+        #endregion Query Parameters
+        #endregion Shopping List
     }
 }

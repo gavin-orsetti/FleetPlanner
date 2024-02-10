@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:FleetPlanner.MVVM.ViewModels"
+             xmlns:uCore="http://schemas.enisn-projects.io/dotnet/maui/uraniumui"
+             xmlns:u="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+             xmlns:m="clr-namespace:UraniumUI.Icons.MaterialIcons;assembly=UraniumUI.Icons.MaterialIcons"
              x:Class="FleetPlanner.MVVM.Views.ShoppingListPage"
-             Title="ShoppingListPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Shopping List Page"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             Title="Shopping List">
+<!--We use dependency injection on this view, since we cannot pass query parameters from flyout navigation. 
+    That means that we are setting our binding context in the code behind, along with calling PopulateCommand.ExecuteAsync() from there.-->
+    <Grid>
+        <CollectionView ItemsSource="{Binding Ships}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Label Text="{Binding Model}" />
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
 </ContentPage>
