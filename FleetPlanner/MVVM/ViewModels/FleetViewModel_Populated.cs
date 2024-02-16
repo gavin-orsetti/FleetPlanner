@@ -69,6 +69,9 @@ namespace FleetPlanner.MVVM.ViewModels
         private AsyncCommand<int> goToFleetCommand;
         public AsyncCommand<int> GoToFleetCommand => goToFleetCommand ??= new AsyncCommand<int>( GoToFleet );
 
+        private AsyncCommand<int> openFleetShoppingListCommand;
+        public AsyncCommand<int> OpenFleetShoppingListCommand => openFleetShoppingListCommand ??= new AsyncCommand<int>( OpenFleetShoppingList );
+
         private async Task GoToFleet( int id )
         {
             Dictionary<string, object> queryParams = new()
@@ -76,8 +79,18 @@ namespace FleetPlanner.MVVM.ViewModels
                 { Routes.FleetQueryParams.PopulatedViewModel, Fleet }
             };
 
-            await Shell.Current.GoToAsync( $"{Routes.Fleet_Page_PageName}", queryParams );
+            await Shell.Current.GoToAsync( $"{Routes.Fleet_Page_PageName}", true, queryParams );
         }
 
+        private async Task OpenFleetShoppingList( int id )
+        {
+            Dictionary<string, object> queryParams = new()
+            {
+                {Routes.ShoppingListQueryParams.Id, id }
+
+            };
+
+            await Shell.Current.GoToAsync( Routes.ShoppingList_FleetSelectedPage_PageName, queryParams );
+        }
     }
 }

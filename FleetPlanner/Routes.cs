@@ -121,6 +121,9 @@ namespace FleetPlanner
         public const string ShoppingList_Page_PageName = nameof( ShoppingListPage );
         public static readonly Type ShoppingList_Page_PageType = typeof( ShoppingListPage );
 
+        public const string ShoppingList_FleetSelectedPage_PageName = nameof( ShoppingList_FleetSelected_Page );
+        public static readonly Type ShoppingList_FleetSelectedPage_PageType = typeof( ShoppingList_FleetSelected_Page );
+
         #region Query Parameters
         public class ShoppingListQueryParams : CommonQueryParams
         {

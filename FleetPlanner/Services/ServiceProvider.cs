@@ -1,5 +1,7 @@
 ﻿using FleetPlanner.MVVM.Models;
 
+using MvvmHelpers.Commands;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,13 +10,29 @@ using System.Threading.Tasks;
 
 namespace FleetPlanner.Services
 {
-    public static class ServiceProvider
+    public class ServiceProvider
     {
         private static ShipDatabaseService shipDb;
         private static FleetDatabaseService fleetDb;
         private static TaskGroupDatabaseService taskGroupDb;
         private static ShipDetailDatabaseService shipDetailDb;
         private static ShipBalanceSheetDatabaseService shipBalanceSheetDb;
+
+        public ServiceProvider()
+        {
+            createAll.ExecuteAsync();
+        }
+
+        private static AsyncCommand createAll = new AsyncCommand( CreateAll );
+
+        private static async Task CreateAll()
+        {
+            _ = await GetShipDatabaseServiceAsync();
+            _ = await GetShipDetailDatabaseServiceAsync();
+            _ = await GetFleetDatabaseServiceAsync();
+            _ = await GetTaskGroupDatabaseServiceAsync();
+            _ = await GetShipBalanceSheetDatabaseServiceAsync();
+        }
 
         public static async Task<ShipDatabaseService> GetShipDatabaseServiceAsync()
         {

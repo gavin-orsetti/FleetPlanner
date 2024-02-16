@@ -24,6 +24,7 @@ public static class MauiProgram
         #region Dependancies
         builder.Services.AddTransient<ShoppingListViewModel>();
         builder.Services.AddTransient<ShoppingListPage>();
+        builder.Services.AddSingleton<ServiceProvider>();
         #endregion Dependancies
 
         return builder.Build();

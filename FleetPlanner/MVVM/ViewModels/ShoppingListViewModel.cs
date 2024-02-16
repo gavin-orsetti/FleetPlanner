@@ -19,6 +19,9 @@ namespace FleetPlanner.MVVM.ViewModels
         private ObservableRangeCollection<ShipDetailViewModel_Populated> ships;
         public ObservableRangeCollection<ShipDetailViewModel_Populated> Ships => ships ??= [];
 
+        private ObservableRangeCollection<FleetViewModel_Populated> fleets;
+        public ObservableRangeCollection<FleetViewModel_Populated> Fleets => fleets ??= [];
+
         private AsyncCommand populateCommand;
         public AsyncCommand PopulateCommand => populateCommand ??= new AsyncCommand( Populate );
 
@@ -42,21 +45,17 @@ namespace FleetPlanner.MVVM.ViewModels
 
         private protected async Task Populate()
         {
-            ShipDetailDatabaseService shipDetailDbs = await ServiceProvider.GetShipDetailDatabaseServiceAsync();
-            List<ShipDetail> shps = await shipDetailDbs.GetAll();
-            List<ShipDetailViewModel_Populated> popShips = [];
-            foreach( ShipDetail shp in shps )
+            FleetDatabaseService fleetDbs = await ServiceProvider.GetFleetDatabaseServiceAsync();
+            List<Fleet> f = await fleetDbs.GetAll();
+            List<FleetViewModel_Populated> f_p = [];
+            foreach( Fleet fleet in f )
             {
-                if( shp.Purchased )
-                { continue; }
-
-                ShipDetailViewModel_Populated sdvm = new ShipDetailViewModel_Populated( shp, Delete );
-                await sdvm.PopulateCommand.ExecuteAsync();
-                popShips.Add( sdvm );
+                FleetViewModel_Populated fvm_p = new FleetViewModel_Populated( fleet );
+                f_p.Add( fvm_p );
             }
 
-            Ships.Clear();
-            Ships.AddRange( popShips );
+            Fleets.Clear();
+            Fleets.AddRange( f_p );
         }
         #endregion Query Handling
         #endregion Methods

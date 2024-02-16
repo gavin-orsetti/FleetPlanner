@@ -1,12 +1,110 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:FleetPlanner.MVVM.ViewModels"
+             xmlns:uCore="http://schemas.enisn-projects.io/dotnet/maui/uraniumui"
+             xmlns:u="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+             xmlns:m="clr-namespace:UraniumUI.Icons.MaterialIcons;assembly=UraniumUI.Icons.MaterialIcons"
              x:Class="FleetPlanner.MVVM.Views.ShoppingList_FleetSelected_Page"
              Title="ShoppingList_FleetSelected_Page">
-    <VerticalStackLayout>
-        <Label 
-            Text="Shopping List Fleet Selected Page"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+
+    <ContentPage.BindingContext>
+        <viewmodels:ShoppingListFleetSelectedViewModel />
+    </ContentPage.BindingContext>
+    <Grid>
+
+        <ActivityIndicator IsRunning="{Binding IsBusy}" MaximumHeightRequest="150" MaximumWidthRequest="150"/>
+        <CollectionView ItemsSource="{Binding Ships}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Grid StyleClass="ExpanderViewContainer">
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+
+                        <uCore:ExpanderView Padding="0, 13.5"
+                                            Grid.Row="0">
+                            <uCore:ExpanderView.Header>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="9*" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <Label Text="{Binding Model}"
+                                           StyleClass="OnPrimaryLabel" />
+                                    <Label Text="{Binding Integrality, StringFormat='Integrality: {0}'}"
+                                           HorizontalOptions="End"
+                                           StyleClass="OnPrimaryLabel" />
+                                </Grid>
+                            </uCore:ExpanderView.Header>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <Label Text="{Binding Callsign, StringFormat='Callsign: {0}'}"
+                                       StyleClass="OnPrimaryLabel"
+                                       FontSize="Micro"
+                                       HorizontalOptions="CenterAndExpand"
+                                       Grid.Column="0"
+                                       Grid.Row="0" />
+                                <Label Text="Player Crew:"
+                                       StyleClass="OnPrimaryLabel"
+                                       FontSize="Micro"
+                                       HorizontalOptions="CenterAndExpand"
+                                       Grid.Column="1"
+                                       Grid.Row="0" />
+                                <Label Text="Profit:"
+                                       StyleClass="OnPrimaryLabel"
+                                       FontSize="Micro"
+                                       HorizontalOptions="CenterAndExpand"
+                                       Grid.Column="2"
+                                       Grid.Row="0" />
+                                <Label Text="Ships:"
+                                       StyleClass="OnPrimaryLabel"
+                                       FontSize="Micro"
+                                       HorizontalOptions="CenterAndExpand"
+                                       Grid.Column="3"
+                                       Grid.Row="0" />
+                                <Grid Grid.Column="0"
+                                      Grid.ColumnSpan="4"
+                                      Grid.Row="1"
+                                      Grid.RowSpan="2">
+
+                                </Grid>
+
+                                <Grid Grid.Row="3"
+                                      Grid.ColumnSpan="4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition />
+                                        <ColumnDefinition Width="25" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Button Text="{Binding ShipPriceUsd, StringFormat='Buy for {0} USD'}"
+                                            BackgroundColor="{Binding BuyUsdBtnColor}"
+                                            Grid.Column="0" />
+
+                                    <Button Text="{Binding ShipPriceUec, StringFormat='Buy for {0} Uec'}"
+                                            BackgroundColor="{Binding BuyAuecBtnColor}"
+                                            Grid.Column="2" />
+                                </Grid>
+
+                            </Grid>
+                        </uCore:ExpanderView>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
 </ContentPage>

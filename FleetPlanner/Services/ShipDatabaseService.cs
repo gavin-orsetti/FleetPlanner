@@ -1,12 +1,14 @@
 ﻿using FleetPlanner.MVVM.Models;
 
+using System.Collections;
+
 namespace FleetPlanner.Services
 {
     public class ShipDatabaseService : IDatabaseService<ShipDatabaseService, Ship>
     {
-        private Dictionary<int, Ship> db;
+        private static Dictionary<int, Ship> db;
         private static ShipDatabaseService service;
-        public Dictionary<int, Ship> Db
+        public static Dictionary<int, Ship> Db
         {
             get => db ??= [];
         }
@@ -49,7 +51,7 @@ namespace FleetPlanner.Services
 
         public async Task<Ship> GetRow( int id )
         {
-            return Db[ id ];
+            return Db.TryGetValue( id, out Ship ship ) ? ship : null;
         }
 
         public async Task<List<Ship>> GetAll()

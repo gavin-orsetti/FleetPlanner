@@ -7,13 +7,28 @@
              xmlns:m="clr-namespace:UraniumUI.Icons.MaterialIcons;assembly=UraniumUI.Icons.MaterialIcons"
              x:Class="FleetPlanner.MVVM.Views.ShoppingListPage"
              Title="Shopping List">
-<!--We use dependency injection on this view, since we cannot pass query parameters from flyout navigation. 
+    <!--We use dependency injection on this view, since we cannot pass query parameters from flyout navigation. 
     That means that we are setting our binding context in the code behind, along with calling PopulateCommand.ExecuteAsync() from there.-->
     <Grid>
-        <CollectionView ItemsSource="{Binding Ships}">
+        <CollectionView ItemsSource="{Binding Fleets}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Label Text="{Binding Model}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Label Text="{Binding Name}"
+                               Grid.Column="0"
+                               HorizontalOptions="Start"
+                               VerticalOptions="Center"
+                               Padding="5" />
+                        <Button Text="Open"
+                                StyleClass="PrimaryElevatedButton"
+                                Grid.Column="1"
+                                Command="{Binding OpenFleetShoppingListCommand}"
+                                CommandParameter="{Binding Id}"/>
+                    </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

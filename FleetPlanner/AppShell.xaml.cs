@@ -52,6 +52,9 @@ public partial class AppShell : Shell
         #region Shopping List
         // Main Shopping List Page
         Routing.RegisterRoute( Routes.ShoppingList_Page_PageName, Routes.ShoppingList_Page_PageType );
+
+        // Fleet Selected Page
+        Routing.RegisterRoute( Routes.ShoppingList_FleetSelectedPage_PageName, Routes.ShoppingList_FleetSelectedPage_PageType );
         #endregion Shopping List
         #endregion Routes
 
