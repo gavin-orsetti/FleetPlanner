@@ -7,9 +7,9 @@
              xmlns:viewmodels="clr-namespace:FleetPlanner.MVVM.ViewModels"
              x:Class="FleetPlanner.MVVM.Views.TaskGroup_Edit_Page"
              Title="{Binding Name}">
-    <ContentPage.BindingContext>
+    <!--<ContentPage.BindingContext>
         <viewmodels:TaskGroupViewModel_Edit />
-    </ContentPage.BindingContext>
+    </ContentPage.BindingContext>-->
 
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Save"

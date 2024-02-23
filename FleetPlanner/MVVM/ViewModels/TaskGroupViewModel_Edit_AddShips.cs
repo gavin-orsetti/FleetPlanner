@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class TaskGroupViewModel_Edit_AddShips : NewTaskGroupViewModel
+    public class TaskGroupViewModel_Edit_AddShips( GlobalViewModel global ) : NewTaskGroupViewModel( global )
     {
         new private AsyncCommand saveCommand;
         new public AsyncCommand SaveCommand => saveCommand ??= new AsyncCommand( Save );

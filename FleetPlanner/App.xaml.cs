@@ -1,15 +1,17 @@
-﻿using UraniumUI;
+﻿using FleetPlanner.MVVM.ViewModels;
+
+using UraniumUI;
 using UraniumUI.Material;
 
 namespace FleetPlanner;
 
 public partial class App : Application
 {
-    public App()
+    public App( MainPageViewModel viewModel )
     {
         InitializeComponent();
 
 
-        MainPage = new AppShell();
+        MainPage = new AppShell( viewModel );
     }
 }

@@ -5,9 +5,9 @@
              xmlns:u="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
              x:Class="FleetPlanner.MVVM.Views.MyFleets_AddNew_Page"
              Title="New Fleet">
-    <ContentPage.BindingContext>
+    <!--<ContentPage.BindingContext>
         <viewmodels:NewFleetViewModel />
-    </ContentPage.BindingContext>
+    </ContentPage.BindingContext>-->
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Save"
                      Command="{Binding SaveCommand}" />

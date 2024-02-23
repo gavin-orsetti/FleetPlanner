@@ -16,7 +16,7 @@ using ServiceProvider = FleetPlanner.Services.ServiceProvider;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class ShoppingListFleetSelectedViewModel : ViewModelBase
+    public class ShoppingListFleetSelectedViewModel( GlobalViewModel global ) : ViewModelBase( global )
     {
         private int? id;
         private List<Ship> shipList;
@@ -70,7 +70,7 @@ namespace FleetPlanner.MVVM.ViewModels
                 if( shp.Purchased )
                 { continue; }
                 Ship s = shipList.Where( x => x.Id == shp.ShipId ).FirstOrDefault();
-                ShoppingListShipDetailViewModel sdvm = new ShoppingListShipDetailViewModel( shp, Delete, s );
+                ShoppingListShipDetailViewModel sdvm = new ShoppingListShipDetailViewModel( shp, Delete, s, Global );
                 await sdvm.PopulateCommand.ExecuteAsync();
                 popShips.Add( sdvm );
             }

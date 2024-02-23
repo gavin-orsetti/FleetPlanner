@@ -7,9 +7,9 @@
              xmlns:viewmodels="clr-namespace:FleetPlanner.MVVM.ViewModels"
              x:Class="FleetPlanner.MVVM.Views.TaskGroupPage"
              Title="{Binding Name}">
-    <ContentPage.BindingContext>
+    <!--<ContentPage.BindingContext>
         <viewmodels:ViewTaskGroupViewModel />
-    </ContentPage.BindingContext>
+    </ContentPage.BindingContext>-->
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Edit"
                      Command="{Binding GoToEditTaskGroupCommand}"
@@ -128,8 +128,12 @@
             </VerticalStackLayout>
         </ScrollView>
         <Grid Grid.Row="1">
+            <ActivityIndicator IsRunning="{Binding Global.IsBusy}"
+                               WidthRequest="100"
+                               HeightRequest="100" />
             <CollectionView ItemsSource="{Binding ShipDetailShips}"
-                            Grid.Row="1">
+                            Grid.Row="1"
+                            IsVisible="{Binding Global.HideWhileBusy}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <SwipeView>

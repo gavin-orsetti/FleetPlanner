@@ -1,11 +1,14 @@
-﻿namespace FleetPlanner;
+﻿using FleetPlanner.MVVM.ViewModels;
+
+namespace FleetPlanner;
 
 public partial class MainPage : ContentPage
 {
 
-    public MainPage()
+    public MainPage( MainPageViewModel viewModel )
     {
         InitializeComponent();
+        BindingContext = viewModel;
     }
 }
 

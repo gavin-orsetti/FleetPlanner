@@ -14,12 +14,19 @@ using ServiceProvider = FleetPlanner.Services.ServiceProvider;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class ReTaskViewModel : ViewModelBase
+    public class ReTaskViewModel( GlobalViewModel global ) : ViewModelBase( global )
     {
         private ShipDetail shipDetail;
         private ObservableRangeCollection<TaskGroupViewModel_Populated> taskGroups;
         public ObservableRangeCollection<TaskGroupViewModel_Populated> TaskGroups => taskGroups ??= new();
         private TaskGroupViewModel_Populated selectedTaskGroup;
+
+        private string callsign;
+        public string Callsign
+        {
+            get => callsign;
+            set => SetProperty( ref callsign, value );
+        }
 
         private bool isInvoking = false;
         #region Methods
@@ -65,6 +72,7 @@ namespace FleetPlanner.MVVM.ViewModels
             {
                 case Routes.ReTaskQueryParams.Ship:
                     shipDetail = (ShipDetail)kvp.Value;
+                    Callsign = shipDetail.Callsign;
                     await Populate();
                     break;
                 default:
@@ -85,7 +93,7 @@ namespace FleetPlanner.MVVM.ViewModels
                 if( t.Id == shipDetail.TaskGroupId )
                     continue;
 
-                TaskGroupViewModel_Populated tgVm = new TaskGroupViewModel_Populated( t, SelectionChanged, Retask );
+                TaskGroupViewModel_Populated tgVm = new TaskGroupViewModel_Populated( Global, t, SelectionChanged, Retask, null );
                 tgVms.Add( tgVm );
             }
 

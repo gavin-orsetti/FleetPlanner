@@ -14,7 +14,7 @@ using ServiceProvider = FleetPlanner.Services.ServiceProvider;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class ViewTaskGroupViewModel : TaskGroupViewModel
+    public class ViewTaskGroupViewModel( GlobalViewModel global ) : TaskGroupViewModel( global )
     {
         private int crewCount_MaxPlusNPC;
         public int CrewCount_MaxPlusNPC
@@ -33,8 +33,8 @@ namespace FleetPlanner.MVVM.ViewModels
         private ObservableRangeCollection<ShipDetailViewModel_Populated> shipDetailShips;
         public ObservableRangeCollection<ShipDetailViewModel_Populated> ShipDetailShips
         {
-            get => shipDetailShips ??= [];
-            set => SetProperty( ref shipDetailShips, value );
+            get => Global.PopulatedShipDetailViewModels;
+            //set => SetProperty( ref shipDetailShips, value );
         }
 
 
@@ -56,19 +56,17 @@ namespace FleetPlanner.MVVM.ViewModels
             switch( kvp.Key )
             {
                 case Routes.TaskGroupQueryParams.TaskGroup:
-                    Task_Group = kvp.Value as TaskGroup;
-                    await Populate();
+                    Task_Group = (TaskGroup)kvp.Value;
+                    Populate();
                     break;
                 case Routes.TaskGroupQueryParams.TaskGroupId:
                     Task_Group = await LoadTaskGroup( (int)kvp.Value );
-                    await Populate();
+                    Populate();
                     break;
 
                 default:
                     break;
             }
-
-            await base.EvaluateQueryParams( kvp );
         }
 
         private protected async Task<TaskGroup> LoadTaskGroup( int id )
@@ -84,11 +82,11 @@ namespace FleetPlanner.MVVM.ViewModels
             return tg;
         }
 
-        private protected async Task Populate()
+        private protected void Populate()
         {
             Id = Task_Group.Id;
 
-            await GetShips();
+            //await GetShips();
 
             Name = Task_Group.Name;
             FleetId = Task_Group.FleetId;
@@ -112,7 +110,7 @@ namespace FleetPlanner.MVVM.ViewModels
             List<ShipDetailViewModel_Populated> sdvm_ps = [];
             foreach( ShipDetail shp in shps )
             {
-                ShipDetailViewModel_Populated sdvm_p = new ShipDetailViewModel_Populated( shp, DeleteShipDetail );
+                ShipDetailViewModel_Populated sdvm_p = new ShipDetailViewModel_Populated( shp, DeleteShipDetail, Global );
                 await sdvm_p.PopulateCommand.ExecuteAsync();
                 sdvm_ps.Add( sdvm_p );
             }

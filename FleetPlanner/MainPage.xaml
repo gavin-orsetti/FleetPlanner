@@ -8,9 +8,7 @@
              x:Class="FleetPlanner.MainPage"
              Title="My Fleets">
 
-    <ContentPage.BindingContext>
-        <viewmodels:MainPageViewModel/>
-    </ContentPage.BindingContext>
+
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Add New" 
                      IconImageSource="{FontImageSource FontFamily=MaterialSharp,
@@ -20,7 +18,7 @@
     </ContentPage.ToolbarItems>
     <RefreshView Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsRefreshing}">
         <ScrollView>
-            <CollectionView ItemsSource="{Binding Fleets}"
+            <CollectionView ItemsSource="{Binding Global.PopulatedFleetViewModels}"
                         EmptyView="Nothing to display. Tap the + to get started!"
                         Margin="2.5">
                 <CollectionView.ItemTemplate>

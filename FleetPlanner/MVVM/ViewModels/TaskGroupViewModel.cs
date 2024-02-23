@@ -14,7 +14,7 @@ using ServiceProvider = FleetPlanner.Services.ServiceProvider;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class TaskGroupViewModel : ViewModelBase
+    public class TaskGroupViewModel( GlobalViewModel global ) : ViewModelBase( global )
     {
         private TaskGroup taskGroup = new();
         public TaskGroup Task_Group { get => taskGroup; protected set => SetProperty( ref taskGroup, value ); }
@@ -130,9 +130,13 @@ namespace FleetPlanner.MVVM.ViewModels
 
         private async Task GoToTaskGroup( int id )
         {
+            // This is intentionally not awaited, since we want this method to continue while the GlobalViewModel does its work in the background.
+            // Perhaps there is a more elegant way to do this, but I don't know how.
+            Global.LoadShipDetailsUsingTaskGroupIdAsync( Task_Group.Id );
+
             Dictionary<string, object> queryParams = new()
             {
-                { Routes.TaskGroupQueryParams.TaskGroupId, id }
+                { Routes.TaskGroupQueryParams.TaskGroup, Task_Group }
             };
 
             await Shell.Current.GoToAsync( Routes.TaskGroup_Page_PageName, queryParams );

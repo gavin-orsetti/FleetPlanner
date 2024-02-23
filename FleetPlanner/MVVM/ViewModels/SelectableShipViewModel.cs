@@ -1,5 +1,7 @@
 ﻿using FleetPlanner.MVVM.Models;
 
+using Microsoft.Maui.Controls;
+
 using MvvmHelpers.Commands;
 
 using System;
@@ -12,7 +14,7 @@ using Command = MvvmHelpers.Commands.Command;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class SelectableShipViewModel( Ship ship ) : ShipViewModel( ship )
+    public class SelectableShipViewModel( Ship ship, GlobalViewModel global ) : ShipViewModel( ship, global )
     {
         private bool _selected = false;
         public bool Selected

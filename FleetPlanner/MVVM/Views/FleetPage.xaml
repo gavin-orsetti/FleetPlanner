@@ -7,9 +7,9 @@
              xmlns:m="clr-namespace:UraniumUI.Icons.MaterialIcons;assembly=UraniumUI.Icons.MaterialIcons"
              x:Class="FleetPlanner.MVVM.Views.FleetPage"
              Title="{Binding Name}">
-    <ContentPage.BindingContext>
+    <!--<ContentPage.BindingContext>
         <viewmodels:FleetViewModel />
-    </ContentPage.BindingContext>
+    </ContentPage.BindingContext>-->
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Edit"
                      Command="{Binding GoToEditFleetCommand}"
@@ -23,6 +23,13 @@
             <RowDefinition Height="2*" />
             <RowDefinition Height="8*" />
         </Grid.RowDefinitions>
+        <ActivityIndicator IsRunning="{Binding IsBusy}"
+                           Grid.Column="0"
+                           Grid.Row="0"
+                           Grid.RowSpan="4"
+                           WidthRequest="100"
+                           HeightRequest="100" />
+        
         <ScrollView Grid.Row="0"
                     Grid.RowSpan="3">
             <VerticalStackLayout>

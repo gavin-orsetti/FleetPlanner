@@ -13,7 +13,7 @@ using ServiceProvider = FleetPlanner.Services.ServiceProvider;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class FleetViewModel_Edit : FleetViewModel
+    public class FleetViewModel_Edit( GlobalViewModel global ) : FleetViewModel( global )
     {
         private AsyncCommand saveCommand;
         public AsyncCommand SaveCommand => saveCommand ??= new AsyncCommand( Save );

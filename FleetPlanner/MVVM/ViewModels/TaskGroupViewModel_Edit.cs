@@ -13,7 +13,7 @@ using ServiceProvider = FleetPlanner.Services.ServiceProvider;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class TaskGroupViewModel_Edit : ViewTaskGroupViewModel
+    public class TaskGroupViewModel_Edit( GlobalViewModel global ) : ViewTaskGroupViewModel( global )
     {
         private AsyncCommand updateCommand;
         public AsyncCommand UpdateCommand => updateCommand ??= new AsyncCommand( Update );
@@ -159,7 +159,7 @@ namespace FleetPlanner.MVVM.ViewModels
         {
             await GetShips();
             await Update( false );
-            await base.Populate();
+            base.Populate();
 
         }
         #endregion Query Handling

@@ -15,7 +15,7 @@ using static FleetPlanner.Helpers.Constants;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class NewTaskGroupViewModel : TaskGroupViewModel
+    public class NewTaskGroupViewModel( GlobalViewModel global ) : TaskGroupViewModel( global )
     {
         private string searchString;
         public string SearchString
@@ -169,7 +169,7 @@ namespace FleetPlanner.MVVM.ViewModels
 
             foreach( Ship s in shipModels )
             {
-                SelectableShipViewModel ssvm = new( s );
+                SelectableShipViewModel ssvm = new( s, Global );
                 ssvms.Add( ssvm );
             }
 

@@ -14,13 +14,8 @@ using ServiceProvider = FleetPlanner.Services.ServiceProvider;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class NewFleetViewModel : FleetViewModel
+    public class NewFleetViewModel( GlobalViewModel global ) : FleetViewModel( global )
     {
-        public NewFleetViewModel() : base()
-        {
-
-        }
-
         #region Properties
         #region Commands
         private AsyncCommand saveCommand;
@@ -41,7 +36,6 @@ namespace FleetPlanner.MVVM.ViewModels
             FleetDatabaseService service = await ServiceProvider.GetFleetDatabaseServiceAsync();
             if( await service.Insert( Fleet ) )
             {
-                Console.WriteLine( "Item Saved Successfully" );
                 Name = string.Empty;
                 Affiliation = string.Empty;
                 AreaOfOperation = string.Empty;

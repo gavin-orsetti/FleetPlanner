@@ -54314,7 +54314,7 @@ namespace FleetPlanner.Helpers
         "Modafferi",
         "Moddejonge",
         "Mode",
-        "Model",
+        "Callsign",
         "Modena",
         "Moder",
         "Modero",

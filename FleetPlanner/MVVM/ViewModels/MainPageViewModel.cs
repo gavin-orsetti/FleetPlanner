@@ -15,20 +15,22 @@ namespace FleetPlanner.MVVM.ViewModels
     public class MainPageViewModel : BaseViewModel
     {
         #region Constructors
-        public MainPageViewModel()
+        public MainPageViewModel( GlobalViewModel global )
         {
-            Task.Run( async () => await Refresh() );
+            Global = global;
+            RefreshCommand.ExecuteAsync();
         }
         #endregion Constructors
 
         #region Properties & Fields
+        public GlobalViewModel Global { get; }
 
-        private ObservableRangeCollection<FleetViewModel> fleets;
-        public ObservableRangeCollection<FleetViewModel> Fleets
-        {
-            get => fleets ??= [];
-            set => SetProperty( ref fleets, value );
-        }
+        //private ObservableRangeCollection<FleetViewModel> fleets;
+        //public ObservableRangeCollection<FleetViewModel> Fleets
+        //{
+        //    get => fleets ??= [];
+        //    set => SetProperty( ref fleets, value );
+        //}
 
         private bool isRefreshing = false;
         public bool IsRefreshing
@@ -60,19 +62,22 @@ namespace FleetPlanner.MVVM.ViewModels
             IsRefreshing = false;
         }
 
-        //TODO: Remove calls to Console.WriteLine()
         private async Task LoadFleets()
         {
             FleetDatabaseService dbService = await Services.ServiceProvider.GetFleetDatabaseServiceAsync();
 
             List<Fleet> fleetList = await dbService.GetAll();
 
-            Fleets.Clear();
+            Global.PopulatedFleetViewModels.Clear();
+
             foreach( Fleet fleet in fleetList )
             {
-                FleetViewModel_Populated fvm_p = new( fleet );
-                fvm_p.RefreshParentView = new AsyncCommand( Refresh );
-                Fleets.Add( fvm_p );
+                FleetViewModel_Populated fvm_p = new( Global, fleet )
+                {
+                    RefreshParentView = RefreshCommand
+                };
+
+                Global.PopulatedFleetViewModels.Add( fvm_p );
             }
         }
 

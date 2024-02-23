@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class ShipViewModel( Ship ship ) : ViewModelBase
+    public class ShipViewModel( Ship ship, GlobalViewModel global ) : ViewModelBase( global )
     {
         readonly Ship ship = ship;
         public Ship Ship => ship;

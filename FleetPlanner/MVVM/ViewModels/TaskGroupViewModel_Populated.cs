@@ -12,27 +12,19 @@ namespace FleetPlanner.MVVM.ViewModels
 {
     public class TaskGroupViewModel_Populated : TaskGroupViewModel
     {
-        public TaskGroupViewModel_Populated( TaskGroup tg )
+        public TaskGroupViewModel_Populated( GlobalViewModel global, TaskGroup tg, Action<TaskGroupViewModel_Populated> selectionChangedAction, Func<int, Task> RetaskAction, Func<int, Task> deleteGroupAction ) : base( global )
         {
             Task_Group = tg;
+            _selectionChanged = selectionChangedAction != null ? selectionChangedAction : _selectionChanged;
+            _retaskAction = RetaskAction != null ? RetaskAction : _retaskAction;
+            _deleteGroup = deleteGroupAction != null ? deleteGroupAction : _deleteGroup;
         }
 
-        public TaskGroupViewModel_Populated( TaskGroup tg, Action<TaskGroupViewModel_Populated> selectionChangedAction, Func<int, Task> RetaskAction )
-        {
-            Task_Group = tg;
-            _selectionChanged = selectionChangedAction;
-            _retaskAction = RetaskAction;
-        }
-
-        public TaskGroupViewModel_Populated( TaskGroup tg, Func<int, Task> DeleteGroupAction )
-        {
-            Task_Group = tg;
-            _deleteGroup = DeleteGroupAction;
-        }
-
-        private Action<TaskGroupViewModel_Populated> _selectionChanged;
-        private Func<int, Task> _retaskAction;
-        private Func<int, Task> _deleteGroup;
+        //TODO: Revisit this decision and consider allowing these to be null in order to fail out rather than just sending a call into a difficult to track down void of nothingness.
+        // All three of the below (Action/2 Func) need to have a default value of an empty delegate, to avoid a null reference exception.
+        private Action<TaskGroupViewModel_Populated> _selectionChanged = _ => { };
+        private Func<int, Task> _retaskAction = async _ => { };
+        private Func<int, Task> _deleteGroup = async _ => { };
 
         private bool isChecked;
         public bool IsChecked

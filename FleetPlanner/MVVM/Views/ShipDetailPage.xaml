@@ -4,9 +4,9 @@
              xmlns:viewmodels="clr-namespace:FleetPlanner.MVVM.ViewModels"
              x:Class="FleetPlanner.MVVM.Views.ShipDetailPage"
              Title="{Binding Model, StringFormat='{} {0} Details'}">
-    <ContentPage.BindingContext>
+    <!--<ContentPage.BindingContext>
         <viewmodels:ViewShipDetailViewModel />
-    </ContentPage.BindingContext>
+    </ContentPage.BindingContext>-->
 
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Edit"

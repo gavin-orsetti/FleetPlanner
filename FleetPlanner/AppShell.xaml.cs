@@ -1,8 +1,10 @@
-﻿namespace FleetPlanner;
+﻿using FleetPlanner.MVVM.ViewModels;
+
+namespace FleetPlanner;
 
 public partial class AppShell : Shell
 {
-    public AppShell()
+    public AppShell( MainPageViewModel viewmodel )
     {
         InitializeComponent();
 
@@ -70,6 +72,7 @@ public partial class AppShell : Shell
         };
         #endregion ThemeSettings
 
+        BindingContext = viewmodel;
     }
     /// <summary>
     /// Swaps the theme when the switch is flipped.

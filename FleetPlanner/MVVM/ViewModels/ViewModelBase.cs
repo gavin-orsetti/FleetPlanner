@@ -11,8 +11,10 @@ using static FleetPlanner.Helpers.Constants;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class ViewModelBase : BaseViewModel, IQueryAttributable
+    public class ViewModelBase( GlobalViewModel global ) : BaseViewModel, IQueryAttributable
     {
+        public GlobalViewModel Global { get; } = global;
+
         private AsyncCommand backCommand;
         public AsyncCommand BackCommand => backCommand ??= new AsyncCommand( Back );
 

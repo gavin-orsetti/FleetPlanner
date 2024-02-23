@@ -9,9 +9,9 @@
              x:Class="FleetPlanner.MVVM.Views.TaskGroup_AddNew_Page"
              Title="New Task Group">
 
-    <ContentPage.BindingContext>
+    <!--<ContentPage.BindingContext>
         <viewmodels:NewTaskGroupViewModel />
-    </ContentPage.BindingContext>
+    </ContentPage.BindingContext>-->
 
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Save"

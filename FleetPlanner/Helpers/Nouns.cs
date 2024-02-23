@@ -3397,7 +3397,7 @@ namespace FleetPlanner.Helpers
         "Mocha",
         "Mochi",
         "Mode",
-        "Model",
+        "Callsign",
         "Modeling",
         "Modem",
         "Modernist",

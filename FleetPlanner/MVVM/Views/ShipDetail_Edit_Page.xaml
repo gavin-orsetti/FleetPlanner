@@ -7,9 +7,9 @@
              xmlns:m="clr-namespace:UraniumUI.Icons.MaterialIcons;assembly=UraniumUI.Icons.MaterialIcons"
              x:Class="FleetPlanner.MVVM.Views.ShipDetail_Edit_Page"
              Title="{Binding Model, StringFormat='Editing: {0}'}">
-    <ContentPage.BindingContext>
+    <!--<ContentPage.BindingContext>
         <viewmodels:ShipDetailViewModel_Edit />
-    </ContentPage.BindingContext>
+    </ContentPage.BindingContext>-->
 
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Save"

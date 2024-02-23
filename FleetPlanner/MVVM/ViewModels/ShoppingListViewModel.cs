@@ -14,8 +14,10 @@ using ServiceProvider = FleetPlanner.Services.ServiceProvider;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class ShoppingListViewModel : ViewModelBase
+    public class ShoppingListViewModel( GlobalViewModel global ) : ViewModelBase( global )
     {
+        GlobalViewModel Global = global;
+
         private ObservableRangeCollection<ShipDetailViewModel_Populated> ships;
         public ObservableRangeCollection<ShipDetailViewModel_Populated> Ships => ships ??= [];
 
@@ -50,7 +52,7 @@ namespace FleetPlanner.MVVM.ViewModels
             List<FleetViewModel_Populated> f_p = [];
             foreach( Fleet fleet in f )
             {
-                FleetViewModel_Populated fvm_p = new FleetViewModel_Populated( fleet );
+                FleetViewModel_Populated fvm_p = new FleetViewModel_Populated( Global, fleet );
                 f_p.Add( fvm_p );
             }
 

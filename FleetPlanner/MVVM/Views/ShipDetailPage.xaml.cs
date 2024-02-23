@@ -1,9 +1,12 @@
+using FleetPlanner.MVVM.ViewModels;
+
 namespace FleetPlanner.MVVM.Views;
 
 public partial class ShipDetailPage : ContentPage
 {
-	public ShipDetailPage()
-	{
-		InitializeComponent();
-	}
+    public ShipDetailPage( ViewShipDetailViewModel viewModel )
+    {
+        InitializeComponent();
+        BindingContext = viewModel;
+    }
 }

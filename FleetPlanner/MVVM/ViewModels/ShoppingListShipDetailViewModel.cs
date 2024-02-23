@@ -16,7 +16,7 @@ namespace FleetPlanner.MVVM.ViewModels
 {
     public class ShoppingListShipDetailViewModel : ShipDetailViewModel_Populated
     {
-        public ShoppingListShipDetailViewModel( ShipDetail ship, Action<int> deleteAction, Ship sModel ) : base( ship, deleteAction )
+        public ShoppingListShipDetailViewModel( ShipDetail ship, Action<int> deleteAction, Ship sModel, GlobalViewModel global ) : base( ship, deleteAction, global )
         {
             PopulateTextCommand.ExecuteAsync( ship.TaskGroupId );
             tertiary = Constants.Tertiary;

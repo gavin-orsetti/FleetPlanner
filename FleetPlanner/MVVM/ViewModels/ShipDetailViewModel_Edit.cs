@@ -16,7 +16,7 @@ using ServiceProvider = FleetPlanner.Services.ServiceProvider;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class ShipDetailViewModel_Edit : ShipDetailViewModel
+    public class ShipDetailViewModel_Edit( GlobalViewModel global ) : ShipDetailViewModel( global )
     {
         private string make;
         public string Make
@@ -95,7 +95,7 @@ namespace FleetPlanner.MVVM.ViewModels
                 Console.WriteLine( sbs.Id );
                 if( sbs.Id > 0 )
                 {
-                    ShipBalanceSheetViewModel sbsvm = new( sbs, DeleteBalanceSheetItem );
+                    ShipBalanceSheetViewModel sbsvm = new( sbs, DeleteBalanceSheetItem, Global );
                     sbsvm.ValueUpdated += BalanceSheetValueUpdated;
                     BalanceSheet.Add( sbsvm );
                 }

@@ -17,17 +17,16 @@ using ServiceProvider = FleetPlanner.Services.ServiceProvider;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class FleetViewModel : ViewModelBase
+    public class FleetViewModel( GlobalViewModel global ) : ViewModelBase( global )
     {
-        public FleetViewModel()
-        { }
 
         #region Fields
         public AsyncCommand RefreshParentView;
         #endregion Fields
 
         #region Properties & Commands
-        private protected Fleet fleet;
+
+        private protected Fleet fleet = global.SelectedFleet;
         public Fleet Fleet => fleet ??= new Fleet();
 
         private int id;
@@ -145,8 +144,7 @@ namespace FleetPlanner.MVVM.ViewModels
         private ObservableRangeCollection<TaskGroupViewModel_Populated> taskGroups;
         public ObservableRangeCollection<TaskGroupViewModel_Populated> TaskGroups
         {
-            get => taskGroups ??= [];
-            set => SetProperty( ref taskGroups, value );
+            get => Global.PopulatedTaskGroupViewModels;
         }
 
 
@@ -157,8 +155,8 @@ namespace FleetPlanner.MVVM.ViewModels
         private AsyncCommand<int> deleteCommand;
         public AsyncCommand<int> DeleteCommand => deleteCommand ??= new AsyncCommand<int>( Delete );
 
-        private AsyncCommand<int> goToAddddNewTaskGroupCommand;
-        public AsyncCommand<int> GoToAddNewTaskGroupCommand => goToAddddNewTaskGroupCommand ??= new AsyncCommand<int>( GoToAddNewTaskGroup );
+        private AsyncCommand<int> goToAddNewTaskGroupCommand;
+        public AsyncCommand<int> GoToAddNewTaskGroupCommand => goToAddNewTaskGroupCommand ??= new AsyncCommand<int>( GoToAddNewTaskGroup );
 
 
         #endregion Properties & Commands
@@ -193,7 +191,7 @@ namespace FleetPlanner.MVVM.ViewModels
             }
         }
 
-        private async Task DeleteTaskGroup( int id )
+        private protected async Task DeleteTaskGroup( int id )
         {
             TaskGroupViewModel_Populated deleted = TaskGroups.Where( x => x.Id == id ).First();
             TaskGroups.Remove( deleted );
@@ -229,6 +227,7 @@ namespace FleetPlanner.MVVM.ViewModels
 
         private protected override async Task EvaluateQueryParams( KeyValuePair<string, object> kvp )
         {
+            IsBusy = true;
             switch( kvp.Key )
             {
                 case Routes.FleetQueryParams.PopulatedViewModel:
@@ -239,11 +238,12 @@ namespace FleetPlanner.MVVM.ViewModels
                 default:
                     break;
             }
+            IsBusy = false;
         }
 
         private protected async Task Populate()
         {
-            await GetTaskGroups( Fleet.Id );
+            // await GetTaskGroups( Fleet.Id );
 
             Id = Fleet.Id;
             Name = Fleet.Name;
@@ -271,7 +271,7 @@ namespace FleetPlanner.MVVM.ViewModels
             List<TaskGroupViewModel_Populated> tg_ps = new();
             foreach( TaskGroup taskGroup in tgs )
             {
-                TaskGroupViewModel_Populated taskGroupViewModel = new TaskGroupViewModel_Populated( taskGroup, DeleteTaskGroup );
+                TaskGroupViewModel_Populated taskGroupViewModel = new TaskGroupViewModel_Populated( Global, taskGroup, selectionChangedAction: null, RetaskAction: null, deleteGroupAction: DeleteTaskGroup );
                 tg_ps.Add( taskGroupViewModel );
             }
 

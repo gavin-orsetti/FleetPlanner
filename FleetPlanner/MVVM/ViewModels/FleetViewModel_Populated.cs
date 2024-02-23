@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class FleetViewModel_Populated( Fleet fleet ) : FleetViewModel
+    public class FleetViewModel_Populated( GlobalViewModel global, Fleet fleet ) : FleetViewModel( global )
     {
         new private protected Fleet fleet = fleet;
         new public Fleet Fleet => fleet;
@@ -56,15 +56,10 @@ namespace FleetPlanner.MVVM.ViewModels
             private set => SetProperty( ref areaOfOperation, value );
         }
 
-        private ObservableRangeCollection<TaskGroup> taskGroups;
-        new public ObservableRangeCollection<TaskGroup> TaskGroups
+        new public ObservableRangeCollection<TaskGroupViewModel_Populated> TaskGroups
         {
-            get => taskGroups ??= [];
-            private set => SetProperty( ref taskGroups, value );
+            get => Global.PopulatedTaskGroupViewModels;
         }
-
-        //private AsyncCommand<int> goToEditFleetCommand;
-        //new public AsyncCommand<int> GoToEditFleetCommand => goToEditFleetCommand ??= new AsyncCommand<int>( GoToEditFleet );
 
         private AsyncCommand<int> goToFleetCommand;
         public AsyncCommand<int> GoToFleetCommand => goToFleetCommand ??= new AsyncCommand<int>( GoToFleet );
@@ -78,6 +73,9 @@ namespace FleetPlanner.MVVM.ViewModels
             {
                 { Routes.FleetQueryParams.PopulatedViewModel, Fleet }
             };
+
+            Global.SelectedFleet = Fleet;
+            await Global.LoadTaskGroupViewModelsUsingFleetId( id, null, null, DeleteTaskGroup );
 
             await Shell.Current.GoToAsync( $"{Routes.Fleet_Page_PageName}", true, queryParams );
         }

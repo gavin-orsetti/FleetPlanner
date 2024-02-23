@@ -8,12 +8,15 @@
              x:Class="FleetPlanner.MVVM.Views.ShoppingList_FleetSelected_Page"
              Title="ShoppingList_FleetSelected_Page">
 
-    <ContentPage.BindingContext>
+    <!--<ContentPage.BindingContext>
         <viewmodels:ShoppingListFleetSelectedViewModel />
-    </ContentPage.BindingContext>
+    </ContentPage.BindingContext>-->
+    
     <Grid>
 
-        <ActivityIndicator IsRunning="{Binding IsBusy}" MaximumHeightRequest="150" MaximumWidthRequest="150"/>
+        <ActivityIndicator IsRunning="{Binding IsBusy}"
+                           MaximumHeightRequest="150"
+                           MaximumWidthRequest="150" />
         <CollectionView ItemsSource="{Binding Ships}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>

@@ -21,7 +21,7 @@ using ServiceProvider = FleetPlanner.Services.ServiceProvider;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class ShipDetailViewModel : ViewModelBase
+    public class ShipDetailViewModel( GlobalViewModel global ) : ViewModelBase( global )
     {
         private ShipDetail shipDetail = new();
         public ShipDetail ShipDetail { get => shipDetail; protected set => SetProperty( ref shipDetail, value ); }
@@ -388,7 +388,7 @@ namespace FleetPlanner.MVVM.ViewModels
 
             foreach( ShipBalanceSheet sheetItem in sheetItems )
             {
-                ShipBalanceSheetViewModel bsvm = new( sheetItem, DeleteBalanceSheetItem );
+                ShipBalanceSheetViewModel bsvm = new( sheetItem, DeleteBalanceSheetItem, Global );
                 bsvm.ValueUpdated += BalanceSheetValueUpdated;
                 bsVms.Add( bsvm );
             }
@@ -402,7 +402,7 @@ namespace FleetPlanner.MVVM.ViewModels
 
             Ship s = await shipDbs.GetRow( id );
 
-            shipViewModel = new ShipViewModel( s );
+            shipViewModel = new ShipViewModel( s, Global );
 
             return (( (ShipManufacturer)shipViewModel.Make ).ToString().SplitCamelCase(), shipViewModel.Model, shipViewModel.Role);
         }

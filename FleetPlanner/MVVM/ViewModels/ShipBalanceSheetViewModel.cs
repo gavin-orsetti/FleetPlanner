@@ -19,7 +19,7 @@ namespace FleetPlanner.MVVM.ViewModels
 {
     public class ShipBalanceSheetViewModel : ViewModelBase
     {
-        public ShipBalanceSheetViewModel( ShipBalanceSheet bs, Func<int, Task> delete )
+        public ShipBalanceSheetViewModel( ShipBalanceSheet bs, Func<int, Task> delete, GlobalViewModel global ) : base( global )
         {
             balanceSheet = bs;
             Id = bs.Id;

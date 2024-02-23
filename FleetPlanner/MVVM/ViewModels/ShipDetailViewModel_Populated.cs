@@ -18,7 +18,7 @@ namespace FleetPlanner.MVVM.ViewModels
 {
     public class ShipDetailViewModel_Populated : ShipDetailViewModel
     {
-        public ShipDetailViewModel_Populated( ShipDetail ship, Action<int> deleteAction )
+        public ShipDetailViewModel_Populated( ShipDetail ship, Action<int> deleteAction, GlobalViewModel global ) : base( global )
         {
             ShipDetail = ship;
             _deleteAction = deleteAction;
@@ -70,7 +70,7 @@ namespace FleetPlanner.MVVM.ViewModels
 
             ShipDatabaseService shipDbs = await ServiceProvider.GetShipDatabaseServiceAsync();
             Ship ship = await shipDbs.GetRow( ShipDetail.ShipId );
-            shipViewModel = new ShipViewModel( ship );
+            shipViewModel = new ShipViewModel( ship, Global );
 
             Make = ( (ShipManufacturer)shipViewModel.Make ).ToString().SplitCamelCase();
             Model = shipViewModel.Model;

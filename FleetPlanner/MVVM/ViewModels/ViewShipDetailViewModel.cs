@@ -18,7 +18,7 @@ using ServiceProvider = FleetPlanner.Services.ServiceProvider;
 
 namespace FleetPlanner.MVVM.ViewModels
 {
-    public class ViewShipDetailViewModel : ShipDetailViewModel
+    public class ViewShipDetailViewModel( GlobalViewModel global ) : ShipDetailViewModel( global )
     {
         private string role;
         public string Role

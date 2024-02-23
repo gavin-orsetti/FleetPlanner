@@ -192,6 +192,5 @@ namespace FleetPlanner.Helpers
         public const string EQUALS = "=";
 
         #endregion SQLite Query Strings
-
     }
 }
