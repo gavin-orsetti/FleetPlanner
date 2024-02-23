@@ -219,7 +219,7 @@ namespace FleetPlanner.MVVM.ViewModels
                 { Routes.TaskGroupQueryParams.FleetId, id }
             };
 
-            await Shell.Current.GoToAsync( Routes.TaskGroup_AddNewPage_PageName, queryParams );
+            await Shell.Current.GoToAsync( Routes.TaskGroup_AddNewPage_PageName, true, queryParams );
         }
 
 

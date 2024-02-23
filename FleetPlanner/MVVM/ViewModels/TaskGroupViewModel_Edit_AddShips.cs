@@ -34,7 +34,7 @@ namespace FleetPlanner.MVVM.ViewModels
             {
                 case Routes.TaskGroupQueryParams.TaskGroup:
                     Task_Group = (TaskGroup)kvp.Value;
-                    await LoadShips();
+                    //await LoadShips();
                     break;
                 default:
                     break;

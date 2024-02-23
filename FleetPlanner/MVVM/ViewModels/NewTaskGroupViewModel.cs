@@ -7,6 +7,7 @@ using MvvmHelpers.Commands;
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -41,11 +42,10 @@ namespace FleetPlanner.MVVM.ViewModels
 
         private List<SelectableShipViewModel> selectedShips => Ships.Where( x => x.Selected ).ToList();
 
-        private ObservableRangeCollection<SelectableShipViewModel> ships;
-        public ObservableRangeCollection<SelectableShipViewModel> Ships => ships ??= [];
+        public ReadOnlyCollection<SelectableShipViewModel> Ships => Global.PopulatedSelectableShipViewModels.AsReadOnly();
 
         private ObservableRangeCollection<SelectableShipViewModel> displayedShips;
-        public ObservableRangeCollection<SelectableShipViewModel> DisplayedShips => displayedShips ??= [];
+        public ObservableRangeCollection<SelectableShipViewModel> DisplayedShips => displayedShips ??= new( Ships );
 
         private AsyncCommand saveCommand;
         public AsyncCommand SaveCommand => saveCommand ??= new AsyncCommand( Save );
@@ -74,6 +74,7 @@ namespace FleetPlanner.MVVM.ViewModels
             {
                 for( int i = ssvm.Quantity; i > 0; i-- )
                 {
+                    //TODO: Put all the correct default values in the constants file and reference them here.
                     shipDetails.Add( new ShipDetail
                     {
                         ShipId = ssvm.Id,
@@ -163,42 +164,39 @@ namespace FleetPlanner.MVVM.ViewModels
 
         private protected async Task LoadShips()
         {
-            ShipDatabaseService shipDbService = await Services.ServiceProvider.GetShipDatabaseServiceAsync();
-            List<Ship> shipModels = await shipDbService.GetAll();
-            List<SelectableShipViewModel> ssvms = [];
+            //ShipDatabaseService shipDbService = await Services.ServiceProvider.GetShipDatabaseServiceAsync();
+            //List<Ship> shipModels = await shipDbService.GetAll();
+            //List<SelectableShipViewModel> ssvms = [];
 
-            foreach( Ship s in shipModels )
-            {
-                SelectableShipViewModel ssvm = new( s, Global );
-                ssvms.Add( ssvm );
-            }
+            //foreach( Ship s in shipModels )
+            //{
+            //    SelectableShipViewModel ssvm = new( s, Global );
+            //    ssvms.Add( ssvm );
+            //}
 
-            Ships.Clear();
-            Ships.AddRange( ssvms );
+            //Ships.Clear();
+            //Ships.AddRange( ssvms );
 
             DisplayedShips.Clear();
-            DisplayedShips.AddRange( ssvms );
+            DisplayedShips.AddRange( Global.PopulatedSelectableShipViewModels );
 
         }
 
         #region Query Handling
         private protected override async Task EvaluateQueryParams( KeyValuePair<string, object> kvp )
         {
+            Global.IsBusy = true;
+
             switch( kvp.Key )
             {
                 case Routes.TaskGroupQueryParams.FleetId:
-                    Console.WriteLine( "Fleet Id Passed" );
-                    await LoadShips();
                     FleetId = (int)kvp.Value;
-                    break;
-                case Routes.TaskGroupQueryParams.Fleet:
-                    Console.WriteLine( "Fleet Passed" );
                     break;
                 default:
                     break;
             }
 
-            await base.EvaluateQueryParams( kvp );
+            Global.IsBusy = false;
         }
         #endregion Query Handling
         #endregion Methods

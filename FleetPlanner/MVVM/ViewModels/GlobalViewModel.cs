@@ -48,9 +48,16 @@ namespace FleetPlanner.MVVM.ViewModels
         private ShipBalanceSheetDatabaseService shipBalanceSheetDbs;
         private ShipDatabaseService shipDbs;
 
+        private int loadedFleetId = 0;
+        private int loadedTaskGroupId = 0;
+        private int loadedShipDetailId = 0;
+
         public ObservableRangeCollection<FleetViewModel_Populated> PopulatedFleetViewModels { get; } = [];
-        public ObservableRangeCollection<ShipDetailViewModel_Populated> PopulatedShipDetailViewModels { get; } = [];
         public ObservableRangeCollection<TaskGroupViewModel_Populated> PopulatedTaskGroupViewModels { get; } = [];
+        public ObservableRangeCollection<ShipViewModel> PopulatedShipViewModels { get; } = [];
+        public ObservableRangeCollection<SelectableShipViewModel> PopulatedSelectableShipViewModels { get; } = [];
+        public ObservableRangeCollection<ShipDetailViewModel_Populated> PopulatedShipDetailViewModels { get; } = [];
+        public ObservableRangeCollection<ShipBalanceSheetViewModel> PopulatedBalanceSheetItemViewModels { get; } = [];
         public ObservableRangeCollection<ShoppingListShipDetailViewModel> ShoppingListShipDetails { get; } = [];
 
         public Fleet SelectedFleet { get; set; }
@@ -86,6 +93,23 @@ namespace FleetPlanner.MVVM.ViewModels
             taskGroupDbs = await ServiceProvider.GetTaskGroupDatabaseServiceAsync();
             shipDetailDbs = await ServiceProvider.GetShipDetailDatabaseServiceAsync();
             shipBalanceSheetDbs = await ServiceProvider.GetShipBalanceSheetDatabaseServiceAsync();
+
+            // We do this here so that we never have to think about it again and the user is already expecting a bit of load time, so they shouldn't find the extra quarter second that annoying
+            await CreateShipViewModels();
+        }
+
+        private async Task CreateShipViewModels()
+        {
+            List<Ship> ships = await shipDbs.GetAll();
+
+            foreach( Ship ship in ships )
+            {
+                ShipViewModel svm = new ShipViewModel( ship, this );
+                SelectableShipViewModel ssvm = new( ship, this );
+
+                PopulatedShipViewModels.Add( svm );
+                PopulatedSelectableShipViewModels.Add( ssvm );
+            }
         }
 
         public async Task LoadTaskGroupViewModelsUsingFleetId( int fleetId, Action<TaskGroupViewModel_Populated> selectionChangedAction, Func<int, Task> RetaskAction, Func<int, Task> deleteGroupAction )

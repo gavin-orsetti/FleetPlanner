@@ -59,7 +59,11 @@
                 <Grid.RowDefinitions>
                     <RowDefinition />
                 </Grid.RowDefinitions>
+                <ActivityIndicator IsRunning="{Binding Global.IsBusy}"
+                                   WidthRequest="100"
+                                   HeightRequest="100" />
                 <CollectionView ItemsSource="{Binding DisplayedShips}"
+                                IsVisible="{Binding Global.HiddenWhileBusy}"
                                 Grid.Row="0">
 
                     <CollectionView.EmptyView>
