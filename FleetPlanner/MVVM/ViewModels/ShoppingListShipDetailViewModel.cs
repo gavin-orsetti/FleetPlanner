@@ -94,6 +94,58 @@ namespace FleetPlanner.MVVM.ViewModels
         private AsyncCommand<int> populateCommand;
         private AsyncCommand<int> PopulateTextCommand => populateCommand ??= new AsyncCommand<int>( PopulateText );
 
+        private AsyncCommand purchaseUsingAuecCommand;
+        public AsyncCommand PurchaseUsingAuecCommand => purchaseUsingAuecCommand ??= new AsyncCommand( PurchaseUsingAuec );
+
+        private AsyncCommand purchaseUsingCashCommand;
+        public AsyncCommand PurchaseUsingCashCommand => purchaseUsingCashCommand ??= new AsyncCommand( PurchaseUsingCash );
+
+        private async Task PurchaseUsingAuec()
+        {
+            ShipDetailDatabaseService shipDetailDbs = await ServiceProvider.GetShipDetailDatabaseServiceAsync();
+
+            Purchased = true;
+            CurrencyAsEnum = Constants.Currency.UEC;
+            CashPurchase = false;
+            MeltValue = 0;
+            InsuranceTypeAsEnum = Constants.InsuranceType.ThreeMonth;
+            AnnualInsuranceCost = 0;
+
+            _deleteAction.Invoke( Id );
+
+            UpdateShipDetail();
+
+            await shipDetailDbs.Update( ShipDetail );
+        }
+
+        private async Task PurchaseUsingCash()
+        {
+            ShipDetailDatabaseService shipDetailDbs = await ServiceProvider.GetShipDetailDatabaseServiceAsync();
+
+            Purchased = true;
+            CurrencyAsEnum = Constants.UserCurrency;
+            CashPurchase = true;
+            MeltValue = shipModel.LivePriceUSD;
+            InsuranceTypeAsEnum = Constants.InsuranceType.ThreeMonth;
+            AnnualInsuranceCost = 0;
+
+            _deleteAction.Invoke( Id );
+
+            UpdateShipDetail();
+
+            await shipDetailDbs.Update( ShipDetail );
+        }
+
+        private void UpdateShipDetail()
+        {
+            ShipDetail.Purchased = Purchased;
+            ShipDetail.Currency = (int)CurrencyAsEnum;
+            ShipDetail.CashPurchase = CashPurchase;
+            ShipDetail.MeltValue = MeltValue;
+            ShipDetail.InsuranceType = (int)InsuranceTypeAsEnum;
+            ShipDetail.AnnualInsuranceCost = AnnualInsuranceCost;
+        }
+
         private async Task PopulateText( int id )
         {
             TaskGroupDatabaseService taskGroupDbs = await ServiceProvider.GetTaskGroupDatabaseServiceAsync();

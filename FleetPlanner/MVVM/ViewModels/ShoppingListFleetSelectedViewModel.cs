@@ -24,9 +24,6 @@ namespace FleetPlanner.MVVM.ViewModels
         private ObservableRangeCollection<ShoppingListShipDetailViewModel> ships;
         public ObservableRangeCollection<ShoppingListShipDetailViewModel> Ships => ships ??= [];
 
-        //private AsyncCommand<int> populateCommand;
-        //public AsyncCommand<int> PopulateCommand => populateCommand ??= new AsyncCommand<int>( Populate );
-
 
         #region Methods
         private void ToggleIsBusy()
@@ -36,7 +33,9 @@ namespace FleetPlanner.MVVM.ViewModels
 
         private void Delete( int id )
         {
-            Console.WriteLine( "Delete Called" ); // TODO: Make this remove an entry from the Ships collection (without deleting it from the db of course)
+            ShoppingListShipDetailViewModel s = Ships.Where( x => x.Id == id ).FirstOrDefault();
+
+            Ships.Remove( s );
         }
         #region Query Handling
         private protected override async Task EvaluateQueryParams( KeyValuePair<string, object> kvp )

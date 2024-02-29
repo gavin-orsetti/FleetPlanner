@@ -24,7 +24,7 @@ namespace FleetPlanner.MVVM.ViewModels
             _deleteAction = deleteAction;
         }
 
-        private Action<int> _deleteAction;
+        private protected Action<int> _deleteAction;
 
         private string make;
         public string Make

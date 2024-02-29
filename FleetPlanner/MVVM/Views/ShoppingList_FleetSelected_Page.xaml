@@ -93,11 +93,13 @@
 
                                     <Button Text="{Binding ShipPriceUsd, StringFormat='Buy for {0} USD'}"
                                             BackgroundColor="{Binding BuyUsdBtnColor}"
-                                            Grid.Column="0" />
+                                            Grid.Column="0"
+                                            Command="{Binding PurchaseUsingCashCommand}"/>
 
                                     <Button Text="{Binding ShipPriceUec, StringFormat='Buy for {0} Uec'}"
                                             BackgroundColor="{Binding BuyAuecBtnColor}"
-                                            Grid.Column="2" />
+                                            Grid.Column="2"
+                                            Command="{Binding PurchaseUsingAuecCommand}"/>
                                 </Grid>
 
                             </Grid>

@@ -8,6 +8,12 @@ namespace FleetPlanner.Helpers
 {
     public static class Constants
     {
+        #region User Values
+
+        public static Currency UserCurrency { get; set; }
+
+        #endregion User Values
+
         #region Strings
         #region Fleet Defaults
         public const string DefaultFleetName = "New Fleet";
