@@ -10,22 +10,22 @@ namespace FleetPlanner.Helpers
     public static class NameGenerator
     {
         private static Random rand = new Random();
-        private static int firstNamesCount = 8070;
+        private static int firstNamesCount = FirstNames.Values.Count;
         private static int FirstNamesCount => firstNamesCount;
 
-        private static int lastNamesCount = 55368;
+        private static int lastNamesCount = LastNames.Values.Count;
         private static int LastNamesCount => lastNamesCount;
 
-        private static int animalsCount = 1158;
+        private static int animalsCount = Animals.Values.Count;
         private static int AnimalsCount => animalsCount;
 
-        private static int adjectivesCount = 4839;
+        private static int adjectivesCount = Adjectives.Values.Count;
         private static int AdjectivesCount => adjectivesCount;
 
-        private static int nounsCount = 5914;
+        private static int nounsCount = Nouns.Values.Count;
         private static int NounsCount => nounsCount;
 
-        private static int professionsCount = 409;
+        private static int professionsCount = Professions.Values.Count;
         private static int ProfessionsCount => professionsCount;
 
         //private static int? nationalitiesCount;
