@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             x:Class="FleetPlanner.Views.FleetDetailPage"
+             x:DataType="vm:FleetDetailViewModel"
+             Title="{Binding FleetName}">
+
+    <Shell.TitleView>
+        <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+            <Label Text="{Binding FleetName}" Style="{StaticResource Title1}"
+                   VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+        </HorizontalStackLayout>
+    </Shell.TitleView>
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="16">
+
+        <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center" />
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="12">
+
+                <!-- Fleet Info (View Mode) -->
+                <Frame Padding="12" CornerRadius="8" IsVisible="{Binding IsEditing, Converter={StaticResource InvertedBoolConverter}}">
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="{Binding Affiliation, StringFormat='Affiliation: {0}'}" />
+                        <Label Text="{Binding AreaOfOperation, StringFormat='Area of Operation: {0}'}" />
+                        <Label Text="{Binding Manifesto, StringFormat='Manifesto: {0}'}" />
+                        <Label Text="{Binding Notes, StringFormat='Notes: {0}'}" TextColor="{StaticResource Gray400}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Fleet Info (Edit Mode) -->
+                <Frame Padding="12" CornerRadius="8" IsVisible="{Binding IsEditing}">
+                    <VerticalStackLayout Spacing="8">
+                        <Entry Text="{Binding FleetName}" Placeholder="Fleet Name" />
+                        <Entry Text="{Binding Affiliation}" Placeholder="Affiliation" />
+                        <Entry Text="{Binding AreaOfOperation}" Placeholder="Area of Operation" />
+                        <Editor Text="{Binding Manifesto}" Placeholder="Manifesto" HeightRequest="80" />
+                        <Editor Text="{Binding Notes}" Placeholder="Notes" HeightRequest="60" />
+                        <Button Text="Save" Command="{Binding SaveFleetCommand}"
+                                BackgroundColor="{StaticResource Tertiary}"
+                                TextColor="{StaticResource OnTertiary}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Ships Section -->
+                <Label Text="Ships" FontSize="20" FontAttributes="Bold" Margin="0,8,0,0" />
+
+                <CollectionView ItemsSource="{Binding Ships}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:FleetShipDisplay">
+                            <SwipeView>
+                                <SwipeView.RightItems>
+                                    <SwipeItems>
+                                        <SwipeItem Text="Remove"
+                                                   BackgroundColor="{StaticResource Error}"
+                                                   Command="{Binding Source={RelativeSource AncestorType={x:Type vm:FleetDetailViewModel}}, Path=RemoveShipCommand}"
+                                                   CommandParameter="{Binding .}" />
+                                    </SwipeItems>
+                                </SwipeView.RightItems>
+                                <Frame Padding="12" Margin="0,4" CornerRadius="8">
+                                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                        <Label Grid.Row="0" Grid.Column="0"
+                                               Text="{Binding ShipName}" FontSize="16" FontAttributes="Bold" />
+                                        <Label Grid.Row="0" Grid.Column="1"
+                                               Text="{Binding PriceUsd, StringFormat='${0:N0}'}"
+                                               FontSize="14" TextColor="{StaticResource Tertiary}" />
+                                        <Label Grid.Row="1" Grid.Column="0"
+                                               Text="{Binding Role}" FontSize="12" TextColor="{StaticResource Gray400}" />
+                                        <Label Grid.Row="1" Grid.Column="1"
+                                               Text="{Binding Manufacturer}" FontSize="12" TextColor="{StaticResource Gray400}" />
+                                    </Grid>
+                                </Frame>
+                            </SwipeView>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                    <CollectionView.EmptyView>
+                        <Label Text="No ships in this fleet yet. Tap 'Add Ship' to browse." Margin="0,16"
+                               HorizontalTextAlignment="Center" TextColor="{StaticResource Gray400}" />
+                    </CollectionView.EmptyView>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Bottom buttons -->
+        <HorizontalStackLayout Grid.Row="2" Spacing="8" HorizontalOptions="Fill" Margin="0,8,0,0">
+            <Button Text="{Binding IsEditing, Converter={StaticResource InvertedBoolConverter}, StringFormat='{0:Edit|Cancel}'}"
+                    Command="{Binding ToggleEditCommand}"
+                    BackgroundColor="{StaticResource Secondary}"
+                    TextColor="{StaticResource OnSecondary}"
+                    HorizontalOptions="FillAndExpand" />
+            <Button Text="+ Add Ship"
+                    Command="{Binding AddShipCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="{StaticResource OnPrimary}"
+                    HorizontalOptions="FillAndExpand" />
+        </HorizontalStackLayout>
+    </Grid>
+</ContentPage>

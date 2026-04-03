@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             xmlns:models="clr-namespace:FleetPlanner.Models"
+             x:Class="FleetPlanner.Views.ShipBrowserPage"
+             x:DataType="vm:ShipBrowserViewModel"
+             Title="Ship Browser">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="16" RowSpacing="8">
+
+        <!-- Offline banner -->
+        <Frame Grid.Row="0" Padding="8" CornerRadius="4" IsVisible="{Binding IsOffline}"
+               BackgroundColor="{StaticResource Warning}">
+            <Label Text="Offline — showing cached data" TextColor="{StaticResource OnWarning}"
+                   HorizontalTextAlignment="Center" FontSize="12" />
+        </Frame>
+
+        <!-- Search bar -->
+        <SearchBar Grid.Row="1" Text="{Binding SearchText}" Placeholder="Search ships..." />
+
+        <!-- Filters -->
+        <HorizontalStackLayout Grid.Row="2" Spacing="8">
+            <Picker Title="Role" ItemsSource="{Binding Roles}"
+                    SelectedItem="{Binding SelectedRole}" WidthRequest="120" />
+            <Picker Title="Manufacturer" ItemsSource="{Binding Manufacturers}"
+                    SelectedItem="{Binding SelectedManufacturer}" WidthRequest="140" />
+            <Picker Title="Size" ItemsSource="{Binding Sizes}"
+                    SelectedItem="{Binding SelectedSize}" WidthRequest="80" />
+        </HorizontalStackLayout>
+
+        <!-- Ship list -->
+        <RefreshView Grid.Row="3" Command="{Binding RefreshShipsCommand}" IsRefreshing="{Binding IsRefreshing}">
+            <CollectionView ItemsSource="{Binding Ships}">
+                <CollectionView.Header>
+                    <VerticalStackLayout>
+                        <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                                           HorizontalOptions="Center" />
+                        <Label Text="{Binding LastUpdated, StringFormat='Last updated: {0}'}"
+                               FontSize="10" HorizontalTextAlignment="Center" TextColor="{StaticResource Gray400}"
+                               Margin="0,4" />
+                    </VerticalStackLayout>
+                </CollectionView.Header>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Ship">
+                        <Frame Padding="12" Margin="0,4" CornerRadius="8"
+                               BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ShipBrowserViewModel}}, Path=SelectShipCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding Name}" FontSize="16" FontAttributes="Bold" />
+                                <Label Grid.Row="0" Grid.Column="1"
+                                       Text="{Binding PriceUsd, StringFormat='${0:N0}'}"
+                                       FontSize="14" FontAttributes="Bold" TextColor="{StaticResource Tertiary}" />
+                                <Label Grid.Row="1" Grid.Column="0"
+                                       Text="{Binding Manufacturer}" FontSize="12" TextColor="{StaticResource Gray400}" />
+                                <Label Grid.Row="1" Grid.Column="1"
+                                       Text="{Binding Role}" FontSize="12" TextColor="{StaticResource Gray400}" />
+                                <HorizontalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="12">
+                                    <Label Text="{Binding CrewMin, StringFormat='Crew: {0}'}" FontSize="11" TextColor="{StaticResource Gray500}" />
+                                    <Label Text="{Binding CargoCapacity, StringFormat='Cargo: {0} SCU'}" FontSize="11" TextColor="{StaticResource Gray500}" />
+                                    <Label Text="{Binding Size, StringFormat='Size: {0}'}" FontSize="11" TextColor="{StaticResource Gray500}" />
+                                </HorizontalStackLayout>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                <CollectionView.EmptyView>
+                    <Label Text="No ships found matching your filters." Margin="0,32"
+                           HorizontalTextAlignment="Center" TextColor="{StaticResource Gray400}" />
+                </CollectionView.EmptyView>
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+</ContentPage>

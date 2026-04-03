@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             xmlns:models="clr-namespace:FleetPlanner.Models"
+             x:Class="FleetPlanner.Views.FleetListPage"
+             x:DataType="vm:FleetListViewModel"
+             Title="My Fleet">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="16">
+
+        <!-- Loading -->
+        <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center" Color="{StaticResource Primary}" />
+
+        <!-- Empty state -->
+        <VerticalStackLayout Grid.Row="1" IsVisible="{Binding IsEmpty}"
+                             VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
+            <Label Text="No fleets yet" FontSize="20" HorizontalTextAlignment="Center" />
+            <Label Text="Tap + to create your first fleet" FontSize="14"
+                   HorizontalTextAlignment="Center" TextColor="{StaticResource Gray400}" />
+        </VerticalStackLayout>
+
+        <!-- Fleet list -->
+        <RefreshView Grid.Row="1" Command="{Binding LoadFleetsCommand}" IsRefreshing="{Binding IsLoading}">
+            <CollectionView ItemsSource="{Binding Fleets}" IsVisible="{Binding IsEmpty, Converter={StaticResource InvertedBoolConverter}}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Fleet">
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="Delete"
+                                               BackgroundColor="{StaticResource Error}"
+                                               Command="{Binding Source={RelativeSource AncestorType={x:Type vm:FleetListViewModel}}, Path=DeleteFleetCommand}"
+                                               CommandParameter="{Binding .}" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+                            <Frame Padding="16" Margin="0,4" CornerRadius="8"
+                                   BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}">
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:FleetListViewModel}}, Path=GoToFleetDetailCommand}"
+                                        CommandParameter="{Binding .}" />
+                                </Frame.GestureRecognizers>
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding Name}" FontSize="18" FontAttributes="Bold" />
+                                    <Label Text="{Binding Affiliation, StringFormat='Affiliation: {0}'}" FontSize="12"
+                                           TextColor="{StaticResource Gray400}" />
+                                    <Label Text="{Binding AreaOfOperation, StringFormat='Area: {0}'}" FontSize="12"
+                                           TextColor="{StaticResource Gray400}" />
+                                </VerticalStackLayout>
+                            </Frame>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <!-- Add fleet button -->
+        <Button Grid.Row="2" Text="+ New Fleet"
+                Command="{Binding AddFleetCommand}"
+                BackgroundColor="{StaticResource Primary}"
+                TextColor="{StaticResource OnPrimary}"
+                Margin="0,8,0,0"
+                CornerRadius="8" />
+    </Grid>
+</ContentPage>

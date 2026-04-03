@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.Maui;assembly=LiveChartsCore.SkiaSharpView.Maui"
+             x:Class="FleetPlanner.Views.DashboardPage"
+             x:DataType="vm:DashboardViewModel"
+             Title="Dashboard">
+
+    <Shell.TitleView>
+        <Label Text="Dashboard" Style="{StaticResource Title1}"
+               VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+    </Shell.TitleView>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+
+            <!-- Loading indicator -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                               HorizontalOptions="Center" Color="{StaticResource Primary}" />
+
+            <!-- Summary cards -->
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8" IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                <Frame Grid.Column="0" Padding="12" BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}" CornerRadius="8">
+                    <VerticalStackLayout HorizontalOptions="Center">
+                        <Label Text="{Binding TotalFleets}" FontSize="24" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                        <Label Text="Fleets" FontSize="12" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Frame>
+                <Frame Grid.Column="1" Padding="12" BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}" CornerRadius="8">
+                    <VerticalStackLayout HorizontalOptions="Center">
+                        <Label Text="{Binding TotalShips}" FontSize="24" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                        <Label Text="Ships" FontSize="12" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Frame>
+                <Frame Grid.Column="2" Padding="12" BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}" CornerRadius="8">
+                    <VerticalStackLayout HorizontalOptions="Center">
+                        <Label Text="{Binding TotalFleetValue, StringFormat='${0:N0}'}" FontSize="24" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                        <Label Text="Fleet Value" FontSize="12" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Frame>
+            </Grid>
+
+            <Label Text="{Binding LastUpdated, StringFormat='Ship data last updated: {0}'}"
+                   FontSize="10" HorizontalTextAlignment="Center" TextColor="{StaticResource Gray400}" />
+
+            <!-- Fleet Composition Pie Chart -->
+            <Frame Padding="8" CornerRadius="8">
+                <VerticalStackLayout>
+                    <Label Text="Fleet Composition by Role" FontSize="16" FontAttributes="Bold" Margin="0,0,0,8" />
+                    <lvc:PieChart Series="{Binding FleetCompositionSeries}"
+                                  HeightRequest="250"
+                                  LegendPosition="Bottom" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Value Distribution Bar Chart -->
+            <Frame Padding="8" CornerRadius="8">
+                <VerticalStackLayout>
+                    <Label Text="Top Ships by Value (USD)" FontSize="16" FontAttributes="Bold" Margin="0,0,0,8" />
+                    <lvc:CartesianChart Series="{Binding ValueDistributionSeries}"
+                                        XAxes="{Binding ValueDistributionXAxes}"
+                                        YAxes="{Binding ValueDistributionYAxes}"
+                                        HeightRequest="250" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Role Coverage Radar Chart -->
+            <Frame Padding="8" CornerRadius="8">
+                <VerticalStackLayout>
+                    <Label Text="Role Coverage" FontSize="16" FontAttributes="Bold" Margin="0,0,0,8" />
+                    <lvc:PolarChart Series="{Binding RoleCoverageSeries}"
+                                    AngleAxes="{Binding RoleCoverageAngles}"
+                                    HeightRequest="300" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Cost Breakdown Pie Chart -->
+            <Frame Padding="8" CornerRadius="8">
+                <VerticalStackLayout>
+                    <Label Text="Cost Breakdown by Manufacturer" FontSize="16" FontAttributes="Bold" Margin="0,0,0,8" />
+                    <lvc:PieChart Series="{Binding CostBreakdownSeries}"
+                                  HeightRequest="250"
+                                  LegendPosition="Bottom" />
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
