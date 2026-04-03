@@ -1,5 +1,3 @@
-using System.Collections.ObjectModel;
-
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -9,6 +7,7 @@ using FleetPlanner.Services;
 
 namespace FleetPlanner.ViewModels;
 
+// LiveCharts stubbed for crash diagnosis — chart properties and build methods removed
 public partial class DashboardViewModel : ObservableObject
 {
     private readonly IFleetRepository _fleetRepository;
@@ -28,8 +27,6 @@ public partial class DashboardViewModel : ObservableObject
 
     [ObservableProperty]
     private string _lastUpdated = "Never";
-
-    // LiveCharts series/axes stubbed out for crash diagnosis
 
     public DashboardViewModel(IFleetRepository fleetRepository, IShipDataService shipDataService)
     {

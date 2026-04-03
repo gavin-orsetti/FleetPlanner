@@ -43,10 +43,9 @@
             <Label Text="{Binding LastUpdated, StringFormat='Ship data last updated: {0}'}"
                    FontSize="10" HorizontalTextAlignment="Center" TextColor="{StaticResource Gray400}" />
 
-            <!-- Charts stubbed for crash diagnosis -->
-            <Frame Padding="8" CornerRadius="8">
-                <Label Text="Charts coming soon" HorizontalTextAlignment="Center" VerticalTextAlignment="Center" HeightRequest="100" />
-            </Frame>
+            <!-- LiveCharts stubbed for crash diagnosis -->
+            <Label Text="Charts coming soon" FontSize="14" HorizontalTextAlignment="Center"
+                   TextColor="{StaticResource Gray400}" Margin="0,16" />
 
         </VerticalStackLayout>
     </ScrollView>
