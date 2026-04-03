@@ -4,6 +4,7 @@ using FleetPlanner.ViewModels;
 using FleetPlanner.Views;
 
 using LiveChartsCore.SkiaSharpView.Maui;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace FleetPlanner;
 
@@ -13,8 +14,9 @@ public static class MauiProgram
     {
         var builder = MauiApp.CreateBuilder();
         builder
-            .UseMauiApp<App>()
+            .UseSkiaSharp()
             .UseLiveCharts()
+            .UseMauiApp<App>()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
