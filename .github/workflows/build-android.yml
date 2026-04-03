@@ -28,7 +28,7 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Restore NuGet packages (main app only)
-        run: dotnet restore FleetPlanner/FleetPlanner.csproj -f net10.0-android
+        run: dotnet restore FleetPlanner/FleetPlanner.csproj -p:TargetFramework=net10.0-android
 
       - name: Build Android APK (Debug)
         run: dotnet build FleetPlanner/FleetPlanner.csproj -f net10.0-android -c Debug --no-restore
