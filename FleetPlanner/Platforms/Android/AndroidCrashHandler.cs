@@ -1,16 +1,4 @@
-using Android.Runtime;
-using System;
-
 namespace FleetPlanner.Platforms.Android;
 
-public static class AndroidCrashHandler
-{
-    public static void Register()
-    {
-        AndroidEnvironment.UnhandledExceptionRaiser += (sender, args) =>
-        {
-            CrashLogger.WriteLogPublic(args.Exception);
-            args.Handled = true;
-        };
-    }
-}
+// Placeholder — Android crash handler removed, was interfering with startup
+public static class AndroidCrashHandler { }
