@@ -8,13 +8,8 @@ public partial class AppShell : Shell
     {
         InitializeComponent();
 
-        // Register detail routes for navigation
-        Routing.RegisterRoute("FleetDetailPage", typeof(FleetDetailPage));
-        Routing.RegisterRoute("ShipDetailPage", typeof(Views.ShipDetailPage));
-        Routing.RegisterRoute("ShipBrowserPage", typeof(ShipBrowserPage));
-
-        // Match system theme
-        if (Application.Current is not null)
-            Application.Current.UserAppTheme = Application.Current.RequestedTheme;
+        // Register detail routes — MAUI Shell resolves these via DI when navigating
+        Routing.RegisterRoute(nameof(FleetDetailPage), typeof(FleetDetailPage));
+        Routing.RegisterRoute(nameof(ShipDetailPage), typeof(ShipDetailPage));
     }
 }
