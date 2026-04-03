@@ -2,7 +2,15 @@
 <?xaml-comp compile="true" ?>
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-                    xmlns:t="clr-namespace:UraniumUI.Theming;assembly=UraniumUI">
+                    xmlns:helpers="clr-namespace:FleetPlanner.Helpers">
+
+    <helpers:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+
+    <Style x:Key="Title1" TargetType="Label">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+    </Style>
 
     <!--Not Currently Used-->
     <Style TargetType="ActivityIndicator">
@@ -678,22 +686,6 @@
            Class="FlyoutHeader">
         <Setter Property="BackgroundColor"
                 Value="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource PrimaryDark}}" />
-        <Setter Property="t:CascadingStyle.Resources">
-            <ResourceDictionary>
-                <!--Switch-->
-                <!--TODO: Check back on this -> currently this does not do anything, but it is a known bug https://github.com/dotnet/maui/issues/19380 -->
-                <Style TargetType="Switch">
-                    <Setter Property="OnColor"
-                            Value="{AppThemeBinding Light={StaticResource OnSecondary}, Dark={StaticResource OnPrimary}}" />
-                    <Setter Property="ThumbColor"
-                            Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource SecondaryDark}}" />
-                </Style>
-                <Style TargetType="Label">
-                    <Setter Property="TextColor"
-                            Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
-                </Style>
-            </ResourceDictionary>
-        </Setter>
     </Style>
 
     <!-- Frame -->
@@ -705,14 +697,6 @@
                 Value="0" />
         <Setter Property="Margin"
                 Value="2.5" />
-        <Setter Property="t:CascadingStyle.Resources">
-            <ResourceDictionary>
-                <Style TargetType="Label">
-                    <Setter Property="TextColor"
-                            Value="{AppThemeBinding Light={StaticResource OnSurface}, Dark={StaticResource OnSurfaceDark}}" />
-                </Style>
-            </ResourceDictionary>
-        </Setter>
     </Style>
 
 </ResourceDictionary>

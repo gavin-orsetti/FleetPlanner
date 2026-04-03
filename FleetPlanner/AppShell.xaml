@@ -3,62 +3,29 @@
     x:Class="FleetPlanner.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:viewmodels="clr-namespace:FleetPlanner.MVVM.ViewModels"
-    xmlns:local="clr-namespace:FleetPlanner"
-    xmlns:views="clr-namespace:FleetPlanner.MVVM.Views"
-    Shell.FlyoutBehavior="Flyout"
-    FlyoutBackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource PrimaryDark}}">
+    xmlns:views="clr-namespace:FleetPlanner.Views"
+    Shell.FlyoutBehavior="Disabled">
 
-    <ShellContent
-        Title="Fleets"
-        ContentTemplate="{DataTemplate local:MainPage}" />
+    <TabBar>
+        <ShellContent Title="Dashboard"
+                      ContentTemplate="{DataTemplate views:DashboardPage}"
+                      Route="DashboardPage" />
 
-    <Shell.FlyoutHeader>
-        <VerticalStackLayout StyleClass="FlyoutHeader" Padding="20">
-            <Label Text="Fleet Planner" FontSize="Large" HorizontalTextAlignment="Center" Margin="10" />
+        <ShellContent Title="My Fleet"
+                      ContentTemplate="{DataTemplate views:FleetListPage}"
+                      Route="FleetListPage" />
 
-            <Label Text="App Theme" HorizontalOptions="Center"/>
+        <ShellContent Title="Ships"
+                      ContentTemplate="{DataTemplate views:ShipBrowserPage}"
+                      Route="ShipBrowserPage" />
 
-            <HorizontalStackLayout HorizontalOptions="Center">
-                <Label Text="Light" VerticalOptions="Center" />
-                <Switch x:Name="themeSwitch" Toggled="ThemeToggled"/>
-                <Label Text="Dark" VerticalOptions="Center" />
-            </HorizontalStackLayout>
-        </VerticalStackLayout>
-    </Shell.FlyoutHeader>
+        <ShellContent Title="Recommend"
+                      ContentTemplate="{DataTemplate views:RecommendationsPage}"
+                      Route="RecommendationsPage" />
 
-   
-    <FlyoutItem Title="Shopping Lists">
-        <Tab>
-            <ShellContent ContentTemplate="{DataTemplate views:ShoppingListPage}"/>
-        </Tab>
-    </FlyoutItem>
+        <ShellContent Title="Settings"
+                      ContentTemplate="{DataTemplate views:SettingsPage}"
+                      Route="SettingsPage" />
+    </TabBar>
 
-    <FlyoutItem Title="About">
-        <Tab>
-            <ShellContent ContentTemplate="{DataTemplate views:AboutPage}"/>
-        </Tab>
-    </FlyoutItem>
-
-    <FlyoutItem Title="Contribute">
-        <Tab>
-            <ShellContent ContentTemplate="{DataTemplate views:ContributePage}"/>
-        </Tab>
-    </FlyoutItem>
-
-    <Shell.FlyoutFooter>
-        <StackLayout>
-            <Image Source="made_by_the_community_white.png" 
-                   MaximumWidthRequest="250"
-                   MaximumHeightRequest="250"
-                   WidthRequest="200"
-                   HeightRequest="200"/>
-
-            <Label Text="This is an unofficial Star Citizen fan project, not affiliated with the Cloud Imperium group of companies. All content on this app not authored by its host or users are property of their respective owners"
-                   HorizontalTextAlignment="Center"
-                   VerticalTextAlignment="Start"
-                   HeightRequest="150"
-                   Padding="10"/>
-        </StackLayout>
-    </Shell.FlyoutFooter>
 </Shell>

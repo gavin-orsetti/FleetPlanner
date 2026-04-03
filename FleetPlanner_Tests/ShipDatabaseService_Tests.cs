@@ -1,30 +1,58 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using FleetPlanner.MVVM.ViewModels;
+using FleetPlanner.Models;
 using FleetPlanner.Services;
 
-namespace FleetPlanner_Tests
+namespace FleetPlanner_Tests;
+
+public class RecommendationService_Tests
 {
-    public class ShipDatabaseService_Tests
+    private readonly RecommendationService _service = new();
+
+    [Fact]
+    public void GetRecommendations_ReturnsRoleCoverage_WhenMissingCombat()
     {
-        //Test naming should follow this convention "MethodName_ExpectedResult_UnderGivenCondition"
+        // Arrange — fleet with only a hauler, no combat ship
+        var owned = new List<Ship>
+        {
+            new() { Id = 1, Name = "Hull C", Role = "Hauling", PriceUsd = 200, CargoCapacity = 4608 }
+        };
+        var all = new List<Ship>
+        {
+            new() { Id = 1, Name = "Hull C", Role = "Hauling", PriceUsd = 200, CargoCapacity = 4608 },
+            new() { Id = 2, Name = "Arrow", Role = "Fighter", PriceUsd = 75, CrewMin = 1, CrewMax = 1 },
+            new() { Id = 3, Name = "Cutlass Black", Role = "Combat", PriceUsd = 100, CrewMin = 1, CrewMax = 3 }
+        };
 
-        // This test will always fail because the Create() Method reads in data from the ships.json file, and for some reason that throws an error. I don't have time to figure it out right now, so I am just going to leave it. The Method works in the main application, but if it starts giving me trouble I will come back to this.
-        //[Fact]
-        //public async Task Create_PopulatesDatabaseDictionary_UponServiceCreation()
-        //{
-        //    // Arrange
-        //    ShipDatabaseService service;
+        // Act
+        var recs = _service.GetRecommendations(owned, all);
 
-        //    // Act
-        //    service = await ShipDatabaseService.Create();
+        // Assert
+        Assert.Contains(recs, r => r.Category == RecommendationCategory.RoleCoverage
+                                   && r.Title.Contains("Combat", StringComparison.OrdinalIgnoreCase));
+    }
 
-        //    // Assert
-        //    Assert.True( service.Db.Count > 0 );
-        //}
+    [Fact]
+    public void GetRecommendations_ReturnsSynergy_WhenHaulerButNoEscort()
+    {
+        var owned = new List<Ship>
+        {
+            new() { Id = 1, Name = "Hull C", Role = "Hauling", PriceUsd = 200, CargoCapacity = 4608 }
+        };
+        var all = new List<Ship>
+        {
+            new() { Id = 1, Name = "Hull C", Role = "Hauling", PriceUsd = 200, CargoCapacity = 4608 },
+            new() { Id = 2, Name = "Arrow", Role = "Fighter", PriceUsd = 75 }
+        };
+
+        var recs = _service.GetRecommendations(owned, all);
+
+        Assert.Contains(recs, r => r.Category == RecommendationCategory.FleetSynergy
+                                   && r.Title.Contains("escort", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public void GetRecommendations_ReturnsEmpty_WhenNoShipsOwned()
+    {
+        var recs = _service.GetRecommendations([], []);
+        Assert.Empty(recs);
     }
 }
