@@ -19,14 +19,12 @@ public static class CrashLogger
         {
             var ex = args.ExceptionObject as Exception;
             WriteLogPublic(ex);
-            ShowAlert(ex).GetAwaiter().GetResult();
         };
 
         TaskScheduler.UnobservedTaskException += (sender, args) =>
         {
             WriteLogPublic(args.Exception);
             args.SetObserved();
-            ShowAlert(args.Exception).GetAwaiter().GetResult();
         };
     }
 
@@ -38,20 +36,5 @@ public static class CrashLogger
             File.AppendAllText(LogPath, content);
         }
         catch { /* swallow - logging must never crash the crash handler */ }
-    }
-
-    private static async Task ShowAlert(Exception? ex)
-    {
-        try
-        {
-            var stackTrace = ex?.StackTrace ?? string.Empty;
-            var truncated = stackTrace.Substring(0, Math.Min(stackTrace.Length, 800));
-            var message = $"Type: {ex?.GetType().Name}\n\nMessage: {ex?.Message}\n\nInner: {ex?.InnerException?.Message}\n\nStack:\n{truncated}";
-            if (Application.Current?.MainPage is not null)
-            {
-                await Application.Current.MainPage.DisplayAlert("Crash Details", message, "OK");
-            }
-        }
-        catch { }
     }
 }

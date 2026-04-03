@@ -23,9 +23,12 @@ public static class MauiProgram
         {
             var builder = MauiApp.CreateBuilder();
             builder
+                .UseMauiApp<App>()
+                // FIX: .UseSkiaSharp() must come before .UseLiveCharts() and both
+                // must come after .UseMauiApp<App>() so the MAUI platform is
+                // initialized before SkiaSharp/LiveCharts hook into the rendering pipeline.
                 .UseSkiaSharp()
                 .UseLiveCharts()
-                .UseMauiApp<App>()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
