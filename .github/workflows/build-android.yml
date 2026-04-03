@@ -21,8 +21,8 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Install MAUI and Android workloads
-        run: dotnet workload install maui android
+      - name: Install Android workload
+        run: dotnet workload install android
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
