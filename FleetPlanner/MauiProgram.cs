@@ -12,9 +12,6 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
-        // FIX: Initialize SQLite native libraries before any SQLite usage.
-        // Without this, SQLiteConnection throws on Android because the native
-        // provider (e2-sqlite3) is never loaded.
         SQLitePCL.Batteries_V2.Init();
 
         CrashLogger.Register();
@@ -24,9 +21,6 @@ public static class MauiProgram
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
-                // FIX: .UseSkiaSharp() must come before .UseLiveCharts() and both
-                // must come after .UseMauiApp<App>() so the MAUI platform is
-                // initialized before SkiaSharp/LiveCharts hook into the rendering pipeline.
                 .UseSkiaSharp()
                 .UseLiveCharts()
                 .ConfigureFonts(fonts =>
@@ -64,9 +58,12 @@ public static class MauiProgram
             builder.Services.AddTransient<FleetListPage>();
             builder.Services.AddTransient<FleetDetailPage>();
             builder.Services.AddTransient<ShipBrowserPage>();
-            builder.Services.AddTransient<Views.ShipDetailPage>();
+            builder.Services.AddTransient<ShipDetailPage>();
             builder.Services.AddTransient<RecommendationsPage>();
             builder.Services.AddTransient<SettingsPage>();
+
+            // Shell — must be Singleton so the same instance is used for the app lifetime
+            builder.Services.AddSingleton<AppShell>();
 
             return builder.Build();
         }
