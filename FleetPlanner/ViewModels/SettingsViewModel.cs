@@ -43,7 +43,7 @@ public partial class SettingsViewModel : ObservableObject
         }
         catch (Exception)
         {
-            await Shell.Current.DisplayAlert("Error", "Could not refresh ship data. Check your connection.", "OK");
+            await Shell.Current.DisplayAlertAsync("Error", "Could not refresh ship data. Check your connection.", "OK");
         }
         finally
         {

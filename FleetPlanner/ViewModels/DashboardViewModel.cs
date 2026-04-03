@@ -46,7 +46,7 @@ public partial class DashboardViewModel : ObservableObject
     private ObservableCollection<ISeries> _roleCoverageSeries = [];
 
     [ObservableProperty]
-    private ObservableCollection<Axis> _roleCoverageAngles = [];
+    private ObservableCollection<PolarAxis> _roleCoverageAngles = [];
 
     [ObservableProperty]
     private ObservableCollection<ISeries> _costBreakdownSeries = [];
@@ -118,7 +118,7 @@ public partial class DashboardViewModel : ObservableObject
             .GroupBy(x => string.IsNullOrWhiteSpace(x.ship!.Role) ? "Unknown" : x.ship.Role)
             .Select(g => new PieSeries<int>
             {
-                Values = [g.Count()],
+                Values = new List<int> { g.Count() },
                 Name = g.Key,
                 DataLabelsPaint = new SolidColorPaint(SKColors.White),
                 DataLabelsFormatter = p => $"{g.Key}: {g.Count()}"
@@ -204,7 +204,7 @@ public partial class DashboardViewModel : ObservableObject
             .GroupBy(x => string.IsNullOrWhiteSpace(x.ship!.Manufacturer) ? "Unknown" : x.ship.Manufacturer)
             .Select(g => new PieSeries<decimal>
             {
-                Values = [g.Sum(x => x.ship!.PriceUsd)],
+                Values = new List<decimal> { g.Sum(x => x.ship!.PriceUsd) },
                 Name = g.Key,
                 DataLabelsFormatter = p => $"{g.Key}: ${g.Sum(x => x.ship!.PriceUsd):N0}"
             })

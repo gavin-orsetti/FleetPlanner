@@ -3,10 +3,7 @@ using FleetPlanner.Services;
 using FleetPlanner.ViewModels;
 using FleetPlanner.Views;
 
-using LiveChartsCore;
-using LiveChartsCore.SkiaSharpView;
-
-using SkiaSharp;
+using LiveChartsCore.SkiaSharpView.Maui;
 
 namespace FleetPlanner;
 
@@ -17,17 +14,12 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
-            .UseSkiaSharp()
+            .UseLiveCharts()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
-
-        // LiveCharts2 configuration
-        LiveCharts.Configure(config =>
-            config.AddSkiaSharp()
-                  .AddDefaultMappers());
 
         // HTTP client
         builder.Services.AddHttpClient("ShipData", client =>
