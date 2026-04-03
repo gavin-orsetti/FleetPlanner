@@ -12,50 +12,60 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
-        var builder = MauiApp.CreateBuilder();
-        builder
-            .UseSkiaSharp()
-            .UseLiveCharts()
-            .UseMauiApp<App>()
-            .ConfigureFonts(fonts =>
+        CrashLogger.Register();
+
+        try
+        {
+            var builder = MauiApp.CreateBuilder();
+            builder
+                .UseSkiaSharp()
+                .UseLiveCharts()
+                .UseMauiApp<App>()
+                .ConfigureFonts(fonts =>
+                {
+                    fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+                    fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                });
+
+            // HTTP client
+            builder.Services.AddHttpClient("ShipData", client =>
             {
-                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+                client.Timeout = TimeSpan.FromSeconds(30);
             });
 
-        // HTTP client
-        builder.Services.AddHttpClient("ShipData", client =>
+            // Repositories
+            builder.Services.AddSingleton<IFleetRepository, FleetRepository>();
+
+            // Services
+            builder.Services.AddSingleton<ShipDataService>();
+            builder.Services.AddSingleton<IShipDataService, CachedShipDataService>();
+            builder.Services.AddSingleton<IRecommendationService, RecommendationService>();
+
+            // ViewModels
+            builder.Services.AddTransient<DashboardViewModel>();
+            builder.Services.AddTransient<FleetListViewModel>();
+            builder.Services.AddTransient<FleetDetailViewModel>();
+            builder.Services.AddTransient<ShipBrowserViewModel>();
+            builder.Services.AddTransient<ShipDetailViewModel>();
+            builder.Services.AddTransient<RecommendationsViewModel>();
+            builder.Services.AddTransient<SettingsViewModel>();
+
+            // Pages
+            builder.Services.AddTransient<DashboardPage>();
+            builder.Services.AddTransient<FleetListPage>();
+            builder.Services.AddTransient<FleetDetailPage>();
+            builder.Services.AddTransient<ShipBrowserPage>();
+            builder.Services.AddTransient<Views.ShipDetailPage>();
+            builder.Services.AddTransient<RecommendationsPage>();
+            builder.Services.AddTransient<SettingsPage>();
+
+            return builder.Build();
+        }
+        catch (Exception ex)
         {
-            client.DefaultRequestHeaders.Add("Accept", "application/json");
-            client.Timeout = TimeSpan.FromSeconds(30);
-        });
-
-        // Repositories
-        builder.Services.AddSingleton<IFleetRepository, FleetRepository>();
-
-        // Services
-        builder.Services.AddSingleton<ShipDataService>();
-        builder.Services.AddSingleton<IShipDataService, CachedShipDataService>();
-        builder.Services.AddSingleton<IRecommendationService, RecommendationService>();
-
-        // ViewModels
-        builder.Services.AddTransient<DashboardViewModel>();
-        builder.Services.AddTransient<FleetListViewModel>();
-        builder.Services.AddTransient<FleetDetailViewModel>();
-        builder.Services.AddTransient<ShipBrowserViewModel>();
-        builder.Services.AddTransient<ShipDetailViewModel>();
-        builder.Services.AddTransient<RecommendationsViewModel>();
-        builder.Services.AddTransient<SettingsViewModel>();
-
-        // Pages
-        builder.Services.AddTransient<DashboardPage>();
-        builder.Services.AddTransient<FleetListPage>();
-        builder.Services.AddTransient<FleetDetailPage>();
-        builder.Services.AddTransient<ShipBrowserPage>();
-        builder.Services.AddTransient<Views.ShipDetailPage>();
-        builder.Services.AddTransient<RecommendationsPage>();
-        builder.Services.AddTransient<SettingsPage>();
-
-        return builder.Build();
+            CrashLogger.WriteLogPublic(ex);
+            throw;
+        }
     }
 }
