@@ -2,9 +2,14 @@ namespace FleetPlanner;
 
 public partial class App : Application
 {
-    public App(AppShell shell)
+    public App()
     {
         InitializeComponent();
-        MainPage = shell;
+    }
+
+    protected override Window CreateWindow(IActivationState? activationState)
+    {
+        var shell = IPlatformApplication.Current!.Services.GetRequiredService<AppShell>();
+        return new Window(shell);
     }
 }
