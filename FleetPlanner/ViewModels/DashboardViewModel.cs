@@ -187,14 +187,14 @@ public partial class DashboardViewModel : ObservableObject
         };
 
         RoleCoverageSeries = new ObservableCollection<ISeries> { series };
-        RoleCoverageAngles =
-        [
+        RoleCoverageAngles = new ObservableCollection<PolarAxis>
+        {
             new PolarAxis
             {
                 Labels = roles.ToList(),
                 MinStep = 1
             }
-        ];
+        };
     }
 
     private void BuildCostBreakdownChart(List<(FleetShip fs, Ship? ship)> fleetShips)
