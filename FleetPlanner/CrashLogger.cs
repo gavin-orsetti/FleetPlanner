@@ -6,8 +6,12 @@ namespace FleetPlanner;
 
 public static class CrashLogger
 {
-    private static string LogPath =>
-        Path.Combine(FileSystem.AppDataDirectory, "crash.log");
+    // FIX: Cache the log path lazily. FileSystem.AppDataDirectory is not
+    // available until the MAUI platform is initialised, but CrashLogger.Register()
+    // is called very early in MauiProgram.CreateMauiApp(). Deferring the path
+    // resolution to first write prevents an early-access crash on Android.
+    private static string? _logPath;
+    private static string LogPath => _logPath ??= Path.Combine(FileSystem.AppDataDirectory, "crash.log");
 
     public static void Register()
     {

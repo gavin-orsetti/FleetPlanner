@@ -12,6 +12,11 @@ public static class MauiProgram
 {
     public static MauiApp CreateMauiApp()
     {
+        // FIX: Initialize SQLite native libraries before any SQLite usage.
+        // Without this, SQLiteConnection throws on Android because the native
+        // provider (e2-sqlite3) is never loaded.
+        SQLitePCL.Batteries_V2.Init();
+
         CrashLogger.Register();
 
         try

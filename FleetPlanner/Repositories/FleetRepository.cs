@@ -8,11 +8,15 @@ public class FleetRepository : IFleetRepository
 {
     private SQLiteAsyncConnection? _db;
 
-    private readonly string _dbPath;
+    // FIX: Lazy-resolve the database path. FileSystem.AppDataDirectory is not
+    // available when the DI container builds singletons during
+    // MauiProgram.CreateMauiApp() on Android. Deferring to first use
+    // ensures the platform is fully initialised.
+    private string? _dbPath;
+    private string DbPath => _dbPath ??= Path.Combine(FileSystem.AppDataDirectory, "FleetPlanner.db3");
 
     public FleetRepository()
     {
-        _dbPath = Path.Combine(FileSystem.AppDataDirectory, "FleetPlanner.db3");
     }
 
     private async Task<SQLiteAsyncConnection> GetConnectionAsync()
@@ -20,7 +24,7 @@ public class FleetRepository : IFleetRepository
         if (_db is not null)
             return _db;
 
-        _db = new SQLiteAsyncConnection(_dbPath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache);
+        _db = new SQLiteAsyncConnection(DbPath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache);
         await _db.CreateTableAsync<Fleet>();
         await _db.CreateTableAsync<FleetShip>();
         return _db;

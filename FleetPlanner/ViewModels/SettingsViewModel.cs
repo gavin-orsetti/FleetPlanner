@@ -21,12 +21,18 @@ public partial class SettingsViewModel : ObservableObject
     public SettingsViewModel(IShipDataService shipDataService)
     {
         _shipDataService = shipDataService;
-        IsDarkMode = Application.Current?.RequestedTheme == AppTheme.Dark;
+        // FIX: Defer Application.Current access. During DI construction the
+        // Application instance may not exist yet, causing a NullReferenceException.
+        // The value is set in LoadSettingsAsync which runs after the UI is ready.
     }
 
     [RelayCommand]
     private async Task LoadSettingsAsync()
     {
+        // FIX: Initialise IsDarkMode here instead of in the constructor,
+        // because Application.Current is guaranteed to exist by this point.
+        IsDarkMode = Application.Current?.RequestedTheme == AppTheme.Dark;
+
         var lastUpdated = await _shipDataService.GetLastUpdatedAsync();
         LastUpdated = lastUpdated?.ToString("g") ?? "Never";
     }
@@ -43,7 +49,9 @@ public partial class SettingsViewModel : ObservableObject
         }
         catch (Exception)
         {
-            await Shell.Current.DisplayAlertAsync("Error", "Could not refresh ship data. Check your connection.", "OK");
+            // FIX: The method is DisplayAlert (returns Task), not DisplayAlertAsync
+            // which does not exist on Shell/Page and would throw MissingMethodException.
+            await Shell.Current.DisplayAlert("Error", "Could not refresh ship data. Check your connection.", "OK");
         }
         finally
         {
