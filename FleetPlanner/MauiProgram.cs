@@ -35,7 +35,8 @@ public static class MauiProgram
         // Services
         builder.Services.AddSingleton<IFleetRepository, FleetRepository>();
         builder.Services.AddSingleton<ShipDataService>();
-        builder.Services.AddSingleton<IShipDataService, CachedShipDataService>();
+        builder.Services.AddSingleton<IShipDataService>(sp =>
+            new CachedShipDataService(sp.GetRequiredService<ShipDataService>()));
         builder.Services.AddSingleton<IRecommendationService, RecommendationService>();
 
         // ViewModels
