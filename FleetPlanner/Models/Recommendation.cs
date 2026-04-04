@@ -12,7 +12,8 @@ public enum RecommendationCategory
     RoleCoverage,
     FleetSynergy,
     UpgradePath,
-    ValueAnalysis
+    ValueAnalysis,
+    CrewEfficiency
 }
 
 /// <summary>
@@ -29,4 +30,10 @@ public class Recommendation
     public RecommendationPriority Priority { get; set; }
 
     public List<Ship> SuggestedShips { get; set; } = [];
+
+    public string? CrewNote { get; set; }
+
+    public string? AcquisitionNote { get; set; }
+
+    public int FleetId { get; set; }
 }
