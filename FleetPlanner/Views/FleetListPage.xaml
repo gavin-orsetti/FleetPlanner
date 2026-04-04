@@ -1,4 +1,25 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!--
+    FleetListPage.xaml — Master list of all user-created fleets.
+
+    LAYOUT STRUCTURE:
+    - Grid with 3 rows: loading indicator, fleet list (or empty state), add button
+    - RefreshView wraps CollectionView for pull-to-refresh on mobile
+    - SwipeView on each item for swipe-to-delete
+
+    KEY XAML PATTERNS:
+    - RefreshView: binds Command to LoadFleetsCommand and IsRefreshing to IsLoading for
+      pull-to-refresh behaviour. See: https://learn.microsoft.com/en-us/dotnet/maui/user-interface/controls/refreshview
+    - SwipeView: wraps each fleet card, providing a "Delete" swipe action on the right side.
+    - RelativeSource AncestorType: Inside the DataTemplate, the binding context is a Fleet item.
+      To reach the ViewModel's commands, we use {Binding Source={RelativeSource AncestorType={x:Type vm:FleetListViewModel}}, Path=DeleteFleetCommand}.
+      This walks up the visual tree to find the ViewModel.
+    - TapGestureRecognizer: adds tap-to-navigate to each fleet card (navigates to FleetDetailPage).
+    - x:DataType inside DataTemplate: <DataTemplate x:DataType="models:Fleet"> enables compiled
+      bindings within the template — the compiler checks that Fleet has Name, PrimaryFocusEnum, etc.
+
+    See: https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/data-binding/relative-bindings
+-->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:FleetPlanner.ViewModels"

@@ -1,4 +1,26 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!--
+    DashboardPage.xaml — Fleet statistics dashboard with KPI cards and LiveCharts2 charts.
+
+    LAYOUT STRUCTURE:
+    - Fleet Picker (select which fleet to analyse)
+    - ActivityIndicator (loading spinner)
+    - KPI Grid (4-column: Ships, Fleet Value, Roles, Avg Crew)
+    - Acquisition breakdown (pledged vs in-game)
+    - PieChart (fleet composition by role) using LiveCharts2
+    - CartesianChart (top-10 ship values as bar chart) using LiveCharts2
+
+    KEY XAML PATTERNS:
+    - x:DataType="vm:DashboardViewModel" enables compiled bindings (compile-time checked,
+      faster than reflection-based bindings). If a binding path is wrong, it fails at build time.
+    - {AppThemeBinding Light=..., Dark=...} switches colours based on the current theme.
+    - {StaticResource InvertedBoolConverter} inverts IsLoading to show content when NOT loading.
+    - StringFormat in bindings formats values inline: StringFormat='${0:N0}' formats as currency.
+    - lvc:PieChart and lvc:CartesianChart are LiveCharts2 MAUI controls bound to ISeries[] arrays.
+
+    See: https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/data-binding/compiled-bindings
+    See: https://livecharts.dev/docs/maui/2.0.0-rc6/
+-->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:FleetPlanner.ViewModels"

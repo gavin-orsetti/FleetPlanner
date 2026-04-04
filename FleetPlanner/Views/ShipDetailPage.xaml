@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!--
+    ShipDetailPage.xaml — Read-only detail view for a single ship's specifications.
+
+    LAYOUT STRUCTURE:
+    - ActivityIndicator (loading spinner)
+    - Ship name + manufacturer header
+    - Stats Grid (Role, Size, Crew, Cargo, Price USD)
+    - In-game price frame (aUEC)
+    - Description frame
+
+    KEY XAML PATTERNS:
+    - Title="{Binding Ship.Name}" — path navigation through the Ship object. The title updates
+      when the Ship property is set after loading completes.
+    - Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,..." — a two-column table layout
+      for displaying key-value pairs (label on left, value on right).
+    - StringFormat in bindings: '{0:N0}' formats numbers with thousand separators,
+      '${0:N0}' adds a dollar sign prefix for USD prices.
+
+    See: https://learn.microsoft.com/en-us/dotnet/maui/user-interface/layouts/grid
+-->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:FleetPlanner.ViewModels"

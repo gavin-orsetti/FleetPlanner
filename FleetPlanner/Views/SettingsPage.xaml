@@ -1,4 +1,24 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!--
+    SettingsPage.xaml — App settings: dark mode toggle, cache management, and about section.
+
+    LAYOUT STRUCTURE:
+    - Appearance frame: Dark Mode switch
+    - Ship Data Cache frame: last-updated timestamp, refresh button, loading indicator
+    - About frame: app name, description, community logo, legal disclaimer
+
+    KEY XAML PATTERNS:
+    - Switch IsToggled="{Binding IsDarkMode}" — two-way binding. When toggled, the ViewModel's
+      OnIsDarkModeChanged partial method fires and updates Application.Current.UserAppTheme,
+      which triggers an immediate theme change across the entire app.
+    - ActivityIndicator IsRunning + IsVisible both bound to IsRefreshing — shows a spinner
+      while the cache refresh HTTP request is in progress.
+    - Image Source="made_by_the_community_white.png" — references an image from the
+      Resources/Images folder. MAUI automatically resolves platform-specific image assets.
+
+    See: https://learn.microsoft.com/en-us/dotnet/maui/user-interface/controls/switch
+    See: https://learn.microsoft.com/en-us/dotnet/maui/user-interface/theming
+-->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:FleetPlanner.ViewModels"

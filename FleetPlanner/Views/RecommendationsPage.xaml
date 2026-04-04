@@ -1,4 +1,27 @@
 <?xml version="1.0" encoding="utf-8" ?>
+<!--
+    RecommendationsPage.xaml — Displays fleet improvement recommendations from the engine.
+
+    LAYOUT STRUCTURE:
+    - Fleet Picker (select which fleet to analyse)
+    - Fleet summary label (focus, crew, scale)
+    - ActivityIndicator (loading spinner)
+    - "No fleet data" empty state (when HasNoFleet=true)
+    - RefreshView wrapping a CollectionView of Recommendation items
+
+    KEY XAML PATTERNS:
+    - Cross-assembly namespace: xmlns:vm and xmlns:models reference FleetPlanner.Core because
+      RecommendationsViewModel and Recommendation/Ship live in the Core project.
+    - Nested CollectionView: each recommendation card contains a horizontal CollectionView
+      of suggested ships using LinearItemsLayout Orientation="Horizontal". This creates a
+      scrollable chip-list of ship suggestions within each recommendation.
+    - Priority/Category badges: small coloured Frame elements showing the recommendation's
+      priority (High/Medium/Low) and category (RoleCoverage, Synergy, etc.).
+    - IsNotNullConverter: used on CrewNote and AcquisitionNote to conditionally show labels
+      only when these optional notes have values.
+
+    See: https://learn.microsoft.com/en-us/dotnet/maui/user-interface/controls/collectionview/layout
+-->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:FleetPlanner.ViewModels;assembly=FleetPlanner.Core"
