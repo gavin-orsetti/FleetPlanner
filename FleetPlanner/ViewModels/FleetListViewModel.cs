@@ -83,7 +83,7 @@ public partial class FleetListViewModel : ObservableObject
     private async Task AddFleetAsync()
     {
         // fleetId=0 tells FleetManagementPage to create a new fleet instead of editing an existing one.
-        await Shell.Current.GoToAsync("FleetManagementPage?fleetId=0");
+        await Shell.Current.GoToAsync("///FleetManagementPage?fleetId=0");
     }
 
     /// <summary>
@@ -118,6 +118,6 @@ public partial class FleetListViewModel : ObservableObject
     {
         if (fleet is null)
             return;
-        await Shell.Current.GoToAsync($"FleetDetailPage?fleetId={fleet.Id}");
+        await Shell.Current.GoToAsync($"///FleetDetailPage?fleetId={fleet.Id}");
     }
 }

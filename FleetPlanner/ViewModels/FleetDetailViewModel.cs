@@ -182,7 +182,7 @@ public partial class FleetDetailViewModel : ObservableObject
     [RelayCommand]
     private async Task ManageFleetAsync()
     {
-        await Shell.Current.GoToAsync($"FleetManagementPage?fleetId={FleetId}");
+        await Shell.Current.GoToAsync($"///FleetManagementPage?fleetId={FleetId}");
     }
 
     /// <summary>
@@ -195,7 +195,7 @@ public partial class FleetDetailViewModel : ObservableObject
     [RelayCommand]
     private async Task AddShipAsync()
     {
-        await Shell.Current.GoToAsync($"ShipBrowserPage?selectMode=true&fleetId={FleetId}");
+        await Shell.Current.GoToAsync($"///ShipBrowserPage?selectMode=true&fleetId={FleetId}");
     }
 
     /// <summary>
