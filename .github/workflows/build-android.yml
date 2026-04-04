@@ -11,29 +11,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: FleetplannerV2
 
-      - name: Setup .NET 10
+      - name: Setup .NET 9
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: '9.0.x'
 
-      - name: Install Android workloads
-        run: dotnet workload install android maui-android
+      - name: Install MAUI Android workload
+        run: dotnet workload install maui-android
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Restore NuGet packages (main app only)
-        run: dotnet restore FleetPlanner/FleetPlanner.csproj -p:TargetFramework=net10.0-android
+      - name: Restore
+        run: dotnet restore FleetPlanner/FleetPlanner.csproj -p:TargetFramework=net9.0-android
 
-      - name: Build Android APK (Debug)
-        run: dotnet build FleetPlanner/FleetPlanner.csproj -f net10.0-android -c Debug --no-restore
+      - name: Publish
+        run: dotnet publish FleetPlanner/FleetPlanner.csproj -f net9.0-android -c Debug -r android-arm64 --no-restore -p:AndroidPackageFormat=apk
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: FleetPlanner-debug.apk

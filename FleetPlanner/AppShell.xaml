@@ -3,14 +3,15 @@
     x:Class="FleetPlanner.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:FleetPlanner.Views"
     Shell.FlyoutBehavior="Disabled">
 
-    <ShellContent Title="Home" Route="MainPage">
-        <ShellContent.Content>
-            <ContentPage Title="Fleet Planner">
-                <Label Text="App is running!" HorizontalOptions="Center" VerticalOptions="Center" />
-            </ContentPage>
-        </ShellContent.Content>
-    </ShellContent>
+    <TabBar>
+        <ShellContent Title="Dashboard" Route="DashboardPage" ContentTemplate="{DataTemplate views:DashboardPage}" />
+        <ShellContent Title="My Fleet" Route="FleetListPage" ContentTemplate="{DataTemplate views:FleetListPage}" />
+        <ShellContent Title="Ships" Route="ShipBrowserPage" ContentTemplate="{DataTemplate views:ShipBrowserPage}" />
+        <ShellContent Title="Recommend" Route="RecommendationsPage" ContentTemplate="{DataTemplate views:RecommendationsPage}" />
+        <ShellContent Title="Settings" Route="SettingsPage" ContentTemplate="{DataTemplate views:SettingsPage}" />
+    </TabBar>
 
 </Shell>

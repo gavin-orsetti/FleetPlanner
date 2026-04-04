@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.Maui;assembly=LiveChartsCore.SkiaSharpView.Maui"
              x:Class="FleetPlanner.Views.DashboardPage"
              x:DataType="vm:DashboardViewModel"
              Title="Dashboard">
@@ -43,9 +44,25 @@
             <Label Text="{Binding LastUpdated, StringFormat='Ship data last updated: {0}'}"
                    FontSize="10" HorizontalTextAlignment="Center" TextColor="{StaticResource Gray400}" />
 
-            <!-- LiveCharts stubbed for crash diagnosis -->
-            <Label Text="Charts coming soon" FontSize="14" HorizontalTextAlignment="Center"
-                   TextColor="{StaticResource Gray400}" Margin="0,16" />
+            <!-- Fleet Composition Pie Chart -->
+            <Frame Padding="8" CornerRadius="8" IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                <VerticalStackLayout>
+                    <Label Text="Fleet Composition by Role" FontAttributes="Bold" FontSize="14" Margin="0,0,0,4" />
+                    <lvc:PieChart Series="{Binding FleetCompositionSeries}" HeightRequest="250"
+                                  LegendPosition="Right" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Value Distribution Bar Chart -->
+            <Frame Padding="8" CornerRadius="8" IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                <VerticalStackLayout>
+                    <Label Text="Fleet Value Distribution (Top 10)" FontAttributes="Bold" FontSize="14" Margin="0,0,0,4" />
+                    <lvc:CartesianChart Series="{Binding ValueDistributionSeries}"
+                                        XAxes="{Binding ValueDistributionXAxes}"
+                                        YAxes="{Binding ValueDistributionYAxes}"
+                                        HeightRequest="300" />
+                </VerticalStackLayout>
+            </Frame>
 
         </VerticalStackLayout>
     </ScrollView>
