@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\FleetPlanner\FleetPlanner.csproj" />
+    <ProjectReference Include="..\FleetPlanner.Core\FleetPlanner.Core.csproj" />
   </ItemGroup>
 
 </Project>
