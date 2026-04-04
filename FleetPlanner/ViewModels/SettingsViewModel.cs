@@ -11,7 +11,7 @@ namespace FleetPlanner.ViewModels;
 /// <b>Responsibilities:</b>
 /// <list type="bullet">
 ///   <item>Display when the ship data cache was last refreshed.</item>
-///   <item>Allow the user to force-refresh the cache (re-download from UEX Corp API).</item>
+///   <item>Allow the user to force-refresh the cache (re-download from starcitizen.tools wiki API).</item>
 ///   <item>Toggle dark/light theme at runtime via <see cref="Application.UserAppTheme"/>.</item>
 /// </list>
 /// </para>
@@ -80,7 +80,7 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Force-refreshes the ship data cache by re-downloading from the UEX Corp API.
+    /// Force-refreshes the ship data cache by re-downloading from the starcitizen.tools wiki API.
     /// <para>
     /// <b>forceRefresh: true</b> bypasses the cache-age check in <see cref="CachedShipDataService"/>,
     /// forcing a fresh HTTP request regardless of when the cache was last updated.

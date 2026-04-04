@@ -38,7 +38,7 @@ namespace FleetPlanner.Services;
 public class CachedShipDataService : IShipDataService
 {
     /// <summary>
-    /// The wrapped "live" service that actually talks to the UEX Corp API.
+    /// The wrapped "live" service that actually talks to the starcitizen.tools wiki API.
     /// Only called when the cache is empty or the user explicitly refreshes.
     /// </summary>
     private readonly IShipDataService _liveService;

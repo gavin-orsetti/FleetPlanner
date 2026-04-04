@@ -3,7 +3,7 @@ using SQLite;
 namespace FleetPlanner.Models;
 
 /// <summary>
-/// Tracks when ship data was last fetched from the UEX Corp API.
+/// Tracks when ship data was last fetched from the starcitizen.tools wiki API.
 /// <para>
 /// This is a single-row table used as a key-value store. The <see cref="Key"/> is always
 /// "ship_cache", and <see cref="LastFetched"/> records the UTC timestamp of the most recent

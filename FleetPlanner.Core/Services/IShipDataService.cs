@@ -7,7 +7,7 @@ namespace FleetPlanner.Services;
 /// <para>
 /// Two implementations exist, illustrating the <b>Decorator Pattern</b>:
 /// <list type="bullet">
-///   <item><see cref="ShipDataService"/> — the "live" implementation that fetches from the UEX Corp API over HTTP.</item>
+///   <item><see cref="ShipDataService"/> — the "live" implementation that fetches from the starcitizen.tools wiki API over HTTP.</item>
 ///   <item><see cref="CachedShipDataService"/> — wraps the live service, adding a SQLite caching layer
 ///     so the app works offline and avoids redundant network calls.</item>
 /// </list>
@@ -32,7 +32,7 @@ public interface IShipDataService
     /// <summary>
     /// Returns a single ship by its ID, or <see langword="null"/> if not found.
     /// </summary>
-    /// <param name="id">The ship's <see cref="Ship.Id"/> (from the UEX Corp API).</param>
+    /// <param name="id">The ship's <see cref="Ship.Id"/>.</param>
     Task<Ship?> GetShipAsync(int id);
 
     /// <summary>

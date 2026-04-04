@@ -6,26 +6,40 @@ using FleetPlanner.Models;
 namespace FleetPlanner.Services;
 
 // ──────────────────────────────────────────────────────────────────────────────
-// API choice: UEX Corp API 2.0 (https://uexcorp.space/api/2.0/)
+// API choice: starcitizen.tools Semantic MediaWiki API
 //
 // Rationale:
-// - UEX Corp is purpose-built for Star Citizen economy data (ships, vehicles, pricing).
-// - Provides both USD pledge pricing and in-game aUEC pricing.
-// - Free tier with no API key required for read-only ship data endpoints.
-// - Returns comprehensive ship stats: name, manufacturer, role, size, crew, cargo, prices.
-// - The Star Citizen API (starcitizen-api.com) was considered but its GameData
-//   feature is deprecated ("This feature is no longer supported"), and its ship
-//   endpoint requires an API key with undocumented rate limits.
-// - UEX Corp is the de-facto standard used by the Star Citizen community tools.
+// - starcitizen.tools is the community-maintained wiki for Star Citizen, powered by
+//   Semantic MediaWiki (SMW). Unlike the previous UEX Corp integration, the wiki's
+//   SMW "action=ask" endpoint returns ship descriptions, USD pledge prices, in-game
+//   aUEC average prices, and all other ship stats in a SINGLE API call.
+// - The UEX Corp /vehicles endpoint lacked pledge pricing, aUEC pricing, and ship
+//   descriptions — three fields that are critical for the recommendation engine's
+//   value analysis and upgrade-path passes.
+// - No API key is required; the wiki only asks for a descriptive User-Agent header.
+// - The SMW query language is powerful: [[Category:Ships]] selects all ship pages,
+//   and |?Property syntax requests specific semantic properties as structured JSON.
 //
-// Endpoints used:
-// - GET /vehicles       — list of all ships/vehicles with stats
-// - GET /vehicles/{id}  — single vehicle detail
+// Endpoint used:
+// - GET /api.php?action=ask&query=[[Category:Ships]]|?...|limit=500&format=json
+//
+// How the SMW "action=ask" query works:
+// - [[Category:Ships]]    — selects all pages in the Ships category
+// - |?Pledge price        — requests the "Pledge price" semantic property
+// - |?Average price       — requests the "Average price" (aUEC) property
+// - |?Description         — requests the ship description
+// - |?Career              — requests the career/role classification
+// - |limit=500            — returns up to 500 results per call
+// - &format=json          — returns results as JSON instead of HTML
+//
+// The response shape is:
+//   { "query": { "results": { "Ship Name": { "printouts": { ... } } } } }
+// Each ship is keyed by its wiki page title (which is the ship name).
 // ──────────────────────────────────────────────────────────────────────────────
 
 /// <summary>
 /// The "live" implementation of <see cref="IShipDataService"/> that fetches ship data
-/// directly from the UEX Corp REST API over HTTP.
+/// directly from the starcitizen.tools Semantic MediaWiki API over HTTP.
 /// <para>
 /// This service is NOT registered directly in DI — instead, <see cref="CachedShipDataService"/>
 /// wraps it (Decorator Pattern) and is what the rest of the app consumes. The live service
@@ -37,13 +51,11 @@ namespace FleetPlanner.Services;
 /// that manages <c>HttpClient</c> lifetimes and connection pooling for us.
 /// </para>
 /// </summary>
-/// <see href="https://uexcorp.space/api/2.0/"/>
+/// <see href="https://starcitizen.tools"/>
+/// <see href="https://www.semantic-mediawiki.org/wiki/Help:API:ask"/>
 /// <see href="https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/http/httpclient-guidelines"/>
 public class ShipDataService : IShipDataService
 {
-    /// <summary>Base URL for the UEX Corp API v2.0.</summary>
-    private const string BaseUrl = "https://uexcorp.space/api/2.0";
-
     /// <summary>
     /// Factory for creating named <c>HttpClient</c> instances. Registered in
     /// <c>MauiProgram.cs</c> via <c>builder.Services.AddHttpClient()</c>.
@@ -55,8 +67,8 @@ public class ShipDataService : IShipDataService
     /// </summary>
     /// <param name="httpClientFactory">
     /// The factory that creates pre-configured <c>HttpClient</c> instances.
-    /// We request a named client called "ShipData" — this name can be used in
-    /// <c>MauiProgram.cs</c> to configure base addresses, default headers, etc.
+    /// We request a named client called "ShipData" — this name is used in
+    /// <c>MauiProgram.cs</c> to configure the User-Agent header and timeout.
     /// </param>
     public ShipDataService(IHttpClientFactory httpClientFactory)
     {
@@ -64,10 +76,12 @@ public class ShipDataService : IShipDataService
     }
 
     /// <summary>
-    /// Fetches all ships from the UEX Corp <c>/vehicles</c> endpoint.
+    /// Fetches all ships from the starcitizen.tools wiki using a single SMW
+    /// <c>action=ask</c> query that returns descriptions, prices, and all stats.
     /// <para>
-    /// <b>Flow:</b> Create HttpClient → GET /vehicles → deserialise JSON → map each API
-    /// vehicle DTO to our <see cref="Ship"/> domain model → return the list.
+    /// <b>Flow:</b> Create HttpClient → GET the SMW ask query → deserialise JSON →
+    /// map each wiki result entry to our <see cref="Ship"/> domain model → return the list
+    /// sorted alphabetically by name.
     /// </para>
     /// </summary>
     /// <param name="forceRefresh">Ignored by the live service (always fetches fresh). The
@@ -76,26 +90,38 @@ public class ShipDataService : IShipDataService
     /// <exception cref="HttpRequestException">Thrown if the API call fails (non-2xx status).</exception>
     public async Task<List<Ship>> GetAllShipsAsync(bool forceRefresh = false)
     {
-        // CreateClient("ShipData") returns a pooled HttpClient instance. The name "ShipData"
-        // allows platform-specific configuration (e.g., custom User-Agent) if needed.
         var client = _httpClientFactory.CreateClient("ShipData");
-        var response = await client.GetAsync($"{BaseUrl}/vehicles");
 
-        // EnsureSuccessStatusCode throws HttpRequestException for 4xx/5xx responses,
-        // which the CachedShipDataService catches to fall back to offline data.
+        var url = "https://starcitizen.tools/api.php?action=ask" +
+                  "&query=[[Category:Ships]]" +
+                  "|?Pledge%20price" +
+                  "|?Average%20price" +
+                  "|?Description" +
+                  "|?Career" +
+                  "|?Minimum%20crew" +
+                  "|?Maximum%20crew" +
+                  "|?Manufacturer" +
+                  "|?Ship%20matrix%20size" +
+                  "|?Cargo%20capacity" +
+                  "|?Production%20state" +
+                  "|limit=500" +
+                  "&format=json";
+
+        var response = await client.GetAsync(url);
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync();
+        var apiResponse = JsonSerializer.Deserialize<WikiApiResponse>(json, JsonOptions);
 
-        // Deserialise the UEX Corp JSON envelope: { "data": [ {...}, {...}, ... ] }
-        var apiResponse = JsonSerializer.Deserialize<UexApiResponse>(json, JsonOptions);
-
-        if (apiResponse?.Data is null)
+        if (apiResponse?.Query?.Results is null)
             return [];
 
-        // Map each API DTO to our domain model, stamping the fetch time.
         var now = DateTime.UtcNow;
-        return apiResponse.Data.Select(v => MapToShip(v, now)).ToList();
+
+        return apiResponse.Query.Results
+            .Select((kvp, index) => MapToShip(kvp.Key, kvp.Value.Printouts, index + 1, now))
+            .OrderBy(s => s.Name)
+            .ToList();
     }
 
     /// <summary>
@@ -105,8 +131,6 @@ public class ShipDataService : IShipDataService
     /// <exception cref="NotSupportedException">Always thrown.</exception>
     public Task<Ship?> GetShipAsync(int id)
     {
-        // Single-ship lookup is handled by CachedShipDataService from local cache.
-        // This method is not typically called directly on the live service.
         throw new NotSupportedException("Use CachedShipDataService for individual ship lookups.");
     }
 
@@ -116,126 +140,207 @@ public class ShipDataService : IShipDataService
     /// </summary>
     public Task<DateTime?> GetLastUpdatedAsync()
     {
-        // The live service always fetches fresh data; caching layer tracks timestamps.
         return Task.FromResult<DateTime?>(DateTime.UtcNow);
     }
 
     /// <summary>
-    /// Maps a UEX Corp API vehicle DTO to our <see cref="Ship"/> domain model.
+    /// Maps a wiki result entry to our <see cref="Ship"/> domain model.
+    /// <para>
+    /// The wiki has no numeric ship IDs — pages are identified by their title string.
+    /// We generate sequential IDs (<paramref name="generatedId"/>) so the SQLite cache
+    /// can use an integer primary key. These IDs are stable within a single fetch but
+    /// may change across fetches if the wiki adds or removes ship pages.
+    /// </para>
+    /// <para>
+    /// Each printout field uses the null-safe <c>FirstOrDefault()</c> pattern because SMW
+    /// returns properties as JSON arrays (a property can have multiple values). We take the
+    /// first value and fall back to a sensible default if the array is null or empty. This
+    /// handles missing data gracefully — not every ship page has every property filled in.
+    /// </para>
     /// <para>
     /// Field mappings:
     /// <list type="bullet">
-    ///   <item><c>v.Scu</c> → <see cref="Ship.CargoCapacity"/> (SCU = Standard Cargo Units)</item>
-    ///   <item><c>v.PledgePrice</c> → <see cref="Ship.PriceUsd"/> (RSI store price in USD)</item>
-    ///   <item><c>v.GamePrice</c> → <see cref="Ship.PriceAuec"/> (in-game aUEC price)</item>
+    ///   <item><c>name</c> (dictionary key) → <see cref="Ship.Name"/></item>
+    ///   <item><c>Pledge price[0].value</c> → <see cref="Ship.PriceUsd"/> (RSI store price in USD)</item>
+    ///   <item><c>Average price[0].value</c> → <see cref="Ship.PriceAuec"/> (in-game aUEC price)</item>
+    ///   <item><c>Description[0]</c> → <see cref="Ship.Description"/></item>
+    ///   <item><c>Career[0]</c> → <see cref="Ship.Role"/> (e.g., "Combat", "Multi-role")</item>
+    ///   <item><c>Minimum crew[0]</c> → <see cref="Ship.CrewMin"/></item>
+    ///   <item><c>Maximum crew[0]</c> → <see cref="Ship.CrewMax"/></item>
+    ///   <item><c>Manufacturer[0].fulltext</c> → <see cref="Ship.Manufacturer"/></item>
+    ///   <item><c>Ship matrix size[0]</c> → <see cref="Ship.Size"/> (e.g., "Small", "Medium", "Large")</item>
+    ///   <item><c>Cargo capacity[0].value</c> → <see cref="Ship.CargoCapacity"/> (SCU, truncated to int)</item>
     /// </list>
     /// </para>
     /// </summary>
-    private static Ship MapToShip(UexVehicle v, DateTime fetchedAt)
+    /// <param name="name">The ship name (wiki page title used as the dictionary key).</param>
+    /// <param name="p">The printout properties from the wiki, or null if the entry has no printouts.</param>
+    /// <param name="generatedId">A sequentially assigned ID (wiki has no numeric IDs).</param>
+    /// <param name="fetchedAt">UTC timestamp of when this data was fetched.</param>
+    /// <returns>A fully populated <see cref="Ship"/> domain model.</returns>
+    private static Ship MapToShip(string name, WikiShipPrintouts? p, int generatedId, DateTime fetchedAt)
     {
-        // Derive a human-readable primary role from the boolean flags.
-        // Priority order: more specific roles first.
-        var role = v.IsMining == 1 ? "Mining"
-                 : v.IsSalvage == 1 ? "Industrial"
-                 : v.IsMedical == 1 ? "Medical"
-                 : v.IsBomber == 1 ? "Combat"
-                 : v.IsMilitary == 1 ? "Combat"
-                 : v.IsExploration == 1 ? "Exploration"
-                 : v.IsCargo == 1 ? "Cargo"
-                 : v.IsRacing == 1 ? "Racing"
-                 : v.IsPassenger == 1 ? "Passenger"
-                 : "Multipurpose";
-
-        // crew is a single string from the API (e.g. "1", "2")
-        int.TryParse(v.Crew, out int crew);
+        var pledgePrice  = p?.PledgePrice?.FirstOrDefault()?.Value ?? 0;
+        var averagePrice = p?.AveragePrice?.FirstOrDefault()?.Value ?? 0;
+        var description  = p?.Description?.FirstOrDefault() ?? string.Empty;
+        var career       = p?.Career?.FirstOrDefault() ?? "Multipurpose";
+        var crewMin      = p?.MinimumCrew?.FirstOrDefault() ?? 1;
+        var crewMax      = p?.MaximumCrew?.FirstOrDefault() ?? 1;
+        var manufacturer = p?.Manufacturer?.FirstOrDefault()?.Fulltext ?? string.Empty;
+        var size         = p?.ShipMatrixSize?.FirstOrDefault() ?? "Small";
+        var cargo        = (int)(p?.CargoCapacity?.FirstOrDefault()?.Value ?? 0);
 
         return new Ship
         {
-            Id = v.Id,
-            Name = v.Name ?? string.Empty,
-            Manufacturer = v.CompanyName ?? string.Empty,
-            Role = role,
-            Description = string.Empty,   // not in /vehicles endpoint
-            Size = v.PadType ?? "S",
-            CrewMin = crew,
-            CrewMax = crew,
-            CargoCapacity = v.Scu,
-            PriceUsd = 0,              // not in /vehicles endpoint
-            PriceAuec = 0,              // not in /vehicles endpoint
-            ImageUrl = v.UrlPhoto ?? string.Empty,
-            LastUpdated = fetchedAt
+            Id            = generatedId,
+            Name          = name,
+            Manufacturer  = manufacturer,
+            Role          = career,
+            Description   = description,
+            Size          = size,
+            CrewMin       = crewMin,
+            CrewMax       = crewMax,
+            CargoCapacity = cargo,
+            PriceUsd      = pledgePrice,
+            PriceAuec     = (long)averagePrice,
+            ImageUrl      = string.Empty,
+            LastUpdated   = fetchedAt
         };
     }
 
     /// <summary>
     /// Shared JSON deserialisation options. <c>PropertyNameCaseInsensitive = true</c>
     /// allows the deserialiser to match JSON property names regardless of casing,
-    /// providing resilience if the API changes casing conventions.
+    /// providing resilience if the wiki API changes casing conventions.
     /// </summary>
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
 
-    // ── UEX Corp API response DTOs ────────────────────────────────────
+    // ── starcitizen.tools SMW API response DTOs ──────────────────────────
     // These are internal to the service — no other code needs to know the API's JSON shape.
-    // We use [JsonPropertyName] to map snake_case JSON keys to PascalCase C# properties.
-    // See: https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/
+    // We use [JsonPropertyName] to map the wiki's JSON keys to PascalCase C# properties.
+    // See: https://www.semantic-mediawiki.org/wiki/Help:API:ask
 
     /// <summary>
-    /// Top-level JSON envelope returned by the UEX Corp API.
-    /// Shape: <c>{ "data": [ ... ] }</c>
+    /// Top-level JSON envelope returned by the SMW <c>action=ask</c> endpoint.
+    /// Shape: <c>{ "query": { "results": { ... } } }</c>
     /// </summary>
-    private sealed class UexApiResponse
+    private sealed class WikiApiResponse
     {
-        [JsonPropertyName("data")]
-        public List<UexVehicle>? Data { get; set; }
+        [JsonPropertyName("query")]
+        public WikiQuery? Query { get; set; }
     }
 
     /// <summary>
-    /// A single vehicle record from the UEX Corp API's <c>/vehicles</c> endpoint.
-    /// Property names use <c>[JsonPropertyName]</c> to map from snake_case JSON keys.
+    /// The "query" object containing the results dictionary.
+    /// Each key is a wiki page title (ship name), and each value holds the printout data.
     /// </summary>
-    private sealed class UexVehicle
+    private sealed class WikiQuery
     {
-        [JsonPropertyName("id")]
-        public int Id { get; set; }
+        [JsonPropertyName("results")]
+        public Dictionary<string, WikiShipEntry>? Results { get; set; }
+    }
 
-        [JsonPropertyName("name")]
-        public string? Name { get; set; }
+    /// <summary>
+    /// A single ship entry in the results dictionary. Contains the printouts
+    /// (semantic properties) requested in the query string.
+    /// </summary>
+    private sealed class WikiShipEntry
+    {
+        [JsonPropertyName("printouts")]
+        public WikiShipPrintouts? Printouts { get; set; }
+    }
 
-        [JsonPropertyName("company_name")]
-        public string? CompanyName { get; set; }
+    /// <summary>
+    /// The printout properties for a single ship. Each property is returned as a JSON array
+    /// because SMW supports multi-valued properties. We take <c>FirstOrDefault()</c> for each.
+    /// <para>
+    /// <b>Why arrays?</b> Semantic MediaWiki properties can have multiple values (e.g., a ship
+    /// could theoretically have multiple careers). In practice, ships have one value per property,
+    /// but the API always wraps them in arrays for consistency.
+    /// </para>
+    /// </summary>
+    private sealed class WikiShipPrintouts
+    {
+        /// <summary>USD pledge price from the RSI store. Returned as a money value with unit.</summary>
+        [JsonPropertyName("Pledge price")]
+        public List<WikiMoneyValue>? PledgePrice { get; set; }
 
-        [JsonPropertyName("pad_type")]
-        public string? PadType { get; set; }  // "XS","S","M","L","XL"
+        /// <summary>Average in-game aUEC price. Returned as a money value with unit.</summary>
+        [JsonPropertyName("Average price")]
+        public List<WikiMoneyValue>? AveragePrice { get; set; }
 
-        [JsonPropertyName("crew")]
-        public string? Crew { get; set; }     // single value e.g. "1" or "2"
+        /// <summary>Ship description text from the wiki page.</summary>
+        [JsonPropertyName("Description")]
+        public List<string>? Description { get; set; }
 
-        [JsonPropertyName("scu")]
-        public int Scu { get; set; }
+        /// <summary>
+        /// The ship's career/role classification (e.g., "Combat", "Exploration", "Multi-role").
+        /// Maps directly to <see cref="Ship.Role"/>.
+        /// </summary>
+        [JsonPropertyName("Career")]
+        public List<string>? Career { get; set; }
 
-        [JsonPropertyName("url_photo")]
-        public string? UrlPhoto { get; set; }
+        /// <summary>Minimum crew needed to operate the ship.</summary>
+        [JsonPropertyName("Minimum crew")]
+        public List<int>? MinimumCrew { get; set; }
 
-        // Role boolean flags (API returns 0/1 integers)
-        [JsonPropertyName("is_cargo")] public int IsCargo { get; set; }
-        [JsonPropertyName("is_mining")] public int IsMining { get; set; }
-        [JsonPropertyName("is_military")] public int IsMilitary { get; set; }
-        [JsonPropertyName("is_exploration")] public int IsExploration { get; set; }
-        [JsonPropertyName("is_medical")] public int IsMedical { get; set; }
-        [JsonPropertyName("is_salvage")] public int IsSalvage { get; set; }
-        [JsonPropertyName("is_refinery")] public int IsRefinery { get; set; }
-        [JsonPropertyName("is_repair")] public int IsRepair { get; set; }
-        [JsonPropertyName("is_refuel")] public int IsRefuel { get; set; }
-        [JsonPropertyName("is_passenger")] public int IsPassenger { get; set; }
-        [JsonPropertyName("is_bomber")] public int IsBomber { get; set; }
-        [JsonPropertyName("is_stealth")] public int IsStealth { get; set; }
-        [JsonPropertyName("is_racing")] public int IsRacing { get; set; }
-        [JsonPropertyName("is_scanning")] public int IsScanning { get; set; }
-        [JsonPropertyName("is_interdiction")] public int IsInterdiction { get; set; }
-        [JsonPropertyName("is_concept")] public int IsConcept { get; set; }
-        [JsonPropertyName("is_starter")] public int IsStarter { get; set; }
+        /// <summary>Maximum crew the ship can accommodate.</summary>
+        [JsonPropertyName("Maximum crew")]
+        public List<int>? MaximumCrew { get; set; }
+
+        /// <summary>
+        /// The ship's manufacturer. Returned as a page reference (SMW links to the manufacturer's
+        /// wiki page), so we use <see cref="WikiPageRef.Fulltext"/> to get the display name.
+        /// </summary>
+        [JsonPropertyName("Manufacturer")]
+        public List<WikiPageRef>? Manufacturer { get; set; }
+
+        /// <summary>
+        /// Size classification from the ship matrix (e.g., "Small", "Medium", "Large", "Capital").
+        /// The wiki uses human-readable strings, not the UEX-style pad codes.
+        /// </summary>
+        [JsonPropertyName("Ship matrix size")]
+        public List<string>? ShipMatrixSize { get; set; }
+
+        /// <summary>Cargo capacity in SCU (Standard Cargo Units). Returned as a money/quantity value.</summary>
+        [JsonPropertyName("Cargo capacity")]
+        public List<WikiMoneyValue>? CargoCapacity { get; set; }
+
+        /// <summary>
+        /// Production state (e.g., "Flight ready", "In concept").
+        /// Not currently mapped to the Ship model but available for future filtering.
+        /// </summary>
+        [JsonPropertyName("Production state")]
+        public List<string>? ProductionState { get; set; }
+    }
+
+    /// <summary>
+    /// Represents a numeric value with an optional unit, used by SMW for monetary amounts
+    /// and quantities (e.g., <c>{ "value": 45.0, "unit": "USD" }</c>).
+    /// </summary>
+    private sealed class WikiMoneyValue
+    {
+        /// <summary>The numeric value (price, quantity, etc.).</summary>
+        [JsonPropertyName("value")]
+        public decimal Value { get; set; }
+
+        /// <summary>The unit string (e.g., "USD", "aUEC", "SCU"), or null if unitless.</summary>
+        [JsonPropertyName("unit")]
+        public string? Unit { get; set; }
+    }
+
+    /// <summary>
+    /// Represents a reference to another wiki page, used by SMW for linked properties
+    /// like Manufacturer. The <see cref="Fulltext"/> field contains the page title
+    /// (e.g., "Aegis Dynamics", "Roberts Space Industries").
+    /// </summary>
+    private sealed class WikiPageRef
+    {
+        /// <summary>The full page title of the referenced wiki page.</summary>
+        [JsonPropertyName("fulltext")]
+        public string? Fulltext { get; set; }
     }
 }

@@ -66,10 +66,9 @@ public static class MauiProgram
         // See: https://learn.microsoft.com/en-us/dotnet/fundamentals/networking/http/httpclient-guidelines
         builder.Services.AddHttpClient("ShipData", client =>
         {
+            // User-Agent is required by starcitizen.tools to identify the client
+            client.DefaultRequestHeaders.Add("User-Agent", "FleetPlanner/2.0");
             client.Timeout = TimeSpan.FromSeconds(30);
-            // Set Accept header so the UEX Corp API returns JSON (not XML or other formats).
-            client.DefaultRequestHeaders.Accept.Add(
-                new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
         });
 
         // ── Service registrations ─────────────────────────────────────────
