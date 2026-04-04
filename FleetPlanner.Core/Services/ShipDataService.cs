@@ -131,22 +131,41 @@ public class ShipDataService : IShipDataService
     /// </list>
     /// </para>
     /// </summary>
-    private static Ship MapToShip(UexVehicle v, DateTime fetchedAt) => new()
+    private static Ship MapToShip(UexVehicle v, DateTime fetchedAt)
     {
-        Id = v.Id,
-        Name = v.Name ?? string.Empty,
-        Manufacturer = v.Manufacturer ?? string.Empty,
-        Role = v.Role ?? string.Empty,
-        Description = v.Description ?? string.Empty,
-        Size = v.Size,
-        CrewMin = v.CrewMin,
-        CrewMax = v.CrewMax,
-        CargoCapacity = v.Scu,
-        PriceUsd = v.PledgePrice,
-        PriceAuec = v.GamePrice,
-        ImageUrl = v.ImageUrl ?? string.Empty,
-        LastUpdated = fetchedAt
-    };
+        // Derive a human-readable primary role from the boolean flags.
+        // Priority order: more specific roles first.
+        var role = v.IsMining == 1 ? "Mining"
+                 : v.IsSalvage == 1 ? "Industrial"
+                 : v.IsMedical == 1 ? "Medical"
+                 : v.IsBomber == 1 ? "Combat"
+                 : v.IsMilitary == 1 ? "Combat"
+                 : v.IsExploration == 1 ? "Exploration"
+                 : v.IsCargo == 1 ? "Cargo"
+                 : v.IsRacing == 1 ? "Racing"
+                 : v.IsPassenger == 1 ? "Passenger"
+                 : "Multipurpose";
+
+        // crew is a single string from the API (e.g. "1", "2")
+        int.TryParse(v.Crew, out int crew);
+
+        return new Ship
+        {
+            Id = v.Id,
+            Name = v.Name ?? string.Empty,
+            Manufacturer = v.CompanyName ?? string.Empty,
+            Role = role,
+            Description = string.Empty,   // not in /vehicles endpoint
+            Size = v.PadType ?? "S",
+            CrewMin = crew,
+            CrewMax = crew,
+            CargoCapacity = v.Scu,
+            PriceUsd = 0,              // not in /vehicles endpoint
+            PriceAuec = 0,              // not in /vehicles endpoint
+            ImageUrl = v.UrlPhoto ?? string.Empty,
+            LastUpdated = fetchedAt
+        };
+    }
 
     /// <summary>
     /// Shared JSON deserialisation options. <c>PropertyNameCaseInsensitive = true</c>
@@ -185,41 +204,38 @@ public class ShipDataService : IShipDataService
         [JsonPropertyName("name")]
         public string? Name { get; set; }
 
-        [JsonPropertyName("manufacturer")]
-        public string? Manufacturer { get; set; }
+        [JsonPropertyName("company_name")]
+        public string? CompanyName { get; set; }
 
-        [JsonPropertyName("role")]
-        public string? Role { get; set; }
+        [JsonPropertyName("pad_type")]
+        public string? PadType { get; set; }  // "XS","S","M","L","XL"
 
-        [JsonPropertyName("description")]
-        public string? Description { get; set; }
+        [JsonPropertyName("crew")]
+        public string? Crew { get; set; }     // single value e.g. "1" or "2"
 
-        /// <summary>Ship size class (1 = snub, up to ~6 = capital).</summary>
-        [JsonPropertyName("size")]
-        public int Size { get; set; }
-
-        /// <summary>Minimum crew to operate the ship.</summary>
-        [JsonPropertyName("crew_min")]
-        public int CrewMin { get; set; }
-
-        /// <summary>Maximum crew the ship can accommodate.</summary>
-        [JsonPropertyName("crew_max")]
-        public int CrewMax { get; set; }
-
-        /// <summary>Cargo capacity in SCU (Standard Cargo Units).</summary>
         [JsonPropertyName("scu")]
         public int Scu { get; set; }
 
-        /// <summary>RSI pledge store price in USD.</summary>
-        [JsonPropertyName("pledge_price")]
-        public decimal PledgePrice { get; set; }
+        [JsonPropertyName("url_photo")]
+        public string? UrlPhoto { get; set; }
 
-        /// <summary>In-game price in aUEC.</summary>
-        [JsonPropertyName("game_price")]
-        public long GamePrice { get; set; }
-
-        /// <summary>URL to the ship's thumbnail/image.</summary>
-        [JsonPropertyName("image_url")]
-        public string? ImageUrl { get; set; }
+        // Role boolean flags (API returns 0/1 integers)
+        [JsonPropertyName("is_cargo")] public int IsCargo { get; set; }
+        [JsonPropertyName("is_mining")] public int IsMining { get; set; }
+        [JsonPropertyName("is_military")] public int IsMilitary { get; set; }
+        [JsonPropertyName("is_exploration")] public int IsExploration { get; set; }
+        [JsonPropertyName("is_medical")] public int IsMedical { get; set; }
+        [JsonPropertyName("is_salvage")] public int IsSalvage { get; set; }
+        [JsonPropertyName("is_refinery")] public int IsRefinery { get; set; }
+        [JsonPropertyName("is_repair")] public int IsRepair { get; set; }
+        [JsonPropertyName("is_refuel")] public int IsRefuel { get; set; }
+        [JsonPropertyName("is_passenger")] public int IsPassenger { get; set; }
+        [JsonPropertyName("is_bomber")] public int IsBomber { get; set; }
+        [JsonPropertyName("is_stealth")] public int IsStealth { get; set; }
+        [JsonPropertyName("is_racing")] public int IsRacing { get; set; }
+        [JsonPropertyName("is_scanning")] public int IsScanning { get; set; }
+        [JsonPropertyName("is_interdiction")] public int IsInterdiction { get; set; }
+        [JsonPropertyName("is_concept")] public int IsConcept { get; set; }
+        [JsonPropertyName("is_starter")] public int IsStarter { get; set; }
     }
 }

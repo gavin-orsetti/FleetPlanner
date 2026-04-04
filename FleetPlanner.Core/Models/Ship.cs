@@ -46,7 +46,7 @@ public class Ship
     /// Size class (1 = snub/small, up to ~6 = capital). Larger ships generally require more crew
     /// and can carry more cargo. The recommendation engine uses this for scale-appropriate filtering.
     /// </summary>
-    public int Size { get; set; }
+    public string Size { get; set; } = string.Empty;
 
     /// <summary>
     /// Minimum crew needed to fly the ship. A solo player (1 crew) can't effectively operate
