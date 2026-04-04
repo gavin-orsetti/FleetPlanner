@@ -42,6 +42,34 @@ public class FleetRepository : IFleetRepository
     public async Task InitializeAsync()
     {
         await GetConnectionAsync();
+        await EnsureDefaultFleetAsync();
+    }
+
+    public async Task EnsureDefaultFleetAsync()
+    {
+        var db = await GetConnectionAsync();
+        var fleets = await db.Table<Fleet>().ToListAsync();
+        if (fleets.Count == 0)
+        {
+            var defaultFleet = new Fleet
+            {
+                Name = "My Fleet",
+                PrimaryFocus = (int)FleetFocus.Multipurpose,
+                OperatingScale = (int)FleetOperatingScale.Solo,
+                AvailableCrewCount = 1,
+                DateCreated = DateTime.UtcNow,
+                DateModified = DateTime.UtcNow
+            };
+            await db.InsertAsync(defaultFleet);
+
+            // Assign any orphaned FleetShip rows to the default fleet
+            var orphanedShips = await db.Table<FleetShip>().Where(fs => fs.FleetId == 0).ToListAsync();
+            foreach (var ship in orphanedShips)
+            {
+                ship.FleetId = defaultFleet.Id;
+                await db.UpdateAsync(ship);
+            }
+        }
     }
 
     public async Task<List<Fleet>> GetAllFleetsAsync()
@@ -59,8 +87,10 @@ public class FleetRepository : IFleetRepository
     public async Task<int> SaveFleetAsync(Fleet fleet)
     {
         var db = await GetConnectionAsync();
+        fleet.DateModified = DateTime.UtcNow;
         if (fleet.Id != 0)
             return await db.UpdateAsync(fleet);
+        fleet.DateCreated = DateTime.UtcNow;
         return await db.InsertAsync(fleet);
     }
 

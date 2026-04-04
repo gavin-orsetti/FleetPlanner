@@ -15,4 +15,6 @@ public interface IFleetRepository
     Task<int> SaveFleetShipAsync(FleetShip fleetShip);
     Task<int> DeleteFleetShipAsync(int id);
     Task DeleteFleetShipsByFleetAsync(int fleetId);
+
+    Task EnsureDefaultFleetAsync();
 }
