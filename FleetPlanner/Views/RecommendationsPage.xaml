@@ -10,8 +10,8 @@
     - RefreshView wrapping a CollectionView of Recommendation items
 
     KEY XAML PATTERNS:
-    - Cross-assembly namespace: xmlns:vm and xmlns:models reference FleetPlanner.Core because
-      RecommendationsViewModel and Recommendation/Ship live in the Core project.
+    - xmlns:vm references FleetPlanner.ViewModels in the MAUI head project.
+      xmlns:models references FleetPlanner.Core because Recommendation/Ship live in Core.
     - Nested CollectionView: each recommendation card contains a horizontal CollectionView
       of suggested ships using LinearItemsLayout Orientation="Horizontal". This creates a
       scrollable chip-list of ship suggestions within each recommendation.
@@ -24,7 +24,7 @@
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:FleetPlanner.ViewModels;assembly=FleetPlanner.Core"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
              xmlns:models="clr-namespace:FleetPlanner.Models;assembly=FleetPlanner.Core"
              x:Class="FleetPlanner.Views.RecommendationsPage"
              x:DataType="vm:RecommendationsViewModel"

@@ -7,9 +7,7 @@ using FleetPlanner.Helpers;
 using FleetPlanner.Models;
 using FleetPlanner.Repositories;
 using FleetPlanner.Services;
-#if ANDROID || IOS || MACCATALYST || WINDOWS
 using FleetPlanner.Views;
-#endif
 
 namespace FleetPlanner.ViewModels;
 
@@ -34,17 +32,14 @@ namespace FleetPlanner.ViewModels;
 /// <para>
 /// <b>QueryProperty attributes:</b> These tell MAUI Shell navigation to populate properties from
 /// URL query parameters. When navigating to <c>"ShipBrowserPage?selectMode=true&amp;fleetId=3"</c>,
-/// Shell automatically sets <c>SelectMode = true</c> and <c>FleetId = 3</c>. Wrapped in <c>#if</c>
-/// because Shell is only available on MAUI platforms (not in unit tests).
+/// Shell automatically sets <c>SelectMode = true</c> and <c>FleetId = 3</c>.
 /// </para>
 /// </summary>
 /// <see href="https://learn.microsoft.com/en-us/dotnet/communitytoolkit/mvvm/generators/observableproperty"/>
 /// <see href="https://learn.microsoft.com/en-us/dotnet/communitytoolkit/mvvm/generators/relaycommand"/>
 /// <see href="https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/shell/navigation"/>
-#if ANDROID || IOS || MACCATALYST || WINDOWS
 [QueryProperty(nameof(SelectMode), "selectMode")]
 [QueryProperty(nameof(FleetId), "fleetId")]
-#endif
 public partial class ShipBrowserViewModel : ObservableObject
 {
     /// <summary>Service for fetching/caching ship data (injected via DI constructor).</summary>
@@ -298,7 +293,6 @@ public partial class ShipBrowserViewModel : ObservableObject
         Ships = new ObservableCollection<Ship>(filtered.ToList());
     }
 
-#if ANDROID || IOS || MACCATALYST || WINDOWS
     /// <summary>
     /// Handles tapping on a ship in the list. Behaviour depends on <see cref="SelectMode"/>:
     /// <list type="bullet">
@@ -340,5 +334,4 @@ public partial class ShipBrowserViewModel : ObservableObject
             });
         }
     }
-#endif
 }
