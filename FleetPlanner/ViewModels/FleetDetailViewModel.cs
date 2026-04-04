@@ -3,9 +3,11 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using FleetPlanner.Helpers;
 using FleetPlanner.Models;
 using FleetPlanner.Repositories;
 using FleetPlanner.Services;
+using FleetPlanner.Views;
 
 namespace FleetPlanner.ViewModels;
 
@@ -182,7 +184,10 @@ public partial class FleetDetailViewModel : ObservableObject
     [RelayCommand]
     private async Task ManageFleetAsync()
     {
-        await Shell.Current.GoToAsync($"///FleetManagementPage?fleetId={FleetId}");
+        await Shell.Current.GoToAsync(nameof(FleetManagementPage), new Dictionary<string, object>
+        {
+            { QueryParameters.FleetId, FleetId }
+        });
     }
 
     /// <summary>
@@ -195,7 +200,11 @@ public partial class FleetDetailViewModel : ObservableObject
     [RelayCommand]
     private async Task AddShipAsync()
     {
-        await Shell.Current.GoToAsync($"///ShipBrowserPage?selectMode=true&fleetId={FleetId}");
+        await Shell.Current.GoToAsync(nameof(ShipBrowserPage), new Dictionary<string, object>
+        {
+            { QueryParameters.SelectMode, true },
+            { QueryParameters.FleetId, FleetId }
+        });
     }
 
     /// <summary>

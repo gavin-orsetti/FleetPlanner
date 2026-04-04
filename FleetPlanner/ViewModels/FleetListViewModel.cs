@@ -3,8 +3,10 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using FleetPlanner.Helpers;
 using FleetPlanner.Models;
 using FleetPlanner.Repositories;
+using FleetPlanner.Views;
 
 namespace FleetPlanner.ViewModels;
 
@@ -83,7 +85,10 @@ public partial class FleetListViewModel : ObservableObject
     private async Task AddFleetAsync()
     {
         // fleetId=0 tells FleetManagementPage to create a new fleet instead of editing an existing one.
-        await Shell.Current.GoToAsync("///FleetManagementPage?fleetId=0");
+        await Shell.Current.GoToAsync(nameof(FleetManagementPage), new Dictionary<string, object>
+        {
+            { QueryParameters.FleetId, 0 }
+        });
     }
 
     /// <summary>
@@ -118,6 +123,9 @@ public partial class FleetListViewModel : ObservableObject
     {
         if (fleet is null)
             return;
-        await Shell.Current.GoToAsync($"///FleetDetailPage?fleetId={fleet.Id}");
+        await Shell.Current.GoToAsync(nameof(FleetDetailPage), new Dictionary<string, object>
+        {
+            { QueryParameters.FleetId, fleet.Id }
+        });
     }
 }

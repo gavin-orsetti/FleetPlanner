@@ -3,9 +3,13 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using FleetPlanner.Helpers;
 using FleetPlanner.Models;
 using FleetPlanner.Repositories;
 using FleetPlanner.Services;
+#if ANDROID || IOS || MACCATALYST || WINDOWS
+using FleetPlanner.Views;
+#endif
 
 namespace FleetPlanner.ViewModels;
 
@@ -329,7 +333,10 @@ public partial class ShipBrowserViewModel : ObservableObject
         else
         {
             // BROWSE MODE: Navigate to the detail page with the ship's ID as a query parameter.
-            await Shell.Current.GoToAsync($"ShipDetailPage?shipId={ship.Id}");
+            await Shell.Current.GoToAsync(nameof(ShipDetailPage), new Dictionary<string, object>
+            {
+                { QueryParameters.ShipId, ship.Id }
+            });
         }
     }
 #endif
