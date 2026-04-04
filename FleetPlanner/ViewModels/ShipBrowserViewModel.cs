@@ -334,4 +334,64 @@ public partial class ShipBrowserViewModel : ObservableObject
             });
         }
     }
+
+    /// <summary>
+    /// Prompts the user for a quantity then adds that many copies of the given
+    /// ship to the current fleet. Each copy is a separate FleetShip record,
+    /// which allows them to have different acquisition types or notes later.
+    /// </summary>
+    [RelayCommand]
+    private async Task AddShipToFleetAsync(Ship ship)
+    {
+        if (ship is null || FleetId <= 0)
+            return;
+
+        var input = await Shell.Current.DisplayPromptAsync(
+            title: $"Add {ship.Name}",
+            message: "How many would you like to add to your fleet?",
+            accept: "Add",
+            cancel: "Cancel",
+            placeholder: "1",
+            initialValue: "1",
+            keyboard: Keyboard.Numeric);
+
+        if (input is null)
+            return;
+
+        if (!int.TryParse(input, out int quantity) || quantity < 1)
+        {
+            await Shell.Current.DisplayAlert("Invalid Quantity", "Please enter a number of 1 or more.", "OK");
+            return;
+        }
+
+        if (quantity > 50)
+        {
+            await Shell.Current.DisplayAlert("Invalid Quantity", "You can add a maximum of 50 ships at once.", "OK");
+            return;
+        }
+
+        var fleetShips = Enumerable.Range(0, quantity).Select(_ => new FleetShip
+        {
+            FleetId         = FleetId,
+            ShipId          = ship.Id,
+            Callsign        = ship.Name,
+            AcquisitionType = (int)Models.AcquisitionType.AUEC
+        });
+
+        foreach (var fleetShip in fleetShips)
+            await _fleetRepository.SaveFleetShipAsync(fleetShip);
+
+        if (SelectMode)
+        {
+            await Shell.Current.GoToAsync("..");
+        }
+        else
+        {
+            var message = quantity == 1
+                ? $"{ship.Name} has been added to your fleet."
+                : $"{quantity}x {ship.Name} have been added to your fleet.";
+
+            await Shell.Current.DisplayAlert("Added", message, "OK");
+        }
+    }
 }

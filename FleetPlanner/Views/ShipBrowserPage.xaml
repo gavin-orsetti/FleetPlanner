@@ -73,7 +73,7 @@
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ShipBrowserViewModel}}, Path=SelectShipCommand}"
                                     CommandParameter="{Binding .}" />
                             </Frame.GestureRecognizers>
-                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
                                 <Label Grid.Row="0" Grid.Column="0"
                                        Text="{Binding Name}" FontSize="16" FontAttributes="Bold" />
                                 <Label Grid.Row="0" Grid.Column="1"
@@ -88,6 +88,10 @@
                                     <Label Text="{Binding CargoCapacity, StringFormat='Cargo: {0} SCU'}" FontSize="11" TextColor="{StaticResource Gray500}" />
                                     <Label Text="{Binding Size, StringFormat='Size: {0}'}" FontSize="11" TextColor="{StaticResource Gray500}" />
                                 </HorizontalStackLayout>
+                                <Button Grid.Row="3" Grid.ColumnSpan="2"
+                                        Text="Add to Fleet"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ShipBrowserViewModel}}, Path=AddShipToFleetCommand}"
+                                        CommandParameter="{Binding .}" />
                             </Grid>
                         </Frame>
                     </DataTemplate>
