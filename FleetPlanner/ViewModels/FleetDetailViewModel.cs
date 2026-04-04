@@ -200,7 +200,7 @@ public partial class FleetDetailViewModel : ObservableObject
     [RelayCommand]
     private async Task AddShipAsync()
     {
-        await Shell.Current.GoToAsync(nameof(ShipBrowserPage), new Dictionary<string, object>
+        await Shell.Current.GoToAsync($"///{nameof(ShipBrowserPage)}", new Dictionary<string, object>
         {
             { QueryParameters.SelectMode, true },
             { QueryParameters.FleetId, FleetId }
