@@ -27,4 +27,8 @@ public class FleetShip
     public decimal PurchasePrice { get; set; }
 
     public string PurchaseCurrency { get; set; } = "USD";
+
+    public int AcquisitionType { get; set; } // Maps to AcquisitionType enum (0=AUEC, 1=RealMoney)
+
+    public decimal? PledgeStorePriceUsd { get; set; }
 }
