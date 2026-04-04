@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks Condition="'$(BuildingForTest)' == 'true'">net9.0</TargetFrameworks>
-		<TargetFrameworks Condition="'$(BuildingForTest)' != 'true'">net9.0;net9.0-android</TargetFrameworks>
+		<TargetFrameworks>net9.0;net9.0-android</TargetFrameworks>
 		<OutputType Condition="'$(TargetFramework)' == 'net9.0-android'">Exe</OutputType>
 		<RootNamespace>FleetPlanner</RootNamespace>
 		<UseMaui Condition="'$(TargetFramework)' != 'net9.0'">true</UseMaui>
