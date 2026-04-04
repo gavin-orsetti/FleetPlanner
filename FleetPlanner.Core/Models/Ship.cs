@@ -3,12 +3,12 @@ using SQLite;
 namespace FleetPlanner.Models;
 
 /// <summary>
-/// Represents a Star Citizen ship with stats and pricing from the external UEX Corp API.
+/// Represents a Star Citizen ship with stats and pricing from the starcitizen.tools wiki API.
 /// <para>
 /// This is the global ship-reference table — every known ship in the game has one row here.
-/// The data is fetched from the UEX Corp community API (<see href="https://uexcorp.space/api"/>)
-/// and cached locally in SQLite so the app works offline. The <see cref="CachedShipDataService"/>
-/// handles the fetch-and-cache lifecycle.
+/// The data is fetched from the starcitizen.tools Semantic MediaWiki API and cached locally in
+/// SQLite so the app works offline. The <see cref="CachedShipDataService"/> handles the
+/// fetch-and-cache lifecycle.
 /// </para>
 /// <para>
 /// <b>Important distinction:</b> <see cref="Ship"/> is a read-only reference record (game data).
@@ -16,13 +16,14 @@ namespace FleetPlanner.Models;
 /// player-specific metadata (callsign, purchase info).
 /// </para>
 /// </summary>
-/// <see href="https://github.com/praeclarum/sqlite-net"/>
+/// <see href="https://starcitizen.tools"/>
 [Table("Ship")]
 public class Ship
 {
     /// <summary>
-    /// Primary key — matches the ship ID from the UEX Corp API.
-    /// Not auto-incremented because the ID comes from the external data source.
+    /// Primary key — a sequentially generated ID assigned during data fetch.
+    /// The wiki has no numeric ship IDs (pages are identified by title), so we generate
+    /// sequential integers to satisfy the SQLite primary key requirement.
     /// </summary>
     [PrimaryKey]
     public int Id { get; set; }
@@ -34,17 +35,18 @@ public class Ship
     public string Manufacturer { get; set; } = string.Empty;
 
     /// <summary>
-    /// The ship's primary role as classified by the game (e.g., "Combat", "Mining", "Exploration").
-    /// Used by the recommendation engine to match ships to fleet roles.
+    /// The ship's primary role/career as classified on the wiki (e.g., "Combat", "Mining",
+    /// "Exploration", "Multi-role"). Used by the recommendation engine to match ships to fleet roles.
     /// </summary>
     public string Role { get; set; } = string.Empty;
 
-    /// <summary>A short description of the ship from the game's lore or marketing material.</summary>
+    /// <summary>A short description of the ship from the wiki page.</summary>
     public string Description { get; set; } = string.Empty;
 
     /// <summary>
-    /// Size class (1 = snub/small, up to ~6 = capital). Larger ships generally require more crew
-    /// and can carry more cargo. The recommendation engine uses this for scale-appropriate filtering.
+    /// Size class from the ship matrix (e.g., "Small", "Medium", "Large", "Capital").
+    /// Larger ships generally require more crew and can carry more cargo. The recommendation
+    /// engine uses this for scale-appropriate filtering.
     /// </summary>
     public string Size { get; set; } = string.Empty;
 
@@ -70,8 +72,8 @@ public class Ship
     public decimal PriceUsd { get; set; }
 
     /// <summary>
-    /// Price in Alpha UEC (aUEC), the in-game currency. Used for value analysis in recommendations.
-    /// Zero if the ship can't be bought in-game yet.
+    /// Average price in Alpha UEC (aUEC), the in-game currency. Used for value analysis
+    /// in recommendations. Zero if the ship can't be bought in-game yet.
     /// </summary>
     public long PriceAuec { get; set; }
 
@@ -79,7 +81,7 @@ public class Ship
     public string ImageUrl { get; set; } = string.Empty;
 
     /// <summary>
-    /// UTC timestamp of when this ship record was last fetched from the UEX Corp API.
+    /// UTC timestamp of when this ship record was last fetched from the wiki API.
     /// Used by <see cref="CachedShipDataService"/> to decide whether the cache is stale.
     /// </summary>
     public DateTime LastUpdated { get; set; }

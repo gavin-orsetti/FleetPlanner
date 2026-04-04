@@ -249,7 +249,8 @@ public partial class ShipBrowserViewModel : ObservableObject
         Manufacturers = new ObservableCollection<string>(["All", .. manufacturerList]);
 
         var sizeList = _allShips
-            .Select(s => s.Size.ToString())
+            .Select(s => s.Size)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
             .Distinct()
             .OrderBy(s => s)
             .ToList();
@@ -289,8 +290,8 @@ public partial class ShipBrowserViewModel : ObservableObject
         if (SelectedManufacturer != "All")
             filtered = filtered.Where(s => s.Manufacturer == SelectedManufacturer);
 
-        if (SelectedSize != "All" && int.TryParse(SelectedSize, out var size))
-            filtered = filtered.Where(s => s.Size == size);
+        if (SelectedSize != "All")
+            filtered = filtered.Where(s => s.Size == SelectedSize);
 
         // Replace the entire ObservableCollection — this triggers a single UI refresh.
         // (Alternatively, you could Clear+AddRange, but replacing is simpler.)
