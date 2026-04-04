@@ -30,7 +30,7 @@ jobs:
         uses: android-actions/setup-android@v3.2.1
 
       - name: Restore
-        run: dotnet restore FleetPlanner/FleetPlanner.csproj -p:TargetFramework=net9.0-android
+        run: dotnet restore FleetPlanner.sln
 
       - name: Publish
         run: dotnet publish FleetPlanner/FleetPlanner.csproj -f net9.0-android -c Debug -r android-arm64 --no-restore -p:AndroidPackageFormat=apk
