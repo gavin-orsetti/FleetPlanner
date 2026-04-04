@@ -9,12 +9,30 @@ using NSubstitute;
 
 namespace FleetPlanner_Tests;
 
+/// <summary>
+/// Unit tests for <see cref="ShipBrowserViewModel"/> — tests the real-time filtering logic.
+/// <para>
+/// <b>Testing reactive filtering:</b> The ShipBrowserViewModel uses <c>[ObservableProperty]</c>
+/// partial method hooks (OnSearchTextChanged, OnSelectedRoleChanged, etc.) to re-filter the
+/// ship list whenever a filter changes. These tests verify that setting filter properties
+/// (SearchText, SelectedRole) immediately produces the correct filtered subset.
+/// </para>
+/// <para>
+/// <b>Mock setup:</b> Both IShipDataService and IFleetRepository are mocked. The ship data
+/// service returns a predefined list of ships; the fleet repository is unused in these
+/// filter-focused tests but required by the ViewModel's constructor.
+/// </para>
+/// </summary>
+/// <see href="https://learn.microsoft.com/en-us/dotnet/communitytoolkit/mvvm/generators/observableproperty"/>
 public class ShipBrowserViewModel_Tests
 {
     private readonly IShipDataService _mockShipDataService;
     private readonly IFleetRepository _mockFleetRepo;
     private readonly ShipBrowserViewModel _vm;
 
+    /// <summary>
+    /// Test constructor — creates fresh mocks and a new ViewModel for each test.
+    /// </summary>
     public ShipBrowserViewModel_Tests()
     {
         _mockShipDataService = Substitute.For<IShipDataService>();

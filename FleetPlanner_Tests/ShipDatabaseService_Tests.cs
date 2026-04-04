@@ -5,10 +5,48 @@ using FluentAssertions;
 
 namespace FleetPlanner_Tests;
 
+/// <summary>
+/// Comprehensive tests for <see cref="RecommendationService"/> — the on-device recommendation engine.
+/// <para>
+/// <b>Test strategy:</b> These are pure unit tests with no mocks needed — the RecommendationService
+/// is a stateless, synchronous computation that takes (Fleet, ownedShips, allShips) and returns
+/// a list of Recommendations. Each test creates specific fleet/ship scenarios and verifies that
+/// the engine produces the expected recommendations.
+/// </para>
+/// <para>
+/// <b>Coverage areas:</b>
+/// <list type="bullet">
+///   <item><b>Role coverage:</b> Missing combat, hauling, medical, and well-rounded fleet scenarios.</item>
+///   <item><b>Fleet synergy:</b> Hauler-without-escort detection.</item>
+///   <item><b>Upgrade paths:</b> Cheaper ship with same-role higher-price alternative.</item>
+///   <item><b>Value analysis:</b> Overpriced ship with cheaper comparable alternative.</item>
+///   <item><b>Crew efficiency:</b> Understaffed and overcapacity fleet detection.</item>
+///   <item><b>Focus-aware priority:</b> Combat fleet rates hauling as Low priority, medical as Medium.</item>
+///   <item><b>Scale-appropriate suggestions:</b> Solo fleet never suggested a 6+ crew ship.</item>
+///   <item><b>Multi-fleet isolation:</b> Different fleets produce different recommendations with correct FleetIds.</item>
+///   <item><b>Result ordering:</b> Recommendations sorted by priority (High before Low).</item>
+///   <item><b>Data quality:</b> All recommendations have non-empty title and description.</item>
+/// </list>
+/// </para>
+/// </summary>
+/// <see href="https://xunit.net/docs/getting-started/netcore/cmdline"/>
+/// <see href="https://fluentassertions.com/introduction"/>
 public class RecommendationService_Tests
 {
+    /// <summary>The system under test — a stateless recommendation engine (no dependencies to mock).</summary>
     private readonly RecommendationService _service = new();
 
+    /// <summary>
+    /// Helper factory method — creates a Fleet with configurable intent properties.
+    /// <para>
+    /// Default values (Multipurpose, Large, 10 crew) create a fleet that expects a diverse
+    /// ship composition, making it useful for testing role gap detection.
+    /// </para>
+    /// </summary>
+    /// <param name="focus">The fleet's primary gameplay focus.</param>
+    /// <param name="scale">The fleet's operating scale (solo, small, medium, large).</param>
+    /// <param name="crewCount">Number of available crew members.</param>
+    /// <returns>A configured Fleet entity for testing.</returns>
     private static Fleet CreateDefaultFleet(
         FleetFocus focus = FleetFocus.Multipurpose,
         FleetOperatingScale scale = FleetOperatingScale.Large,

@@ -5,11 +5,34 @@ using FluentAssertions;
 
 namespace FleetPlanner_Tests;
 
+/// <summary>
+/// Integration tests for <see cref="FleetRepository"/> — tests the SQLite repository against
+/// a real (temporary) SQLite database.
+/// <para>
+/// <b>Why integration tests, not mocks?</b> The repository IS the data access layer — mocking
+/// it would just test a mock. Instead, these tests use a real SQLite database to verify that
+/// SQL operations (insert, update, delete, cascade) work correctly. Each test gets its own
+/// temp database via the <see cref="IDisposable"/> pattern.
+/// </para>
+/// <para>
+/// <b>Test naming convention:</b> <c>MethodName_Scenario_ExpectedBehavior</c>.
+/// Example: <c>SaveFleetAsync_NewFleet_AssignsIdAndPersists</c>.
+/// </para>
+/// </summary>
+/// <see href="https://xunit.net/docs/shared-context#constructor"/>
+/// <see href="https://fluentassertions.com/introduction"/>
 public class FleetRepository_Tests : IDisposable
 {
+    /// <summary>The system under test — a real FleetRepository backed by a temp SQLite DB.</summary>
     private readonly FleetRepository _repo;
+
+    /// <summary>Path to the temporary SQLite database for this test run.</summary>
     private readonly string _dbPath;
 
+    /// <summary>
+    /// Test constructor — creates a fresh temp database for each test.
+    /// Uses the <c>FleetRepository(string dbPath)</c> constructor overload designed for testing.
+    /// </summary>
     public FleetRepository_Tests()
     {
         SQLitePCL.Batteries_V2.Init();
@@ -17,6 +40,7 @@ public class FleetRepository_Tests : IDisposable
         _repo = new FleetRepository(_dbPath);
     }
 
+    /// <summary>Cleanup — delete the temporary SQLite database file.</summary>
     public void Dispose()
     {
         try { File.Delete(_dbPath); } catch { }
