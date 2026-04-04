@@ -9,8 +9,10 @@ using FleetPlanner.Services;
 
 namespace FleetPlanner.ViewModels;
 
+#if ANDROID || IOS || MACCATALYST || WINDOWS
 [QueryProperty(nameof(SelectMode), "selectMode")]
 [QueryProperty(nameof(FleetId), "fleetId")]
+#endif
 public partial class ShipBrowserViewModel : ObservableObject
 {
     private readonly IShipDataService _shipDataService;
@@ -168,6 +170,7 @@ public partial class ShipBrowserViewModel : ObservableObject
         Ships = new ObservableCollection<Ship>(filtered.ToList());
     }
 
+#if ANDROID || IOS || MACCATALYST || WINDOWS
     [RelayCommand]
     private async Task SelectShipAsync(Ship ship)
     {
@@ -190,4 +193,5 @@ public partial class ShipBrowserViewModel : ObservableObject
             await Shell.Current.GoToAsync($"ShipDetailPage?shipId={ship.Id}");
         }
     }
+#endif
 }

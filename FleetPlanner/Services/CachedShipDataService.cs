@@ -11,19 +11,29 @@ namespace FleetPlanner.Services;
 /// </summary>
 public class CachedShipDataService : IShipDataService
 {
-    private readonly ShipDataService _liveService;
+    private readonly IShipDataService _liveService;
     private SQLiteAsyncConnection? _db;
 
-    // FIX: Lazy-resolve the database path. FileSystem.AppDataDirectory is not
-    // available when the DI container builds singletons during
-    // MauiProgram.CreateMauiApp() on Android. Deferring to first use
-    // ensures the platform is fully initialised.
     private string? _dbPath;
-    private string DbPath => _dbPath ??= Path.Combine(FileSystem.AppDataDirectory, "FleetPlanner.db3");
+    private string DbPath => _dbPath ??=
+#if ANDROID || IOS || MACCATALYST || WINDOWS
+        Path.Combine(FileSystem.AppDataDirectory, "FleetPlanner.db3");
+#else
+        Path.Combine(Path.GetTempPath(), "FleetPlanner.db3");
+#endif
 
     public CachedShipDataService(ShipDataService liveService)
     {
         _liveService = liveService;
+    }
+
+    /// <summary>
+    /// Constructor for testing — accepts a mock service and custom database path.
+    /// </summary>
+    public CachedShipDataService(IShipDataService liveService, string dbPath)
+    {
+        _liveService = liveService;
+        _dbPath = dbPath;
     }
 
     private async Task<SQLiteAsyncConnection> GetConnectionAsync()
