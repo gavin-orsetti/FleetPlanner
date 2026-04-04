@@ -1,10 +1,42 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <?xaml-comp compile="true" ?>
+<!--
+    Colors.xaml — Defines all colour constants for the app's "Deep Space" theme.
+
+    COLOUR SYSTEM:
+    This uses Material Design 3's colour role naming convention:
+    - Primary (#00d4ff cyan) — the main brand colour, used for buttons, links, tab highlights
+    - OnPrimary (#0d0f14 near-black) — text/icon colour on Primary backgrounds
+    - PrimaryContainer (#1c2030 dark blue) — subtle primary-tinted backgrounds (KPI cards)
+    - Secondary (#f5a623 amber) — accent colour for badges, secondary actions
+    - Tertiary (#22c55e green) — success/positive indicators, price highlights
+    - Error (#ef4444 red) — destructive actions (delete), error states
+    - Warning (#f59e0b amber) — offline banners, caution states
+    - Background (#0d0f14) and Surface (#151820) — dark backgrounds for the space theme
+    - On* colours — always the text/icon colour for the corresponding surface colour
+
+    LIGHT vs DARK VARIANTS:
+    Each colour has a "Light" and "Dark" variant (e.g., Primary and PrimaryDark). In this
+    theme, both light and dark variants are identical because the app uses a unified dark
+    "deep space" aesthetic. However, having both keys allows future light-theme support
+    without changing any XAML bindings — just update the colour values here.
+
+    ROLE COLOURS:
+    RoleCombat, RoleCargo, etc. are semantic colours for ship role badges/indicators.
+    These give visual distinction to different gameplay loops in the UI.
+
+    BRUSH RESOURCES:
+    SolidColorBrush resources (PrimaryBrush, etc.) wrap Color resources. Brushes are needed
+    by certain MAUI properties (like Border.Stroke) that accept Brush, not Color.
+
+    See: https://learn.microsoft.com/en-us/dotnet/maui/user-interface/theming
+    See: https://m3.material.io/styles/color/system/overview
+-->
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
-    <!-- Deep Space Theme -->
+    <!-- ── Primary brand colour (Cyan #00d4ff) ─────────────────────── -->
     <Color x:Key="Primary">#00d4ff</Color>
     <Color x:Key="PrimaryDark">#00d4ff</Color>
 

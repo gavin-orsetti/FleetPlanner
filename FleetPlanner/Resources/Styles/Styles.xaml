@@ -1,9 +1,46 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
 <?xaml-comp compile="true" ?>
+<!--
+    Styles.xaml — Global implicit and explicit styles for all MAUI controls.
+
+    STYLE SYSTEM:
+    MAUI styles work like CSS — they set default property values for controls. Two kinds:
+
+    1. IMPLICIT STYLES (TargetType only, no x:Key):
+       Applied automatically to ALL controls of that type in the app. For example,
+       the Label style sets FontFamily="OpenSansRegular" on every Label everywhere.
+
+    2. EXPLICIT/NAMED STYLES (x:Key="Name"):
+       Must be applied manually via Style="{StaticResource Name}". The Title1 style
+       and button variant styles (TertiaryElevatedButton, etc.) are explicit.
+
+    3. CLASS STYLES (Class="ClassName"):
+       Applied via StyleClass="ClassName" on controls. Used for variant styling like
+       ExpanderView.Header and button variants.
+
+    VISUAL STATE MANAGER (VSM):
+    Many styles include VisualStateManager groups with Normal/Disabled states. This is MAUI's
+    way of handling interactive states — when a control is disabled, VSM automatically applies
+    the Disabled state's setters (typically muted colours).
+
+    AppThemeBinding:
+    Used throughout to provide Light and Dark values. When the user toggles dark mode via
+    SettingsViewModel.OnIsDarkModeChanged, all controls using AppThemeBinding automatically
+    re-render with the new theme colours.
+
+    CONVERTER REGISTRATION:
+    Value converters (InvertedBoolConverter, IsNotNullConverter) are instantiated here as
+    XAML resources so they can be referenced by {StaticResource} throughout the app.
+
+    See: https://learn.microsoft.com/en-us/dotnet/maui/user-interface/styles/xaml
+    See: https://learn.microsoft.com/en-us/dotnet/maui/user-interface/visual-states
+-->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                     xmlns:helpers="clr-namespace:FleetPlanner.Helpers">
 
+    <!-- Value converter instances — used by {StaticResource} in XAML bindings throughout the app.
+         These are created once here and shared globally. -->
     <helpers:InvertedBoolConverter x:Key="InvertedBoolConverter" />
     <helpers:IsNotNullConverter x:Key="IsNotNullConverter" />
 
