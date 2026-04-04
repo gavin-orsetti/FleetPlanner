@@ -61,8 +61,11 @@ public class RecommendationsViewModel_Tests
         };
 
         _mockRecommendationService
-            .GetRecommendations(Arg.Any<List<Ship>>(), Arg.Any<List<Ship>>())
+            .GetRecommendations(Arg.Any<Fleet>(), Arg.Any<List<Ship>>(), Arg.Any<List<Ship>>())
             .Returns(recs);
+
+        // Set the selected fleet directly to avoid double-load
+        _vm.SelectedFleet = fleet;
 
         await _vm.LoadRecommendationsCommand.ExecuteAsync(null);
 
