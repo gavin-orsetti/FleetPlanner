@@ -183,9 +183,10 @@ public class RecommendationService : IRecommendationService
     /// </list>
     /// </para>
     /// <para>
-    /// <b>Role groups:</b> Multiple API role strings can map to a single logical group.
-    /// E.g., "Fighter" and "Bomber" both count as "Combat" coverage. This handles the
-    /// inconsistent role naming in the UEX Corp API data.
+    /// <b>Role groups:</b> Multiple role strings can map to a single logical group.
+    /// E.g., "Fighter", "Bomber", and "Combat" all count as "Combat" coverage. This handles
+    /// varying role names across data sources (the wiki uses Career strings like "Combat",
+    /// "Multi-role", "Industrial", "Transport", etc.).
     /// </para>
     /// </summary>
     private static List<Recommendation> GetRoleCoverageRecommendations(Fleet fleet, List<Ship> owned, List<Ship> allShips)
@@ -202,13 +203,13 @@ public class RecommendationService : IRecommendationService
         // If the fleet has ANY ship whose role matches ANY string in a group, that group is "covered".
         var roleGroups = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
         {
-            ["Combat"] = ["Combat", "Fighter", "Bomber", "Dropship"],
+            ["Combat"] = ["Combat", "Fighter", "Bomber", "Dropship", "Interdiction"],
             ["Hauling"] = ["Transport", "Hauling", "Freight"],
-            ["Mining"] = ["Mining"],
+            ["Mining"] = ["Mining", "Industrial"],
             ["Medical"] = ["Medical"],
             ["Exploration"] = ["Exploration", "Pathfinder"],
             ["Salvage"] = ["Salvage"],
-            ["Support"] = ["Refueling", "Repair"],
+            ["Support"] = ["Refueling", "Repair", "Support"],
             ["Reconnaissance"] = ["Reconnaissance", "Stealth", "Data"]
         };
 
@@ -382,7 +383,7 @@ public class RecommendationService : IRecommendationService
         }
 
         // Synergy check 2: Miners need haulers — mined ore must be transported to sell points.
-        var hasMiner = owned.Any(s => IsRole(s, "Mining"));
+        var hasMiner = owned.Any(s => IsRole(s, "Mining", "Industrial"));
         if (hasMiner && !hasHauler)
         {
             var haulers = allShips
@@ -555,7 +556,7 @@ public class RecommendationService : IRecommendationService
     /// <summary>
     /// Normalises a role string by trimming whitespace. Handles null/empty gracefully.
     /// <para>
-    /// The UEX Corp API sometimes returns roles with leading/trailing spaces or inconsistent
+    /// The wiki API may return roles with leading/trailing spaces or inconsistent
     /// casing. This normalisation ensures role comparisons work correctly.
     /// </para>
     /// </summary>
