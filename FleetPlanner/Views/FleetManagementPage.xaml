@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             x:Class="FleetPlanner.Views.FleetManagementPage"
+             x:DataType="vm:FleetManagementViewModel"
+             Title="{Binding FleetName, StringFormat='Fleet: {0}'}">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="12">
+
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                               HorizontalOptions="Center" />
+
+            <!-- Fleet Name -->
+            <Label Text="Fleet Name" FontAttributes="Bold" />
+            <Entry Text="{Binding FleetName}" Placeholder="Enter fleet name" />
+
+            <!-- Description -->
+            <Label Text="Description" FontAttributes="Bold" />
+            <Editor Text="{Binding Description}" Placeholder="Optional description" HeightRequest="60" />
+
+            <!-- Primary Focus -->
+            <Label Text="Primary Focus" FontAttributes="Bold" />
+            <Picker ItemsSource="{Binding FocusOptions}"
+                    SelectedIndex="{Binding SelectedFocusIndex}" />
+
+            <!-- Operating Scale -->
+            <Label Text="Operating Scale" FontAttributes="Bold" />
+            <Picker ItemsSource="{Binding ScaleOptions}"
+                    SelectedIndex="{Binding SelectedScaleIndex}" />
+
+            <!-- Available Crew -->
+            <Label Text="Available Crew Count" FontAttributes="Bold" />
+            <HorizontalStackLayout Spacing="8">
+                <Stepper Minimum="1" Maximum="100" Increment="1"
+                         Value="{Binding AvailableCrewCount}" />
+                <Label Text="{Binding AvailableCrewCount}" VerticalOptions="Center" FontSize="16" FontAttributes="Bold" />
+            </HorizontalStackLayout>
+
+            <!-- Declared Roles -->
+            <Label Text="Declared Roles" FontAttributes="Bold" />
+            <CollectionView ItemsSource="{Binding RoleSelections}" HeightRequest="300">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:FleetRoleSelection">
+                        <HorizontalStackLayout Spacing="8" Padding="4">
+                            <CheckBox IsChecked="{Binding IsSelected}" />
+                            <Label Text="{Binding DisplayName}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Action Buttons -->
+            <Button Text="Save Fleet" Command="{Binding SaveCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="{StaticResource OnPrimary}" />
+
+            <Button Text="Delete Fleet" Command="{Binding DeleteCommand}"
+                    BackgroundColor="{StaticResource Error}"
+                    TextColor="{StaticResource OnError}"
+                    IsVisible="{Binding IsNewFleet, Converter={StaticResource InvertedBoolConverter}}" />
+
+            <Button Text="Cancel" Command="{Binding CancelCommand}"
+                    BackgroundColor="Transparent"
+                    TextColor="{StaticResource Gray400}" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

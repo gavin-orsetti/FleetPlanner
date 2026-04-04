@@ -5,6 +5,7 @@
                     xmlns:helpers="clr-namespace:FleetPlanner.Helpers">
 
     <helpers:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+    <helpers:IsNotNullConverter x:Key="IsNotNullConverter" />
 
     <Style x:Key="Title1" TargetType="Label">
         <Setter Property="FontSize" Value="20" />

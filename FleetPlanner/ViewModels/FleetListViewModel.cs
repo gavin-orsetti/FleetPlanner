@@ -45,9 +45,7 @@ public partial class FleetListViewModel : ObservableObject
     [RelayCommand]
     private async Task AddFleetAsync()
     {
-        var fleet = new Fleet { Name = "New Fleet" };
-        await _fleetRepository.SaveFleetAsync(fleet);
-        await LoadFleetsAsync();
+        await Shell.Current.GoToAsync("FleetManagementPage?fleetId=0");
     }
 
     [RelayCommand]

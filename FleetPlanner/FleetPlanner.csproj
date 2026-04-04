@@ -40,6 +40,8 @@
 		<Compile Remove="ViewModels\ShipDetailViewModel.cs" />
 		<Compile Remove="ViewModels\FleetDetailViewModel.cs" />
 		<Compile Remove="ViewModels\FleetListViewModel.cs" />
+		<Compile Remove="ViewModels\FleetManagementViewModel.cs" />
+		<Compile Remove="Helpers\IsNotNullConverter.cs" />
 	</ItemGroup>
 
 	<!-- MAUI-specific packages — only for mobile targets -->

@@ -25,16 +25,10 @@ public partial class FleetDetailViewModel : ObservableObject
     private string _fleetName = string.Empty;
 
     [ObservableProperty]
-    private string _affiliation = string.Empty;
+    private string _description = string.Empty;
 
     [ObservableProperty]
-    private string _areaOfOperation = string.Empty;
-
-    [ObservableProperty]
-    private string _manifesto = string.Empty;
-
-    [ObservableProperty]
-    private string _notes = string.Empty;
+    private string _fleetIntentSummary = string.Empty;
 
     [ObservableProperty]
     private ObservableCollection<FleetShipDisplay> _ships = [];
@@ -62,10 +56,8 @@ public partial class FleetDetailViewModel : ObservableObject
                 return;
 
             FleetName = Fleet.Name;
-            Affiliation = Fleet.Affiliation;
-            AreaOfOperation = Fleet.AreaOfOperation;
-            Manifesto = Fleet.Manifesto;
-            Notes = Fleet.Notes;
+            Description = Fleet.Description;
+            FleetIntentSummary = $"{Fleet.PrimaryFocusEnum} fleet — {Fleet.AvailableCrewCount} players — {Fleet.OperatingScaleEnum} scale";
 
             var fleetShips = await _fleetRepository.GetFleetShipsAsync(FleetId);
             var displays = new List<FleetShipDisplay>();
@@ -81,7 +73,11 @@ public partial class FleetDetailViewModel : ObservableObject
                     ShipName = ship?.Name ?? "Unknown",
                     Manufacturer = ship?.Manufacturer ?? "Unknown",
                     Role = ship?.Role ?? "Unknown",
-                    PriceUsd = ship?.PriceUsd ?? 0
+                    PriceUsd = ship?.PriceUsd ?? 0,
+                    CrewMin = ship?.CrewMin ?? 0,
+                    CrewMax = ship?.CrewMax ?? 0,
+                    AcquisitionType = (AcquisitionType)fs.AcquisitionType,
+                    PledgeStorePriceUsd = fs.PledgeStorePriceUsd
                 });
             }
 
@@ -106,13 +102,16 @@ public partial class FleetDetailViewModel : ObservableObject
             return;
 
         Fleet.Name = FleetName;
-        Fleet.Affiliation = Affiliation;
-        Fleet.AreaOfOperation = AreaOfOperation;
-        Fleet.Manifesto = Manifesto;
-        Fleet.Notes = Notes;
+        Fleet.Description = Description;
 
         await _fleetRepository.SaveFleetAsync(Fleet);
         IsEditing = false;
+    }
+
+    [RelayCommand]
+    private async Task ManageFleetAsync()
+    {
+        await Shell.Current.GoToAsync($"FleetManagementPage?fleetId={FleetId}");
     }
 
     [RelayCommand]
@@ -147,4 +146,11 @@ public class FleetShipDisplay
     public string Manufacturer { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public decimal PriceUsd { get; set; }
+    public int CrewMin { get; set; }
+    public int CrewMax { get; set; }
+    public AcquisitionType AcquisitionType { get; set; }
+    public decimal? PledgeStorePriceUsd { get; set; }
+
+    public string AcquisitionBadge => AcquisitionType == AcquisitionType.RealMoney ? "$USD" : "aUEC";
+    public string CrewDisplay => CrewMin == CrewMax ? $"{CrewMin}" : $"{CrewMin}-{CrewMax}";
 }

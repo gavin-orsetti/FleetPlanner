@@ -29,6 +29,21 @@ public partial class DashboardViewModel : ObservableObject
     private decimal _totalFleetValue;
 
     [ObservableProperty]
+    private int _rolesCovered;
+
+    [ObservableProperty]
+    private double _avgCrewSize;
+
+    [ObservableProperty]
+    private int _pledgedShipCount;
+
+    [ObservableProperty]
+    private int _inGameShipCount;
+
+    [ObservableProperty]
+    private decimal _totalPledgeValueUsd;
+
+    [ObservableProperty]
     private string _lastUpdated = "Never";
 
     [ObservableProperty]
@@ -43,10 +58,22 @@ public partial class DashboardViewModel : ObservableObject
     [ObservableProperty]
     private Axis[] _valueDistributionYAxes = [];
 
+    [ObservableProperty]
+    private ObservableCollection<Fleet> _fleets = [];
+
+    [ObservableProperty]
+    private Fleet? _selectedFleet;
+
     public DashboardViewModel(IFleetRepository fleetRepository, IShipDataService shipDataService)
     {
         _fleetRepository = fleetRepository;
         _shipDataService = shipDataService;
+    }
+
+    partial void OnSelectedFleetChanged(Fleet? value)
+    {
+        if (value is not null)
+            LoadDataCommand.Execute(null);
     }
 
     [RelayCommand]
@@ -56,13 +83,21 @@ public partial class DashboardViewModel : ObservableObject
         try
         {
             var fleets = await _fleetRepository.GetAllFleetsAsync();
+            Fleets = new ObservableCollection<Fleet>(fleets);
             TotalFleets = fleets.Count;
+
+            if (SelectedFleet is null && fleets.Count > 0)
+            {
+                SelectedFleet = fleets[0];
+                return; // OnSelectedFleetChanged will re-trigger LoadData
+            }
 
             var allShips = await _shipDataService.GetAllShipsAsync();
             var shipLookup = allShips.ToDictionary(s => s.Id);
 
+            var fleetsToShow = SelectedFleet is not null ? [SelectedFleet] : fleets;
             var allFleetShips = new List<(FleetShip fs, Ship? ship)>();
-            foreach (var fleet in fleets)
+            foreach (var fleet in fleetsToShow)
             {
                 var fleetShips = await _fleetRepository.GetFleetShipsAsync(fleet.Id);
                 foreach (var fs in fleetShips)
@@ -76,6 +111,27 @@ public partial class DashboardViewModel : ObservableObject
             TotalFleetValue = allFleetShips
                 .Where(x => x.ship is not null)
                 .Sum(x => x.ship!.PriceUsd);
+
+            // Acquisition breakdown
+            PledgedShipCount = allFleetShips.Count(x => x.fs.AcquisitionType == (int)AcquisitionType.RealMoney);
+            InGameShipCount = allFleetShips.Count(x => x.fs.AcquisitionType == (int)AcquisitionType.AUEC);
+            TotalPledgeValueUsd = allFleetShips
+                .Where(x => x.fs.AcquisitionType == (int)AcquisitionType.RealMoney && x.fs.PledgeStorePriceUsd.HasValue)
+                .Sum(x => x.fs.PledgeStorePriceUsd!.Value);
+
+            // Roles covered
+            var coveredRoles = allFleetShips
+                .Where(x => x.ship is not null && !string.IsNullOrWhiteSpace(x.ship!.Role))
+                .Select(x => x.ship!.Role)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Count();
+            RolesCovered = coveredRoles;
+
+            // Avg crew
+            var crewShips = allFleetShips.Where(x => x.ship is not null).ToList();
+            AvgCrewSize = crewShips.Count > 0
+                ? crewShips.Average(x => (double)x.ship!.CrewMin)
+                : 0;
 
             var lastUpdated = await _shipDataService.GetLastUpdatedAsync();
             LastUpdated = lastUpdated?.ToString("g") ?? "Never";
@@ -124,7 +180,7 @@ public partial class DashboardViewModel : ObservableObject
             {
                 Name = "Value (USD)",
                 Values = values,
-                Fill = new SolidColorPaint(new SKColor(0x27, 0x1d, 0x49)),
+                Fill = new SolidColorPaint(new SKColor(0x00, 0xD4, 0xFF)),
                 DataLabelsPaint = new SolidColorPaint(SKColors.White),
                 DataLabelsSize = 10
             }

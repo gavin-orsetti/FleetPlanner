@@ -27,6 +27,15 @@ public partial class RecommendationsViewModel : ObservableObject
     [ObservableProperty]
     private bool _hasNoFleet;
 
+    [ObservableProperty]
+    private ObservableCollection<Fleet> _fleets = [];
+
+    [ObservableProperty]
+    private Fleet? _selectedFleet;
+
+    [ObservableProperty]
+    private string _fleetSummary = string.Empty;
+
     public RecommendationsViewModel(
         IFleetRepository fleetRepository,
         IShipDataService shipDataService,
@@ -37,6 +46,12 @@ public partial class RecommendationsViewModel : ObservableObject
         _recommendationService = recommendationService;
     }
 
+    partial void OnSelectedFleetChanged(Fleet? value)
+    {
+        if (value is not null)
+            LoadRecommendationsCommand.Execute(null);
+    }
+
     [RelayCommand]
     private async Task LoadRecommendationsAsync()
     {
@@ -44,6 +59,8 @@ public partial class RecommendationsViewModel : ObservableObject
         try
         {
             var fleets = await _fleetRepository.GetAllFleetsAsync();
+            Fleets = new ObservableCollection<Fleet>(fleets);
+
             if (fleets.Count == 0)
             {
                 HasNoFleet = true;
@@ -53,19 +70,24 @@ public partial class RecommendationsViewModel : ObservableObject
             }
 
             HasNoFleet = false;
+
+            if (SelectedFleet is null)
+            {
+                SelectedFleet = fleets[0];
+                return; // OnSelectedFleetChanged will re-trigger
+            }
+
+            var fleet = SelectedFleet;
+            FleetSummary = $"{fleet.PrimaryFocusEnum} fleet — {fleet.AvailableCrewCount} players — {fleet.OperatingScaleEnum} scale";
+
             var allShips = await _shipDataService.GetAllShipsAsync();
             var shipLookup = allShips.ToDictionary(s => s.Id);
 
-            var ownedShips = new List<Ship>();
-            foreach (var fleet in fleets)
-            {
-                var fleetShips = await _fleetRepository.GetFleetShipsAsync(fleet.Id);
-                foreach (var fs in fleetShips)
-                {
-                    if (shipLookup.TryGetValue(fs.ShipId, out var ship))
-                        ownedShips.Add(ship);
-                }
-            }
+            var fleetShips = await _fleetRepository.GetFleetShipsAsync(fleet.Id);
+            var ownedShips = fleetShips
+                .Where(fs => shipLookup.ContainsKey(fs.ShipId))
+                .Select(fs => shipLookup[fs.ShipId])
+                .ToList();
 
             if (ownedShips.Count == 0)
             {
@@ -74,7 +96,7 @@ public partial class RecommendationsViewModel : ObservableObject
                 return;
             }
 
-            var recs = _recommendationService.GetRecommendations(ownedShips, allShips);
+            var recs = _recommendationService.GetRecommendations(fleet, ownedShips, allShips);
             Recommendations = new ObservableCollection<Recommendation>(recs);
             IsEmpty = recs.Count == 0;
         }

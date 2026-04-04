@@ -42,6 +42,7 @@ public static class MauiProgram
         builder.Services.AddTransient<DashboardViewModel>();
         builder.Services.AddTransient<FleetListViewModel>();
         builder.Services.AddTransient<FleetDetailViewModel>();
+        builder.Services.AddTransient<FleetManagementViewModel>();
         builder.Services.AddTransient<ShipBrowserViewModel>();
         builder.Services.AddTransient<ShipDetailViewModel>();
         builder.Services.AddTransient<RecommendationsViewModel>();
@@ -51,6 +52,7 @@ public static class MauiProgram
         builder.Services.AddTransient<DashboardPage>();
         builder.Services.AddTransient<FleetListPage>();
         builder.Services.AddTransient<FleetDetailPage>();
+        builder.Services.AddTransient<FleetManagementPage>();
         builder.Services.AddTransient<ShipBrowserPage>();
         builder.Services.AddTransient<ShipDetailPage>();
         builder.Services.AddTransient<RecommendationsPage>();

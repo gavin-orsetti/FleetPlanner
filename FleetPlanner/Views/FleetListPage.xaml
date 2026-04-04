@@ -44,10 +44,14 @@
                                 </Frame.GestureRecognizers>
                                 <VerticalStackLayout Spacing="4">
                                     <Label Text="{Binding Name}" FontSize="18" FontAttributes="Bold" />
-                                    <Label Text="{Binding Affiliation, StringFormat='Affiliation: {0}'}" FontSize="12"
+                                    <Label Text="{Binding PrimaryFocusEnum, StringFormat='Focus: {0}'}" FontSize="12"
                                            TextColor="{StaticResource Gray400}" />
-                                    <Label Text="{Binding AreaOfOperation, StringFormat='Area: {0}'}" FontSize="12"
-                                           TextColor="{StaticResource Gray400}" />
+                                    <HorizontalStackLayout Spacing="12">
+                                        <Label Text="{Binding AvailableCrewCount, StringFormat='{0} crew'}" FontSize="12"
+                                               TextColor="{StaticResource Gray400}" />
+                                        <Label Text="{Binding OperatingScaleEnum, StringFormat='{0} scale'}" FontSize="12"
+                                               TextColor="{StaticResource Gray400}" />
+                                    </HorizontalStackLayout>
                                 </VerticalStackLayout>
                             </Frame>
                         </SwipeView>
