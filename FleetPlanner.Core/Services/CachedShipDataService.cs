@@ -22,6 +22,7 @@ public class CachedShipDataService : IShipDataService
         Path.Combine(Path.GetTempPath(), "FleetPlanner.db3");
 #endif
 
+    [ActivatorUtilitiesConstructor]
     public CachedShipDataService(ShipDataService liveService)
     {
         _liveService = liveService;
