@@ -4,19 +4,59 @@ using FleetPlanner.Models;
 namespace FleetPlanner.Services;
 
 /// <summary>
-/// Graph-driven recommendation engine implementing 10 analytical patterns.
-/// Operates entirely on the in-memory <see cref="FleetGraph"/> — no I/O.
+/// Graph-driven recommendation engine implementing 10 analytical patterns that analyse
+/// the user's fleet composition and produce actionable <see cref="Recommendation"/> objects.
+///
+/// <para><b>Architecture:</b> Sits in the services layer, operating entirely on the
+/// in-memory <see cref="FleetGraph"/> — no I/O, no database calls. The graph must be
+/// pre-built by <see cref="IGraphBuildService"/> before calling <see cref="GetRecommendations"/>.
+/// This service is stateless and safe to call from any thread.</para>
+///
+/// <para><b>Scoring pipeline:</b> Each of the 10 patterns independently generates zero or
+/// more <see cref="Recommendation"/> objects. Each recommendation receives a
+/// <see cref="Recommendation.Score"/> in the 0.0–1.0 range (drawn from
+/// <see cref="RecommendationWeights"/> constants, sometimes scaled by a ratio). The
+/// <see cref="Recommendation.Priority"/> is derived from the score — typically ≥ 0.7 → High,
+/// 0.4–0.7 → Medium, &lt; 0.4 → Low — though some patterns use fixed priorities.
+/// Results are sorted by score descending so the most actionable items appear first.</para>
+///
+/// <para><b>The 10 analytical patterns:</b>
+/// <list type="number">
+///   <item><b>CapabilityGap</b> — group doctrine implies capabilities that no member ship provides.</item>
+///   <item><b>Redundancy</b> — multiple ships in a group share the same primary role tag.</item>
+///   <item><b>Complement</b> — an unassigned ship's roles would fill a gap in a group.</item>
+///   <item><b>UnderDescribedShip</b> — a ship has fewer than 2 meaningful tags.</item>
+///   <item><b>UnassignedShip</b> — a ship has been in the collection &gt; 7 days with no group.</item>
+///   <item><b>GroupCoherence</b> — ship role tags in a group align poorly with group doctrine.</item>
+///   <item><b>AccountRoleDistribution</b> — the entire collection is missing major role categories.</item>
+///   <item><b>DoctrineMismatch</b> — a ship's primary doctrine contradicts its group's doctrine.</item>
+///   <item><b>RemoveFromGroup</b> — a ship's tags don't align with any group doctrine capability.</item>
+///   <item><b>CrewEfficiency</b> — group crew requirements significantly exceed or underutilise the target.</item>
+/// </list></para>
+///
+/// <para><b>Edge case handling:</b> All patterns guard against empty collections —
+/// <c>graph.Ships.Count == 0</c> or <c>group.MemberShips.Count == 0</c> causes the
+/// pattern to return an empty list, never throw.</para>
 /// </summary>
 public class RecommendationService : IRecommendationService
 {
-    /// <summary>Major role categories that a well-rounded collection should cover.</summary>
+    /// <summary>
+    /// The 8 role tag keys that define a "well-rounded" fleet for
+    /// <see cref="AnalyseAccountRoleDistribution"/>. Missing any of these triggers a gap recommendation.
+    /// </summary>
     private static readonly string[] MajorRoleCategories =
     [
         "role:escort", "role:frontline", "role:hauling", "role:mining",
         "role:salvage", "role:exploration", "role:medical", "role:repair"
     ];
 
-    /// <summary>Doctrine-to-capability mappings for gap detection.</summary>
+    /// <summary>
+    /// Maps each doctrine tag key to the role/capability tag keys that doctrine implies.
+    /// Used by <see cref="AnalyseCapabilityGaps"/>, <see cref="AnalyseGroupCoherence"/>,
+    /// and <see cref="AnalyseRemoveFromGroup"/> to determine what a group "needs".
+    /// Doctrines not in this dictionary (e.g. "doctrine:solo", "doctrine:multipurpose") have
+    /// no specific capability requirements and are silently skipped by those patterns.
+    /// </summary>
     private static readonly Dictionary<string, string[]> DoctrineCapabilities = new()
     {
         ["doctrine:industrial"] = ["role:mining", "role:salvage", "role:hauling", "role:refinery", "capability:cargo"],
@@ -48,7 +88,18 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 1: CapabilityGap — group has doctrine tag X but lacks ships with matching capability/role tags.
+    /// Pattern 1: CapabilityGap — a group's doctrine implies capabilities that no member ship provides.
+    /// <para><b>Trigger:</b> For each group, for each doctrine tag on the group, look up the
+    /// expected role/capability tags in <see cref="DoctrineCapabilities"/>. If any expected tag
+    /// is absent from all member ships (checking both global and contextual tags for that group),
+    /// a CapabilityGap recommendation is generated.</para>
+    /// <para><b>Score:</b> Fixed at <see cref="RecommendationWeights.CapabilityGapWeight"/> (1.0).
+    /// Priority: always <see cref="RecommendationPriority.High"/>.</para>
+    /// <para><b>Evidence:</b> One entry per missing tag key (e.g. "Missing: Mining").</para>
+    /// <para><b>Suggested actions:</b> "Add a ship with the [missing role] tag to this group".</para>
+    /// <para><b>Edge cases:</b> Doctrines not in <see cref="DoctrineCapabilities"/> (e.g.
+    /// "doctrine:solo", "doctrine:multipurpose") are silently skipped — they have no specific
+    /// capability requirements. Groups with no member ships generate gaps for all capabilities.</para>
     /// </summary>
     private static List<Recommendation> AnalyseCapabilityGaps(FleetGraph graph)
     {
@@ -96,7 +147,16 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 2: Redundancy — multiple ships in a group carry the same primary role tag.
+    /// Pattern 2: Redundancy — multiple ships in a group share the same primary (weight 1) role tag.
+    /// <para><b>Trigger:</b> For each group, collect all role-category tags with weight == 1 from
+    /// each member ship (global + contextual). If two or more ships share the same primary role,
+    /// a Redundancy recommendation is generated for that role.</para>
+    /// <para><b>Score:</b> Fixed at <see cref="RecommendationWeights.RedundancyWeight"/> (0.6).
+    /// Priority: Medium if score ≥ 0.7, else Low (in practice always Low at 0.6).</para>
+    /// <para><b>Evidence:</b> One entry per ship listing its name and the shared role.</para>
+    /// <para><b>Suggested actions:</b> "Reassign one ship's primary role or move it to a different group".</para>
+    /// <para><b>Limitation:</b> Intentional redundancy (e.g. multiple escorts for safety) cannot
+    /// be distinguished from accidental duplication. The recommendation is always generated.</para>
     /// </summary>
     private static List<Recommendation> AnalyseRedundancy(FleetGraph graph)
     {
@@ -144,7 +204,17 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 3: Complement — a ship's role tags suggest it would strengthen a group that lacks that role.
+    /// Pattern 3: Complement — a ship not yet in a group has role tags that would fill a gap in that group.
+    /// <para><b>Trigger:</b> For each group, collect all role tags from member ships. Then for each
+    /// ship NOT already in the group, check if any of its global role tags are absent from the group's
+    /// role coverage. If so, generate a Complement recommendation suggesting the ship be added.</para>
+    /// <para><b>Score:</b> Fixed at <see cref="RecommendationWeights.ComplementWeight"/> (0.8).
+    /// Priority: always <see cref="RecommendationPriority.Medium"/>.</para>
+    /// <para><b>Evidence:</b> One entry per complementary role (e.g. "Missing in group: Mining").</para>
+    /// <para><b>Suggested actions:</b> "Add [ship name] to group '[group name]'".</para>
+    /// <para><b>Limitation:</b> Only checks global tags on candidate ships, not contextual tags
+    /// from other groups. A ship already in group A could still be recommended for group B
+    /// (which may be desirable — ships can belong to multiple groups via contextual tags).</para>
     /// </summary>
     private static List<Recommendation> AnalyseComplement(FleetGraph graph)
     {
@@ -192,7 +262,15 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 4: UnderDescribedShip — owned ship has fewer than 2 tags (excluding acquisition tags).
+    /// Pattern 4: UnderDescribedShip — an owned ship has fewer than 2 meaningful global tags.
+    /// <para><b>Trigger:</b> Count global tags on the ship excluding any with category "acquisition".
+    /// If the count is 0 or 1, generate an UnderDescribedShip recommendation.</para>
+    /// <para><b>Score:</b> Fixed at <see cref="RecommendationWeights.UnderDescribedWeight"/> (0.4).
+    /// Priority: always <see cref="RecommendationPriority.Low"/>.</para>
+    /// <para><b>Evidence:</b> "Current tags: {count}".</para>
+    /// <para><b>Suggested actions:</b> "Add role tags", "Add crew tags", "Add doctrine tags".</para>
+    /// <para><b>Edge case:</b> A ship with zero global tags but many contextual tags is still
+    /// flagged, because global tags are what the account-level patterns analyse.</para>
     /// </summary>
     private static List<Recommendation> AnalyseUnderDescribedShips(FleetGraph graph)
     {
@@ -225,7 +303,15 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 5: UnassignedShip — owned ship not in any group and in collection > 7 days.
+    /// Pattern 5: UnassignedShip — an owned ship has been in the collection for over 7 days
+    /// but is not a member of any fleet group.
+    /// <para><b>Trigger:</b> For each ship, check if <c>CreatedUtc</c> is more than 7 days ago
+    /// AND the ship has no contextual tags in any group (i.e. not a member of any group).
+    /// New ships (≤ 7 days old) are excluded to give the user time to organise them.</para>
+    /// <para><b>Score:</b> Fixed at <see cref="RecommendationWeights.UnassignedShipWeight"/> (0.5).
+    /// Priority: always <see cref="RecommendationPriority.Low"/>.</para>
+    /// <para><b>Evidence:</b> "Added: {yyyy-MM-dd}".</para>
+    /// <para><b>Suggested actions:</b> "Assign this ship to a fleet group with matching doctrine".</para>
     /// </summary>
     private static List<Recommendation> AnalyseUnassignedShips(FleetGraph graph)
     {
@@ -259,7 +345,20 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 6: GroupCoherence — group's ship role tags align poorly with group's doctrine tags.
+    /// Pattern 6: GroupCoherence — fewer than 50% of a group's ships have role/capability tags
+    /// that align with the group's doctrine.
+    /// <para><b>Trigger:</b> For each group with at least one member ship and one doctrine tag,
+    /// look up the doctrine's expected roles in <see cref="DoctrineCapabilities"/>. Count how many
+    /// member ships have at least one matching tag. If fewer than 50% align, generate a
+    /// GroupCoherence recommendation.</para>
+    /// <para><b>Score:</b> <c>(1.0 - coherenceRatio) × CapabilityGapWeight × 0.8</c>. A group
+    /// with 0% alignment scores 0.8; a group with 49% scores ~0.41. Priority: High if ≥ 0.7,
+    /// else Medium.</para>
+    /// <para><b>Evidence:</b> "{aligned}/{total} ships aligned".</para>
+    /// <para><b>Suggested actions:</b> "Add ships that match the group's doctrine",
+    /// "Reassign misaligned ships to a different group".</para>
+    /// <para><b>Edge case:</b> Doctrines not in <see cref="DoctrineCapabilities"/> are skipped.
+    /// Groups with 0 members or 0 doctrine tags are skipped entirely.</para>
     /// </summary>
     private static List<Recommendation> AnalyseGroupCoherence(FleetGraph graph)
     {
@@ -310,7 +409,18 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 7: AccountRoleDistribution — whole collection lacks ships in major role categories.
+    /// Pattern 7: AccountRoleDistribution — the user's entire collection is missing one or more
+    /// of the 8 major role categories defined in <see cref="MajorRoleCategories"/>.
+    /// <para><b>Trigger:</b> Collect all global role tags across all owned ships. Compare against
+    /// the 8 major roles (escort, frontline, hauling, mining, salvage, exploration, medical, repair).
+    /// If any are missing, generate a single Account-scoped recommendation listing all gaps.</para>
+    /// <para><b>Score:</b> <c>0.5 × (missingCount / totalMajorRoles)</c>. With 8 major roles,
+    /// missing 4 = score 0.25, missing all 8 = score 0.5. Priority: High if ≥ 4 missing,
+    /// Medium if ≥ 2, Low otherwise.</para>
+    /// <para><b>Evidence:</b> One "Missing: {role}" entry per gap.</para>
+    /// <para><b>Suggested actions:</b> One "Acquire a ship for {role}" per gap.</para>
+    /// <para><b>Edge case:</b> Returns empty if the user has no ships at all (early exit guard).
+    /// Only checks global tags — contextual group-scoped role tags are not counted.</para>
     /// </summary>
     private static List<Recommendation> AnalyseAccountRoleDistribution(FleetGraph graph)
     {
@@ -347,7 +457,18 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 8: DoctrineMismatch — ship's primary doctrine tag conflicts with group's doctrine tags.
+    /// Pattern 8: DoctrineMismatch — a ship's primary (weight 1) doctrine tag is not among its
+    /// group's doctrine tags, indicating the ship may be in the wrong group.
+    /// <para><b>Trigger:</b> For each group with doctrine tags, for each member ship, find the
+    /// ship's weight-1 doctrine tags (global + contextual). If any ship doctrine tag is NOT in
+    /// the group's doctrine set, generate a DoctrineMismatch recommendation.</para>
+    /// <para><b>Score:</b> Fixed at <see cref="RecommendationWeights.DoctrineMismatchWeight"/> (0.9).
+    /// Priority: always <see cref="RecommendationPriority.High"/>.</para>
+    /// <para><b>Evidence:</b> "Ship doctrine: {name}", "Group doctrine: {names}".</para>
+    /// <para><b>Suggested actions:</b> "Move this ship to a group with matching doctrine",
+    /// "Change the ship's doctrine tag to match the group".</para>
+    /// <para><b>Edge case:</b> A ship with no doctrine tags generates no mismatch. Groups
+    /// with no doctrine tags are skipped entirely.</para>
     /// </summary>
     private static List<Recommendation> AnalyseDoctrineMismatch(FleetGraph graph)
     {
@@ -395,7 +516,20 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 9: RemoveFromGroup — ship contributes nothing to a group based on group doctrine + ship tags.
+    /// Pattern 9: RemoveFromGroup — a member ship's tags don't match any of the group's
+    /// doctrine-derived capability requirements, suggesting it doesn't contribute to the group.
+    /// <para><b>Trigger:</b> For each group with doctrine tags, derive the set of desired
+    /// role/capability tags from <see cref="DoctrineCapabilities"/>. For each member ship,
+    /// check if any of its tags (global + contextual) match the desired set. If none match,
+    /// generate a RemoveFromGroup recommendation.</para>
+    /// <para><b>Score:</b> <c>RedundancyWeight × 0.8</c> = 0.48. Priority: always
+    /// <see cref="RecommendationPriority.Low"/>.</para>
+    /// <para><b>Evidence:</b> "Ship tags: {list}", "Group needs: {list}".</para>
+    /// <para><b>Suggested actions:</b> "Remove [ship] from this group",
+    /// "Add relevant role/capability tags to the ship".</para>
+    /// <para><b>Edge case:</b> Groups with no doctrine tags or doctrines not in
+    /// <see cref="DoctrineCapabilities"/> are skipped. If the derived desired set is empty
+    /// (all doctrines are unmapped), the group is skipped.</para>
     /// </summary>
     private static List<Recommendation> AnalyseRemoveFromGroup(FleetGraph graph)
     {
@@ -445,7 +579,22 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 10: CrewEfficiency — group's required crew total significantly exceeds or is under group.CrewTarget.
+    /// Pattern 10: CrewEfficiency — the total minimum crew required to operate all ships in a
+    /// group significantly exceeds or underutilises the group's <see cref="UserFleetGroup.CrewTarget"/>.
+    /// <para><b>Trigger (overcrew):</b> If <c>totalMinCrew / crewTarget &gt; 1.5</c>, the group
+    /// needs more crew than available — some ships will be unmanned. Generates a Medium priority
+    /// recommendation with score = <see cref="RecommendationWeights.CrewEfficiencyWeight"/> (0.7).</para>
+    /// <para><b>Trigger (undercrew):</b> If <c>totalMinCrew / crewTarget &lt; 0.3</c> AND
+    /// <c>crewTarget ≥ 3</c>, the group is wasting available crew. Generates a Low priority
+    /// recommendation with score = CrewEfficiencyWeight × 0.7 = 0.49. The crewTarget ≥ 3 guard
+    /// prevents false positives for solo players.</para>
+    /// <para><b>Evidence:</b> "Min crew needed: {n}", "Crew target: {n}", "Ratio: {n}x".</para>
+    /// <para><b>Suggested actions (overcrew):</b> "Remove ships with high crew requirements",
+    /// "Increase the crew target", "Replace multi-crew ships with solo-operable alternatives".</para>
+    /// <para><b>Suggested actions (undercrew):</b> "Add multi-crew ships to better utilise
+    /// available crew", "Reduce crew target if players aren't available".</para>
+    /// <para><b>Edge case:</b> Groups with 0 members or crewTarget ≤ 0 are skipped.
+    /// Ships with CrewMin = 0 (unusual) contribute nothing to the sum.</para>
     /// </summary>
     private static List<Recommendation> AnalyseCrewEfficiency(FleetGraph graph)
     {

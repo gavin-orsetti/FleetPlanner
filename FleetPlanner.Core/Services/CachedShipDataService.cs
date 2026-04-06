@@ -45,8 +45,8 @@ public class CachedShipDataService : IShipDataService
 
     /// <summary>
     /// Lazily-initialised SQLite connection for the ship cache.
-    /// Shares the same database file as <see cref="FleetPlanner.Repositories.FleetRepository"/>
-    /// — both use "FleetPlanner.db3" — so ships, fleets, and cache metadata live side by side.
+    /// Shares the same database file as all other repositories
+    /// — all use "FleetPlanner.db3" — so ships, tags, groups, and cache metadata live side by side.
     /// </summary>
     private SQLiteAsyncConnection? _db;
 
@@ -55,7 +55,7 @@ public class CachedShipDataService : IShipDataService
 
     /// <summary>
     /// Resolves the database path using the same platform-conditional pattern as
-    /// <see cref="FleetPlanner.Repositories.FleetRepository"/>. Both point to "FleetPlanner.db3"
+    /// all other repositories. Every repository points to "FleetPlanner.db3"
     /// so all data lives in a single SQLite file.
     /// </summary>
     private string DbPath => _dbPath ??=
@@ -98,7 +98,7 @@ public class CachedShipDataService : IShipDataService
 
     /// <summary>
     /// Returns the shared database connection, creating the Ship and ShipCacheMetadata
-    /// tables on first call. Same lazy-init pattern as <see cref="FleetPlanner.Repositories.FleetRepository"/>.
+    /// tables on first call. Same lazy-init pattern used by all repository implementations.
     /// </summary>
     private async Task<SQLiteAsyncConnection> GetConnectionAsync()
     {

@@ -6,7 +6,37 @@ namespace FleetPlanner.Services;
 
 /// <summary>
 /// Builds the in-memory <see cref="FleetGraph"/> by loading all user data from SQLite
-/// and resolving relationships. The graph is cached and invalidated after mutations.
+/// repositories and resolving cross-entity relationships (ship→catalogue, ship→tags,
+/// group→tags, group→member ships).
+///
+/// <para><b>Build sequence (order matters):</b>
+/// <list type="number">
+///   <item>Load all non-archived <see cref="OwnedShip"/> records.</item>
+///   <item>Load the full ship catalogue from <see cref="IShipDataService"/> and build an ID lookup.</item>
+///   <item>Load all <see cref="TagDefinition"/> records (including archived, for tag resolution).</item>
+///   <item>Load all non-archived <see cref="UserFleetGroup"/> records.</item>
+///   <item>For each OwnedShip, load its <see cref="OwnedShipTag"/> records and resolve each to a
+///     <see cref="TagNode"/>. Tags are partitioned into global (ContextType == null) and contextual
+///     (ContextType == "group") buckets on the <see cref="ShipNode"/>.</item>
+///   <item>For each group, load its <see cref="UserFleetGroupTag"/> records and resolve to TagNodes.
+///     Then determine group membership: a ship is a member if it has ANY contextual tags for that group.</item>
+/// </list></para>
+///
+/// <para><b>Contextual tags and group membership:</b> A ship belongs to a group if and only if
+/// it has at least one <see cref="OwnedShipTag"/> with <c>ContextType == "group"</c> and
+/// <c>ContextId == group.Id</c>. There is no separate membership table — the contextual tag IS
+/// the membership. This means adding any group-scoped tag to a ship automatically makes it a
+/// group member.</para>
+///
+/// <para><b>Cache invalidation contract:</b> The graph is cached in <c>_cachedGraph</c>.
+/// <see cref="InvalidateCache"/> sets it to null. Any code that mutates ships, tags, or groups
+/// should call <c>InvalidateCache()</c> afterwards so the next <c>GetOrRebuildAsync()</c> call
+/// produces a fresh graph. Currently, cache invalidation is the caller's responsibility (typically
+/// the ViewModel layer).</para>
+///
+/// <para><b>Thread safety:</b> Not thread-safe. The <c>_cachedGraph</c> field is read/written
+/// without synchronisation. This is acceptable in MAUI where ViewModel calls are serialised
+/// on the UI thread.</para>
 /// </summary>
 public class GraphBuildService : IGraphBuildService
 {

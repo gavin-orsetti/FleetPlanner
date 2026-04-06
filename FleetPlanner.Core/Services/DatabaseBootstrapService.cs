@@ -5,8 +5,42 @@ using SQLite;
 namespace FleetPlanner.Services;
 
 /// <summary>
-/// Creates all database tables and seeds the system tag taxonomy on first run.
-/// Must be called at startup after <c>builder.Build()</c> but before the app is returned.
+/// Creates all SQLite tables and seeds the system-defined tag taxonomy on first launch.
+/// This is the app's schema-and-seed bootstrapper — called once at startup from
+/// <see cref="MauiProgram.CreateMauiApp"/> after <c>builder.Build()</c> but before the
+/// <see cref="MauiApp"/> is returned.
+///
+/// <para><b>Schema versioning strategy:</b> An <see cref="AppMetadata"/> row with key
+/// <c>"schema_version"</c> gates whether seeding runs. On first launch the row does not
+/// exist, so <see cref="InitialiseAsync"/> seeds all system tags and writes version "2".
+/// On subsequent launches the row is found immediately and the method returns — this is
+/// the idempotency guard. Future schema migrations can bump the version and add migration
+/// logic between the version check and the version write.</para>
+///
+/// <para><b>Idempotency:</b> Safe to call on every startup. <c>CreateTableAsync</c> is a
+/// no-op if the table already exists (SQLite <c>CREATE TABLE IF NOT EXISTS</c>). Seeding
+/// only runs when <c>schema_version</c> is absent. Even if seeding did run twice, tags use
+/// <c>InsertOrReplaceAsync</c> keyed on the stable <see cref="TagDefinition.Key"/>, so
+/// duplicates are impossible.</para>
+///
+/// <para><b>Seeding strategy — 8 tag categories:</b> The taxonomy seeds 40+ tags across:
+/// <list type="bullet">
+///   <item><b>role</b> — ship role classification (escort, mining, medical, etc.)</item>
+///   <item><b>doctrine</b> — operational philosophy (solo, combat, industrial, etc.)</item>
+///   <item><b>status</b> — ship lifecycle state (core, situational, upgrade-target, etc.)</item>
+///   <item><b>crew</b> — crewing pattern (solo, duo, small, large, NPC-viable)</item>
+///   <item><b>capability</b> — ship hardware features (medical bay, tractor beam, hangar, etc.)</item>
+///   <item><b>preference</b> — player sentiment (daily-driver, favorite, lore-pick, investment)</item>
+///   <item><b>constraint</b> — planning constraints (soloable, budget, hangar-limited)</item>
+///   <item><b>custom</b> — user-created tags (not seeded; created at runtime)</item>
+/// </list></para>
+///
+/// <para><b>Why stable slug keys instead of integer IDs:</b> System tags use string keys
+/// in <c>"category:slug"</c> format (e.g. <c>"role:escort"</c>) rather than auto-increment
+/// integers. This ensures keys are stable across installs, schema migrations, and database
+/// resets — a tag assignment saved as <c>"role:escort"</c> is always meaningful, even if
+/// the database was recreated. Integer IDs would depend on insertion order and could
+/// silently change meaning after a migration.</para>
 /// </summary>
 public class DatabaseBootstrapService
 {
@@ -29,8 +63,18 @@ public class DatabaseBootstrapService
     }
 
     /// <summary>
-    /// Creates all tables and seeds system tags if not already present.
-    /// Idempotent — safe to call on every startup.
+    /// Creates all SQLite tables and seeds the system tag taxonomy if not already present.
+    /// <para>
+    /// <b>Idempotent:</b> Safe to call on every startup. The <c>schema_version</c> guard in
+    /// <see cref="AppMetadata"/> prevents duplicate seeding — if the row exists, this method
+    /// returns immediately after ensuring tables exist. Table creation itself is idempotent
+    /// (SQLite <c>CREATE TABLE IF NOT EXISTS</c>).
+    /// </para>
+    /// <para>
+    /// <b>Call site:</b> Invoked synchronously (via <c>.GetAwaiter().GetResult()</c>) from
+    /// <see cref="MauiProgram.CreateMauiApp"/> because the MAUI startup contract requires a
+    /// synchronous return. The blocking call is safe here because no UI thread exists yet.
+    /// </para>
     /// </summary>
     public async Task InitialiseAsync()
     {
@@ -71,7 +115,27 @@ public class DatabaseBootstrapService
 
     /// <summary>
     /// Builds the complete list of system-defined tags that form the seeded taxonomy.
+    /// <para>
+    /// Each tag uses a stable <c>"category:slug"</c> key that NEVER changes once shipped.
+    /// The slug is a lowercase, hyphenated identifier (e.g. <c>"role:frontline"</c>,
+    /// <c>"doctrine:small-crew"</c>). Keys are the primary key in SQLite — renaming a slug
+    /// would orphan all existing tag assignments.
+    /// </para>
+    /// <para>
+    /// <b>AllowedScopes:</b> Each tag's <see cref="TagDefinition.AllowedScopes"/> controls
+    /// which entity types it can be applied to. Most role/status/crew/capability/preference
+    /// tags are scoped to <c>"OwnedShip"</c> only. Doctrine and constraint tags allow both
+    /// <c>"OwnedShip,UserFleetGroup"</c> so they can describe both individual ships and
+    /// fleet groups.
+    /// </para>
+    /// <para>
+    /// <b>IsSystemDefined:</b> All tags created here have <c>IsSystemDefined = true</c>.
+    /// System tags can be archived (hidden from pickers) but never hard-deleted by the user.
+    /// This protects the recommendation engine's tag key references from breaking.
+    /// </para>
     /// </summary>
+    /// <returns>A list of 40+ <see cref="TagDefinition"/> records spanning 7 categories
+    /// (role, doctrine, status, crew, capability, preference, constraint).</returns>
     internal static List<TagDefinition> BuildSystemTags()
     {
         var sortOrder = 0;
