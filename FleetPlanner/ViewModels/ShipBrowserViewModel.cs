@@ -204,7 +204,6 @@ public partial class ShipBrowserViewModel : ObservableObject
 
     /// <summary>
     /// Creates an OwnedShip record and navigates to the editor for tag assignment.
-    /// Replaces the old AddShipToFleetAsync which created FleetShip records.
     /// </summary>
     [RelayCommand]
     private async Task AddToCollectionAsync(Ship ship)

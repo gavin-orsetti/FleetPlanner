@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using System.Text.RegularExpressions;
 
 namespace FleetPlanner.Helpers
 {
@@ -22,7 +17,7 @@ namespace FleetPlanner.Helpers
         /// <summary>
         /// Converts an enum value to a human-readable string by splitting its PascalCase name.
         /// <para>
-        /// Example: <c>FleetFocus.BountyHunting.ToSplitString()</c> → <c>"Bounty Hunting"</c>.
+        /// Example: <c>AcquisitionType.RealMoney.ToSplitString()</c> → <c>"Real Money"</c>.
         /// Used in the UI to display enum values as readable labels without maintaining a
         /// separate display-name dictionary.
         /// </para>

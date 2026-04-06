@@ -14,9 +14,8 @@ namespace FleetPlanner.ViewModels;
 /// No editing, no CRUD — just a read-only detail display.
 /// </para>
 /// <para>
-/// <b>Navigation flow:</b> The user arrives here from either the ShipBrowser (browse mode)
-/// or the FleetDetail page. The ship ID is passed as a query parameter:
-/// <c>GoToAsync("ShipDetailPage?shipId=123")</c>.
+/// <b>Navigation flow:</b> The user arrives here from the ShipBrowser page. The ship ID is
+/// passed as a query parameter: <c>GoToAsync("ShipDetailPage?shipId=123")</c>.
 /// </para>
 /// </summary>
 /// <see href="https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/shell/navigation#process-navigation-data-using-query-property-attributes"/>

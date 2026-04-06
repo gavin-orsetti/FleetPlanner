@@ -13,7 +13,6 @@ namespace FleetPlanner.ViewModels;
 
 /// <summary>
 /// ViewModel for the Dashboard page — aggregates owned-ship statistics and renders charts.
-/// Now driven by OwnedShip + tag data instead of Fleet data.
 /// </summary>
 public partial class DashboardViewModel : ObservableObject
 {

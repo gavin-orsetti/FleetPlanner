@@ -5,9 +5,9 @@ namespace FleetPlanner.Views;
 /// <summary>
 /// Code-behind for the Ship Browser page — searchable/filterable catalogue of all ships.
 /// <para>
-/// <b>Dual mode (browse vs. select):</b> When navigated to from the FleetDetail page with
-/// <c>selectMode=true&amp;fleetId=42</c>, tapping a ship adds it to the fleet. In normal browse
-/// mode, tapping navigates to <see cref="ShipDetailPage"/>.
+/// <b>Browse mode:</b> Tapping a ship navigates to <see cref="ShipDetailPage"/>. The "Add to
+/// Collection" button creates an <see cref="FleetPlanner.Models.OwnedShip"/> and navigates to
+/// the editor for tag assignment.
 /// </para>
 /// <para>
 /// <b>Real-time filtering:</b> The XAML binds a <c>SearchBar</c> and three <c>Picker</c>

@@ -12,8 +12,8 @@ namespace FleetPlanner.Models;
 /// </para>
 /// <para>
 /// <b>Important distinction:</b> <see cref="Ship"/> is a read-only reference record (game data).
-/// <see cref="FleetShip"/> is the user-owned instance that links a Ship to a Fleet with
-/// player-specific metadata (callsign, purchase info).
+/// <see cref="OwnedShip"/> is the user-owned instance that links a Ship to the player's
+/// collection with player-specific metadata (callsign, acquisition info, tags).
 /// </para>
 /// </summary>
 /// <see href="https://starcitizen.tools"/>
