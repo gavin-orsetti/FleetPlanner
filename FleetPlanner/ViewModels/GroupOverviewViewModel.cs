@@ -5,16 +5,31 @@ using CommunityToolkit.Mvvm.Input;
 
 using FleetPlanner.Models;
 using FleetPlanner.Repositories;
+using FleetPlanner.Services;
 using FleetPlanner.Views;
 
 namespace FleetPlanner.ViewModels;
 
 /// <summary>
-/// ViewModel for the Group Overview page — lists all user-created fleet groups.
+/// ViewModel for the Group Overview page — lists all non-archived fleet groups and supports
+/// group creation and deletion.
+///
+/// <para><b>Page lifecycle:</b> <see cref="LoadGroupsCommand"/> runs on every <c>OnAppearing</c>,
+/// replacing the <see cref="Groups"/> collection with fresh data from the repository.</para>
+///
+/// <para><b>Destructive commands:</b> <see cref="DeleteGroupCommand"/> hard-deletes a group
+/// after a confirmation dialog ("Permanently delete '[name]'?"). This does NOT archive —
+/// it permanently removes the group record. Orphaned contextual tags on ships are not cleaned
+/// up (they become dangling references until the next graph build silently ignores them).</para>
+///
+/// <para><b>Navigation:</b> <see cref="CreateGroupCommand"/> creates a new group and immediately
+/// navigates to <c>GroupDetailPage</c> with <see cref="Helpers.QueryParameters.GroupId"/>.
+/// <see cref="NavigateToGroupCommand"/> does the same for existing groups.</para>
 /// </summary>
 public partial class GroupOverviewViewModel : ObservableObject
 {
     private readonly IUserFleetGroupRepository _groupRepository;
+    private readonly IGraphBuildService _graphBuildService;
 
     /// <summary>The list of groups currently displayed.</summary>
     [ObservableProperty]
@@ -31,9 +46,10 @@ public partial class GroupOverviewViewModel : ObservableObject
     /// <summary>
     /// Constructor — receives dependencies from the DI container.
     /// </summary>
-    public GroupOverviewViewModel(IUserFleetGroupRepository groupRepository)
+    public GroupOverviewViewModel(IUserFleetGroupRepository groupRepository, IGraphBuildService graphBuildService)
     {
         _groupRepository = groupRepository;
+        _graphBuildService = graphBuildService;
     }
 
     /// <summary>Loads all non-archived groups.</summary>
@@ -65,6 +81,7 @@ public partial class GroupOverviewViewModel : ObservableObject
 
         var group = new UserFleetGroup { Name = name };
         await _groupRepository.SaveGroupAsync(group);
+        _graphBuildService.InvalidateCache();
 
         await Shell.Current.GoToAsync(nameof(GroupDetailPage), new Dictionary<string, object>
         {
@@ -83,7 +100,7 @@ public partial class GroupOverviewViewModel : ObservableObject
         });
     }
 
-    /// <summary>Deletes a group after confirmation.</summary>
+    /// <summary>Deletes a group after confirmation and invalidates the graph cache.</summary>
     [RelayCommand]
     private async Task DeleteGroupAsync(UserFleetGroup group)
     {
@@ -92,6 +109,7 @@ public partial class GroupOverviewViewModel : ObservableObject
             $"Permanently delete '{group.Name}'?", "Delete", "Cancel");
         if (!confirm) return;
         await _groupRepository.DeleteGroupAsync(group.Id);
+        _graphBuildService.InvalidateCache();
         await LoadGroupsAsync();
     }
 }

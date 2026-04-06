@@ -12,16 +12,34 @@ using FleetPlanner.Views;
 namespace FleetPlanner.ViewModels;
 
 /// <summary>
-/// ViewModel for the Ship Browser page — lists all known ships with search, filter, and add-to-collection support.
-/// <para>
-/// In the tag-centric model, adding a ship creates an <see cref="OwnedShip"/> record
-/// and navigates to the <see cref="OwnedShipEditorPage"/> for tag assignment.
-/// </para>
+/// ViewModel for the Ship Browser page — lists all known Star Citizen ships from the catalogue
+/// with search, filter (role/manufacturer/size), and add-to-collection support.
+///
+/// <para><b>Page lifecycle:</b> <see cref="LoadShipsCommand"/> is executed from
+/// <c>ShipBrowserPage.OnAppearing</c> on every page visit. The first load may trigger a
+/// network call (if the cache is empty); subsequent loads serve from the SQLite cache.
+/// <see cref="RefreshShipsCommand"/> force-refreshes from the starcitizen.tools API.</para>
+///
+/// <para><b>Real-time filtering:</b> The partial method hooks <c>OnSearchTextChanged</c>,
+/// <c>OnSelectedRoleChanged</c>, <c>OnSelectedManufacturerChanged</c>, and
+/// <c>OnSelectedSizeChanged</c> all call <see cref="ApplyFilters"/> which rebuilds the
+/// <see cref="Ships"/> ObservableCollection from the full <c>_allShips</c> list. The
+/// collection is replaced entirely on each filter change (not incrementally updated).</para>
+///
+/// <para><b>Adding to collection:</b> <see cref="AddToCollectionCommand"/> is destructive
+/// (creates OwnedShip records in the database). It prompts for quantity (1–50), creates
+/// the records, and navigates to the editor for tag assignment if quantity == 1.</para>
+///
+/// <para><b>QueryProperty usage:</b> This ViewModel does not receive query parameters — it
+/// is a tab-level page. Navigation out goes to <c>ShipDetailPage</c> (via
+/// <see cref="Helpers.QueryParameters.ShipId"/>) or <c>OwnedShipEditorPage</c> (via
+/// <see cref="Helpers.QueryParameters.OwnedShipId"/>).</para>
 /// </summary>
 public partial class ShipBrowserViewModel : ObservableObject
 {
     private readonly IShipDataService _shipDataService;
     private readonly IOwnedShipRepository _ownedShipRepository;
+    private readonly IGraphBuildService _graphBuildService;
 
     private List<Ship> _allShips = [];
 
@@ -76,10 +94,11 @@ public partial class ShipBrowserViewModel : ObservableObject
     /// <summary>
     /// Constructor — receives dependencies from the DI container.
     /// </summary>
-    public ShipBrowserViewModel(IShipDataService shipDataService, IOwnedShipRepository ownedShipRepository)
+    public ShipBrowserViewModel(IShipDataService shipDataService, IOwnedShipRepository ownedShipRepository, IGraphBuildService graphBuildService)
     {
         _shipDataService = shipDataService;
         _ownedShipRepository = ownedShipRepository;
+        _graphBuildService = graphBuildService;
     }
 
     /// <summary>Loads the ship catalogue from the cache/API.</summary>
@@ -247,6 +266,9 @@ public partial class ShipBrowserViewModel : ObservableObject
             await _ownedShipRepository.SaveOwnedShipAsync(ownedShip);
             lastId = ownedShip.Id;
         }
+
+        // Invalidate the graph cache so recommendations reflect the new ship(s)
+        _graphBuildService.InvalidateCache();
 
         if (quantity == 1 && lastId > 0)
         {

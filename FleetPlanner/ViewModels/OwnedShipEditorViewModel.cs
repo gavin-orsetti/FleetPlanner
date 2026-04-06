@@ -11,7 +11,22 @@ namespace FleetPlanner.ViewModels;
 
 /// <summary>
 /// ViewModel for the Owned Ship Editor page — allows editing callsign, notes,
-/// acquisition info, and tag assignments for a single owned ship.
+/// acquisition info, and viewing tag assignments for a single owned ship.
+///
+/// <para><b>QueryProperty:</b> Receives <see cref="OwnedShipId"/> via Shell navigation
+/// parameter <c>"ownedShipId"</c> (an integer). The property is set before <c>OnAppearing</c>.</para>
+///
+/// <para><b>Page lifecycle:</b> <see cref="LoadShipCommand"/> runs on <c>OnAppearing</c>,
+/// loading the <see cref="OwnedShip"/> record, resolving the catalogue ship name, and
+/// loading all tags (global + contextual) into <see cref="AppliedTags"/>.</para>
+///
+/// <para><b>Save behaviour:</b> <see cref="SaveCommand"/> writes the edited fields back to
+/// the <c>OwnedShip</c> record via <see cref="IOwnedShipRepository.SaveOwnedShipAsync"/>
+/// (which stamps <c>UpdatedUtc</c>) and navigates back. <see cref="CancelCommand"/> navigates
+/// back without saving.</para>
+///
+/// <para><b>Destructive operations:</b> None — this page only edits metadata. Archive/delete
+/// are handled on the <c>OwnedShipLibraryPage</c>.</para>
 /// </summary>
 [QueryProperty(nameof(OwnedShipId), "ownedShipId")]
 public partial class OwnedShipEditorViewModel : ObservableObject
@@ -20,6 +35,7 @@ public partial class OwnedShipEditorViewModel : ObservableObject
     private readonly IOwnedShipTagRepository _ownedShipTagRepository;
     private readonly ITagRepository _tagRepository;
     private readonly IShipDataService _shipDataService;
+    private readonly IGraphBuildService _graphBuildService;
 
     /// <summary>The OwnedShip Id received via query parameter.</summary>
     [ObservableProperty]
@@ -66,12 +82,14 @@ public partial class OwnedShipEditorViewModel : ObservableObject
         IOwnedShipRepository ownedShipRepository,
         IOwnedShipTagRepository ownedShipTagRepository,
         ITagRepository tagRepository,
-        IShipDataService shipDataService)
+        IShipDataService shipDataService,
+        IGraphBuildService graphBuildService)
     {
         _ownedShipRepository = ownedShipRepository;
         _ownedShipTagRepository = ownedShipTagRepository;
         _tagRepository = tagRepository;
         _shipDataService = shipDataService;
+        _graphBuildService = graphBuildService;
     }
 
     /// <summary>Loads the owned ship and its tags.</summary>
@@ -118,6 +136,7 @@ public partial class OwnedShipEditorViewModel : ObservableObject
         _currentShip.AcquiredPriceAuec = AcquiredPriceAuec;
 
         await _ownedShipRepository.SaveOwnedShipAsync(_currentShip);
+        _graphBuildService.InvalidateCache();
         await Shell.Current.GoToAsync("..");
     }
 

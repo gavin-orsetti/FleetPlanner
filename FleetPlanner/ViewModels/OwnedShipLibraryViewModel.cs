@@ -11,12 +11,29 @@ using FleetPlanner.Views;
 namespace FleetPlanner.ViewModels;
 
 /// <summary>
-/// ViewModel for the Owned Ship Library page — lists all ships the user owns.
+/// ViewModel for the Owned Ship Library page — lists all non-archived ships the user owns,
+/// resolved against the ship catalogue for display names and metadata.
+///
+/// <para><b>Page lifecycle:</b> <see cref="LoadOwnedShipsCommand"/> runs on every
+/// <c>OnAppearing</c>, rebuilding the <see cref="OwnedShips"/> collection from scratch.
+/// This ensures edits made in the <c>OwnedShipEditorPage</c> are reflected on return.</para>
+///
+/// <para><b>Destructive commands:</b>
+/// <list type="bullet">
+///   <item><see cref="ArchiveShipCommand"/> — soft-deletes (sets IsArchived). No confirmation dialog.</item>
+///   <item><see cref="DeleteShipCommand"/> — hard-deletes after a confirmation dialog ("Permanently delete?").</item>
+/// </list>
+/// Both reload the list after completion.</para>
+///
+/// <para><b>Navigation:</b> <see cref="EditOwnedShipCommand"/> pushes to
+/// <c>OwnedShipEditorPage</c> with <see cref="Helpers.QueryParameters.OwnedShipId"/>.
+/// <see cref="AddOwnedShipCommand"/> navigates to the <c>ShipBrowserPage</c> tab.</para>
 /// </summary>
 public partial class OwnedShipLibraryViewModel : ObservableObject
 {
     private readonly IOwnedShipRepository _ownedShipRepository;
     private readonly IShipDataService _shipDataService;
+    private readonly IGraphBuildService _graphBuildService;
 
     /// <summary>The list of owned ships currently displayed.</summary>
     [ObservableProperty]
@@ -33,10 +50,11 @@ public partial class OwnedShipLibraryViewModel : ObservableObject
     /// <summary>
     /// Constructor — receives dependencies from the DI container.
     /// </summary>
-    public OwnedShipLibraryViewModel(IOwnedShipRepository ownedShipRepository, IShipDataService shipDataService)
+    public OwnedShipLibraryViewModel(IOwnedShipRepository ownedShipRepository, IShipDataService shipDataService, IGraphBuildService graphBuildService)
     {
         _ownedShipRepository = ownedShipRepository;
         _shipDataService = shipDataService;
+        _graphBuildService = graphBuildService;
     }
 
     /// <summary>Loads all non-archived owned ships and resolves catalogue data.</summary>
@@ -93,16 +111,17 @@ public partial class OwnedShipLibraryViewModel : ObservableObject
         });
     }
 
-    /// <summary>Archives an owned ship (soft delete).</summary>
+    /// <summary>Archives an owned ship (soft delete) and invalidates the graph cache.</summary>
     [RelayCommand]
     private async Task ArchiveShipAsync(OwnedShipDisplay ship)
     {
         if (ship is null) return;
         await _ownedShipRepository.ArchiveOwnedShipAsync(ship.OwnedShipId);
+        _graphBuildService.InvalidateCache();
         await LoadOwnedShipsAsync();
     }
 
-    /// <summary>Hard-deletes an owned ship after confirmation.</summary>
+    /// <summary>Hard-deletes an owned ship after confirmation and invalidates the graph cache.</summary>
     [RelayCommand]
     private async Task DeleteShipAsync(OwnedShipDisplay ship)
     {
@@ -111,12 +130,15 @@ public partial class OwnedShipLibraryViewModel : ObservableObject
             $"Permanently delete {ship.ShipName}?", "Delete", "Cancel");
         if (!confirm) return;
         await _ownedShipRepository.DeleteOwnedShipAsync(ship.OwnedShipId);
+        _graphBuildService.InvalidateCache();
         await LoadOwnedShipsAsync();
     }
 }
 
 /// <summary>
-/// Display DTO merging OwnedShip with catalogue Ship data for UI binding.
+/// Display DTO that merges <see cref="OwnedShip"/> user data with <see cref="Ship"/> catalogue
+/// data for UI binding in the Owned Ship Library and Group Detail pages. This avoids exposing
+/// raw domain models to the View and provides computed display properties like <see cref="AcquisitionBadge"/>.
 /// </summary>
 public class OwnedShipDisplay
 {
