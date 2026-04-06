@@ -4,62 +4,76 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using FleetPlanner.Models;
-using FleetPlanner.Repositories;
 using FleetPlanner.Services;
 
 namespace FleetPlanner.ViewModels;
 
 /// <summary>
-/// ViewModel for the Recommendations page — placeholder for Phase 3.
-/// Currently loads owned ships and displays a "coming soon" message.
-/// Will be fully rewritten with the graph-driven recommendation engine.
+/// ViewModel for the Recommendations page — runs the graph-driven
+/// recommendation engine and displays results grouped by priority.
 /// </summary>
 public partial class RecommendationsViewModel : ObservableObject
 {
-    private readonly IOwnedShipRepository _ownedShipRepository;
-    private readonly IShipDataService _shipDataService;
+    private readonly IGraphBuildService _graphBuildService;
+    private readonly IRecommendationService _recommendationService;
 
     /// <summary>True while loading.</summary>
     [ObservableProperty]
     private bool _isLoading;
 
-    /// <summary>True when no owned ships exist.</summary>
+    /// <summary>True when no recommendations were generated.</summary>
     [ObservableProperty]
     private bool _isEmpty;
 
     /// <summary>Summary text for the current state.</summary>
     [ObservableProperty]
-    private string _statusMessage = "Recommendations engine is being upgraded. Check back soon!";
+    private string _statusMessage = string.Empty;
 
-    /// <summary>Total number of owned ships for context.</summary>
+    /// <summary>Total number of recommendations generated.</summary>
     [ObservableProperty]
-    private int _totalShips;
+    private int _totalRecommendations;
+
+    /// <summary>Recommendations to display.</summary>
+    public ObservableCollection<Recommendation> Recommendations { get; } = new();
 
     /// <summary>
     /// Constructor — receives dependencies from the DI container.
     /// </summary>
     public RecommendationsViewModel(
-        IOwnedShipRepository ownedShipRepository,
-        IShipDataService shipDataService)
+        IGraphBuildService graphBuildService,
+        IRecommendationService recommendationService)
     {
-        _ownedShipRepository = ownedShipRepository;
-        _shipDataService = shipDataService;
+        _graphBuildService = graphBuildService;
+        _recommendationService = recommendationService;
     }
 
-    /// <summary>Loads current state information.</summary>
+    /// <summary>Builds the graph and runs the recommendation engine.</summary>
     [RelayCommand]
     private async Task LoadRecommendationsAsync()
     {
         IsLoading = true;
         try
         {
-            var ownedShips = await _ownedShipRepository.GetAllOwnedShipsAsync();
-            TotalShips = ownedShips.Count;
-            IsEmpty = ownedShips.Count == 0;
+            var graph = await _graphBuildService.GetOrRebuildAsync();
+            var results = _recommendationService.GetRecommendations(graph);
 
-            StatusMessage = ownedShips.Count == 0
-                ? "Add some ships to your collection first to get recommendations."
-                : $"You have {ownedShips.Count} ships. Graph-driven recommendations coming in Phase 3.";
+            Recommendations.Clear();
+            foreach (var r in results)
+                Recommendations.Add(r);
+
+            TotalRecommendations = results.Count;
+            IsEmpty = results.Count == 0;
+
+            StatusMessage = results.Count == 0
+                ? graph.Ships.Count == 0
+                    ? "Add some ships to your collection first to get recommendations."
+                    : "No recommendations right now — your fleet looks good!"
+                : $"{results.Count} recommendations generated.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error generating recommendations: {ex.Message}";
+            IsEmpty = true;
         }
         finally
         {

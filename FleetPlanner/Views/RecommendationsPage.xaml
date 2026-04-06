@@ -2,23 +2,57 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             xmlns:m="clr-namespace:FleetPlanner.Models;assembly=FleetPlanner.Core"
              x:Class="FleetPlanner.Views.RecommendationsPage"
              x:DataType="vm:RecommendationsViewModel"
              Title="Recommendations">
 
-    <VerticalStackLayout Padding="16" Spacing="16" VerticalOptions="Center" HorizontalOptions="Center">
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="8">
 
-        <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
-                           HorizontalOptions="Center" />
+        <!-- Header -->
+        <VerticalStackLayout Grid.Row="0" Spacing="4">
+            <Label Text="Fleet Recommendations" FontSize="22" FontAttributes="Bold" />
+            <Label Text="{Binding StatusMessage}" FontSize="14" TextColor="{StaticResource Gray400}" />
+        </VerticalStackLayout>
 
-        <Label Text="Recommendations" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+        <!-- Loading indicator -->
+        <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
 
-        <Label Text="{Binding StatusMessage}" FontSize="14" TextColor="{StaticResource Gray400}"
-               HorizontalTextAlignment="Center" />
+        <!-- Recommendation list -->
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Recommendations}"
+                        IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8" Padding="32">
+                    <Label Text="No recommendations yet" FontSize="16" FontAttributes="Bold"
+                           HorizontalTextAlignment="Center" />
+                    <Label Text="Add ships and groups to get fleet improvement suggestions."
+                           FontSize="13" TextColor="{StaticResource Gray400}" HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
 
-        <Label Text="{Binding TotalShips, StringFormat='{0} ships in collection'}"
-               FontSize="12" TextColor="{StaticResource Gray500}" HorizontalTextAlignment="Center"
-               IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="m:Recommendation">
+                    <Border Stroke="{StaticResource Gray200}" StrokeThickness="1"
+                            StrokeShape="RoundRectangle 8" Padding="12" Margin="0,4">
+                        <VerticalStackLayout Spacing="4">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Grid.Column="0" Text="{Binding Summary}" FontSize="15" FontAttributes="Bold"
+                                       LineBreakMode="WordWrap" />
+                                <Border Grid.Column="1" StrokeShape="RoundRectangle 4"
+                                        BackgroundColor="{StaticResource Gray100}" Padding="6,2">
+                                    <Label Text="{Binding Priority}" FontSize="11" />
+                                </Border>
+                            </Grid>
+                            <Label Text="{Binding Explanation}" FontSize="13" TextColor="{StaticResource Gray500}"
+                                   LineBreakMode="WordWrap" MaxLines="3" />
+                            <Label Text="{Binding Kind, StringFormat='Pattern: {0}'}" FontSize="11"
+                                   TextColor="{StaticResource Gray400}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
-    </VerticalStackLayout>
+    </Grid>
 </ContentPage>

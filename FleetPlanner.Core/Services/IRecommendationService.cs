@@ -1,16 +1,19 @@
+using FleetPlanner.Graph;
 using FleetPlanner.Models;
 
 namespace FleetPlanner.Services;
 
 /// <summary>
-/// Abstraction for the on-device recommendation engine.
-/// Will be fully rewritten in Phase 3 with graph-driven analysis.
+/// Graph-driven recommendation engine that analyses the fleet graph
+/// and produces actionable <see cref="Recommendation"/> objects.
 /// </summary>
 public interface IRecommendationService
 {
     /// <summary>
-    /// Generates recommendations based on the fleet graph.
-    /// Phase 3 stub — currently returns empty list.
+    /// Generates recommendations from a fully-built fleet graph.
+    /// Runs all 10 analytical patterns and returns results sorted by score descending.
     /// </summary>
-    List<Recommendation> GetRecommendations();
+    /// <param name="graph">The in-memory fleet graph built by <see cref="IGraphBuildService"/>.</param>
+    /// <returns>Sorted list of recommendations.</returns>
+    List<Recommendation> GetRecommendations(FleetGraph graph);
 }

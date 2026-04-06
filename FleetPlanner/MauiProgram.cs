@@ -54,6 +54,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<IShipDataService>(sp =>
             new CachedShipDataService(sp.GetRequiredService<ShipDataService>()));
 
+        builder.Services.AddSingleton<IGraphBuildService, GraphBuildService>();
+        builder.Services.AddSingleton<IRecommendationService, RecommendationService>();
+
         // ── ViewModel registrations ───────────────────────────────────────
         builder.Services.AddTransient<DashboardViewModel>();
         builder.Services.AddTransient<OwnedShipLibraryViewModel>();
