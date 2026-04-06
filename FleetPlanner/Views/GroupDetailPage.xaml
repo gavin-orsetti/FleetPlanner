@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             xmlns:models="clr-namespace:FleetPlanner.Models;assembly=FleetPlanner.Core"
              x:Class="FleetPlanner.Views.GroupDetailPage"
              x:DataType="vm:GroupDetailViewModel"
              Title="{Binding Group.Name}">
@@ -27,7 +28,7 @@
                     <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
                 </CollectionView.ItemsLayout>
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="models:UserFleetGroupTag">
                         <Frame Padding="6,4" CornerRadius="4" HasShadow="False"
                                BackgroundColor="{StaticResource Secondary}">
                             <Label Text="{Binding TagKey}" FontSize="12"

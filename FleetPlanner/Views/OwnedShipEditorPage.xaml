@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             xmlns:models="clr-namespace:FleetPlanner.Models;assembly=FleetPlanner.Core"
              x:Class="FleetPlanner.Views.OwnedShipEditorPage"
              x:DataType="vm:OwnedShipEditorViewModel"
              Title="{Binding ShipName, StringFormat='Edit: {0}'}">
@@ -30,10 +31,10 @@
                     <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
                 </CollectionView.ItemsLayout>
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:OwnedShipEditorViewModel">
+                    <DataTemplate x:DataType="models:OwnedShipTag">
                         <Frame Padding="6,4" CornerRadius="4" HasShadow="False"
                                BackgroundColor="{StaticResource PrimaryContainer}">
-                            <Label Text="{Binding .}" FontSize="12" />
+                            <Label Text="{Binding TagKey}" FontSize="12" />
                         </Frame>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
