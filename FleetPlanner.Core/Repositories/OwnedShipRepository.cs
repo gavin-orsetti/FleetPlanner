@@ -6,7 +6,15 @@ namespace FleetPlanner.Repositories;
 
 /// <summary>
 /// SQLite-backed implementation of <see cref="IOwnedShipRepository"/>.
-/// Uses the sqlite-net-pcl async API with lazy connection initialisation.
+/// Uses the sqlite-net-pcl async API with lazy connection initialisation: the
+/// <see cref="SQLiteAsyncConnection"/> is created on first use and the
+/// <c>OwnedShip</c> table is auto-created via <c>CreateTableAsync</c>.
+/// All data lives in the shared <c>FleetPlanner.db3</c> file. On MAUI
+/// platforms (Android, iOS, Mac Catalyst, Windows) the database path resolves
+/// to <c>FileSystem.AppDataDirectory</c>; on other targets (unit-test hosts)
+/// it falls back to <c>Path.GetTempPath()</c>. A second constructor accepting
+/// a <c>dbPath</c> string enables test isolation by pointing each test run at
+/// a unique temporary database.
 /// </summary>
 public class OwnedShipRepository : IOwnedShipRepository
 {

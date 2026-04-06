@@ -3,9 +3,35 @@ using SQLite;
 namespace FleetPlanner.Models;
 
 /// <summary>
-/// An optional organisational group for ships. Groups are tag-driven:
-/// a ship's membership in a group is represented by contextual
-/// <see cref="OwnedShipTag"/> records (ContextType = "group", ContextId = group Id).
+/// An organisational container that lets the user group ships for a specific
+/// purpose (e.g. "Mining Fleet", "Combat Patrol Alpha").
+///
+/// Ship membership is <strong>not</strong> modelled with a direct FK. Instead, an
+/// <see cref="OwnedShipTag"/> with <c>ContextType = "group"</c> and
+/// <c>ContextId</c> equal to this group's <see cref="Id"/> represents the
+/// association. This tag-centric approach lets the same ship appear in multiple
+/// groups with different contextual tags (e.g. "role:escort" in one group,
+/// "role:scout" in another).
+///
+/// Groups themselves carry doctrine tags via <see cref="UserFleetGroupTag"/>
+/// records that describe the group's intended operational focus (e.g.
+/// "doctrine:industrial", "doctrine:combat"). The recommendation engine reads
+/// these tags alongside <see cref="IntendedFocus"/> to suggest fleet composition.
+///
+/// <para><strong>Crew model:</strong> <see cref="CrewTarget"/> represents the
+/// number of real players available to crew ships in this group, which the
+/// recommendation engine uses to filter out ships that cannot be adequately
+/// staffed.</para>
+///
+/// <para><strong>Soft-delete semantics:</strong> when <see cref="IsArchived"/> is
+/// <see langword="true"/> the group is hidden from active views but remains in the
+/// database for historical reference and can be restored.</para>
+///
+/// <para><strong>Persistence:</strong> stored via sqlite-net-pcl in the
+/// <c>UserFleetGroups</c> table and managed through
+/// <c>IUserFleetGroupRepository</c>. <see cref="CreatedUtc"/> and
+/// <see cref="UpdatedUtc"/> are set by the repository on insert/update and must
+/// not be set by the caller.</para>
 /// </summary>
 [Table("UserFleetGroups")]
 public class UserFleetGroup

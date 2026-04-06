@@ -3,7 +3,14 @@ using SQLite;
 namespace FleetPlanner.Models;
 
 /// <summary>
-/// Key-value metadata store for app-level settings such as schema version.
+/// Key-value metadata store for app-level settings persisted in SQLite.
+/// Currently holds a single key (<c>"schema_version"</c>) used by
+/// <see cref="FleetPlanner.Services.DatabaseBootstrapService"/> to gate idempotent seeding.
+/// Future keys can be added without schema changes.
+///
+/// <para><b>Architecture:</b> Sits in the user data layer. Created and managed by
+/// <see cref="FleetPlanner.Services.DatabaseBootstrapService.InitialiseAsync"/>. Not accessed
+/// through a dedicated repository — the bootstrap service writes directly via sqlite-net-pcl.</para>
 /// </summary>
 [Table("AppMetadata")]
 public class AppMetadata

@@ -3,9 +3,27 @@ using SQLite;
 namespace FleetPlanner.Models;
 
 /// <summary>
-/// A user-owned ship instance. This is the domain root of the tag-centric model.
+/// A user-owned ship instance and the domain root of the tag-centric architecture.
+///
 /// Each record represents one physical ship the player owns, distinct from the
-/// read-only catalogue <see cref="Ship"/> reference.
+/// read-only catalogue <see cref="Ship"/> reference. A user may own multiple
+/// <see cref="OwnedShip"/> records that reference the same <see cref="Ship.Id"/>
+/// (e.g. two Prospectors bought at different times).
+///
+/// All descriptive metadata (role, doctrine, capability, status, etc.) is expressed
+/// through <see cref="OwnedShipTag"/> records rather than columns on this entity.
+/// Group membership is likewise represented by contextual <see cref="OwnedShipTag"/>
+/// records (ContextType = "group", ContextId = group Id) rather than a direct FK.
+///
+/// <para><strong>Soft-delete semantics:</strong> when <see cref="IsArchived"/> is
+/// <see langword="true"/> the ship is hidden from active views but remains in the
+/// database for historical reference and can be restored.</para>
+///
+/// <para><strong>Persistence:</strong> stored via sqlite-net-pcl in the
+/// <c>OwnedShips</c> table and managed through
+/// <c>IOwnedShipRepository</c>. <see cref="CreatedUtc"/> and
+/// <see cref="UpdatedUtc"/> are set by the repository on insert/update and must
+/// not be set by the caller.</para>
 /// </summary>
 [Table("OwnedShips")]
 public class OwnedShip

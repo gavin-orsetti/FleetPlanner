@@ -3,8 +3,44 @@ using SQLite;
 namespace FleetPlanner.Models;
 
 /// <summary>
-/// A controlled tag definition in the taxonomy. Tags are the primary way users describe
-/// their ships and groups. System-defined tags are seeded at first launch and cannot be deleted.
+/// A controlled tag definition in the taxonomy. Tags are the primary mechanism by
+/// which users describe their ships (<see cref="OwnedShipTag"/>) and groups
+/// (<see cref="UserFleetGroupTag"/>), replacing traditional relational columns
+/// with a flexible, extensible labelling system.
+///
+/// <para><strong>Key format:</strong> <see cref="Key"/> uses the pattern
+/// <c>"category:slug"</c> (e.g. <c>"role:escort"</c>,
+/// <c>"doctrine:industrial"</c>). Keys are the primary key and
+/// <strong>must never change once shipped</strong> -- they serve as stable
+/// identifiers across schema migrations, are human-readable in diagnostics, and
+/// avoid auto-increment collision issues that integer IDs would introduce when
+/// merging seed data with user-created tags.</para>
+///
+/// <para><strong>Categories (8):</strong> <c>role</c>, <c>doctrine</c>,
+/// <c>status</c>, <c>crew</c>, <c>capability</c>, <c>preference</c>,
+/// <c>constraint</c>, <c>custom</c>. The category prefix is stored separately in
+/// <see cref="Category"/> for efficient filtering.</para>
+///
+/// <para><strong>Scoping:</strong> <see cref="AllowedScopes"/> is a
+/// comma-separated string of entity type names (e.g. <c>"OwnedShip"</c>,
+/// <c>"UserFleetGroup"</c>, <c>"OwnedShip,UserFleetGroup"</c>) that controls
+/// which entity types a tag may be applied to. The tag-assignment layer validates
+/// against this before persisting.</para>
+///
+/// <para><strong>Weight convention:</strong> when a tag is assigned via
+/// <see cref="OwnedShipTag.Weight"/>, the values <c>1</c> = primary,
+/// <c>2</c> = secondary, <c>3</c> = tertiary. The recommendation engine uses
+/// weight to rank tag relevance.</para>
+///
+/// <para><strong>System tags:</strong> when <see cref="IsSystemDefined"/> is
+/// <see langword="true"/> the tag was seeded at first launch. System tags can be
+/// archived (<see cref="IsArchived"/> = <see langword="true"/>) to hide them from
+/// pickers, but they must never be hard-deleted because existing records may still
+/// reference them.</para>
+///
+/// <para><strong>Persistence:</strong> stored via sqlite-net-pcl in the
+/// <c>TagDefinitions</c> table and managed through
+/// <c>ITagRepository</c>.</para>
 /// </summary>
 [Table("TagDefinitions")]
 public class TagDefinition
