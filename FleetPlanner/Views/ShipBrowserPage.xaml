@@ -89,8 +89,8 @@
                                     <Label Text="{Binding Size, StringFormat='Size: {0}'}" FontSize="11" TextColor="{StaticResource Gray500}" />
                                 </HorizontalStackLayout>
                                 <Button Grid.Row="3" Grid.ColumnSpan="2"
-                                        Text="Add to Fleet"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ShipBrowserViewModel}}, Path=AddShipToFleetCommand}"
+                                        Text="Add to Collection"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ShipBrowserViewModel}}, Path=AddToCollectionCommand}"
                                         CommandParameter="{Binding .}" />
                             </Grid>
                         </Frame>
