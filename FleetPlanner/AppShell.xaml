@@ -1,28 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!--
-    AppShell.xaml — The app's navigation shell (tab bar and route registration).
-
-    MAUI Shell provides a URI-based navigation model with two kinds of pages:
-
-    1. IMPLICIT ROUTES (declared here as <ShellContent> inside <TabBar>):
-       These are the app's top-level tabs. Each one gets a route name from its Route attribute.
-       Shell creates them lazily via ContentTemplate (DataTemplate defers page creation until
-       the tab is first tapped, improving startup performance).
-
-    2. EXPLICIT ROUTES (registered in AppShell.xaml.cs):
-       Detail/sub-pages like FleetDetailPage and ShipDetailPage are NOT tabs — they're pushed
-       onto the navigation stack via GoToAsync(). They must be registered with Routing.RegisterRoute()
-       in the code-behind constructor.
-
-    Shell.FlyoutBehavior="Disabled" hides the hamburger menu / flyout drawer. This app uses
-    only the bottom tab bar for navigation — no flyout needed.
-
-    xmlns:views — maps the C# namespace FleetPlanner.Views to the XML prefix "views:",
-    allowing us to reference page classes like views:DashboardPage in XAML.
-
-    See: https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/shell/
-    See: https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/shell/tabs
--->
 <Shell
     x:Class="FleetPlanner.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -30,12 +6,10 @@
     xmlns:views="clr-namespace:FleetPlanner.Views"
     Shell.FlyoutBehavior="Disabled">
 
-    <!-- TabBar: The bottom navigation bar with 5 tabs.
-         Each ShellContent becomes one tab. Route names match the page class names
-         for consistency with Shell.GoToAsync() navigation. -->
     <TabBar>
         <ShellContent Title="Dashboard" Route="DashboardPage" ContentTemplate="{DataTemplate views:DashboardPage}" />
-        <ShellContent Title="My Fleet" Route="FleetListPage" ContentTemplate="{DataTemplate views:FleetListPage}" />
+        <ShellContent Title="My Ships" Route="OwnedShipLibraryPage" ContentTemplate="{DataTemplate views:OwnedShipLibraryPage}" />
+        <ShellContent Title="Groups" Route="GroupOverviewPage" ContentTemplate="{DataTemplate views:GroupOverviewPage}" />
         <ShellContent Title="Ships" Route="ShipBrowserPage" ContentTemplate="{DataTemplate views:ShipBrowserPage}" />
         <ShellContent Title="Recommend" Route="RecommendationsPage" ContentTemplate="{DataTemplate views:RecommendationsPage}" />
         <ShellContent Title="Settings" Route="SettingsPage" ContentTemplate="{DataTemplate views:SettingsPage}" />

@@ -1,118 +1,24 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<!--
-    RecommendationsPage.xaml — Displays fleet improvement recommendations from the engine.
-
-    LAYOUT STRUCTURE:
-    - Fleet Picker (select which fleet to analyse)
-    - Fleet summary label (focus, crew, scale)
-    - ActivityIndicator (loading spinner)
-    - "No fleet data" empty state (when HasNoFleet=true)
-    - RefreshView wrapping a CollectionView of Recommendation items
-
-    KEY XAML PATTERNS:
-    - xmlns:vm references FleetPlanner.ViewModels in the MAUI head project.
-      xmlns:models references FleetPlanner.Core because Recommendation/Ship live in Core.
-    - Nested CollectionView: each recommendation card contains a horizontal CollectionView
-      of suggested ships using LinearItemsLayout Orientation="Horizontal". This creates a
-      scrollable chip-list of ship suggestions within each recommendation.
-    - Priority/Category badges: small coloured Frame elements showing the recommendation's
-      priority (High/Medium/Low) and category (RoleCoverage, Synergy, etc.).
-    - IsNotNullConverter: used on CrewNote and AcquisitionNote to conditionally show labels
-      only when these optional notes have values.
-
-    See: https://learn.microsoft.com/en-us/dotnet/maui/user-interface/controls/collectionview/layout
--->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
-             xmlns:models="clr-namespace:FleetPlanner.Models;assembly=FleetPlanner.Core"
              x:Class="FleetPlanner.Views.RecommendationsPage"
              x:DataType="vm:RecommendationsViewModel"
              Title="Recommendations">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="16" RowSpacing="8">
+    <VerticalStackLayout Padding="16" Spacing="16" VerticalOptions="Center" HorizontalOptions="Center">
 
-        <!-- Fleet Selector -->
-        <Picker Grid.Row="0" Title="Select Fleet" ItemsSource="{Binding Fleets}"
-                SelectedItem="{Binding SelectedFleet}"
-                ItemDisplayBinding="{Binding Name}" />
-
-        <!-- Fleet Intent Summary -->
-        <Label Grid.Row="1" Text="{Binding FleetSummary}" FontSize="12" TextColor="{StaticResource Gray400}"
-               HorizontalTextAlignment="Center" />
-
-        <ActivityIndicator Grid.Row="2" IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+        <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
                            HorizontalOptions="Center" />
 
-        <VerticalStackLayout Grid.Row="3" IsVisible="{Binding HasNoFleet}"
-                             VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
-            <Label Text="No fleet data" FontSize="20" HorizontalTextAlignment="Center" />
-            <Label Text="Add ships to your fleet to get recommendations." FontSize="14"
-                   HorizontalTextAlignment="Center" TextColor="{StaticResource Gray400}" />
-        </VerticalStackLayout>
+        <Label Text="Recommendations" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center" />
 
-        <RefreshView Grid.Row="3" Command="{Binding LoadRecommendationsCommand}" IsRefreshing="{Binding IsLoading}">
-            <CollectionView ItemsSource="{Binding Recommendations}"
-                            IsVisible="{Binding HasNoFleet, Converter={StaticResource InvertedBoolConverter}}">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:Recommendation">
-                        <Frame Padding="12" Margin="0,4" CornerRadius="8"
-                               BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}">
-                            <VerticalStackLayout Spacing="6">
+        <Label Text="{Binding StatusMessage}" FontSize="14" TextColor="{StaticResource Gray400}"
+               HorizontalTextAlignment="Center" />
 
-                                <HorizontalStackLayout Spacing="8">
-                                    <!-- Priority badge -->
-                                    <Frame Padding="4,2" CornerRadius="4" HasShadow="False"
-                                           BackgroundColor="{StaticResource Tertiary}">
-                                        <Label Text="{Binding Priority}" FontSize="10"
-                                               TextColor="{StaticResource OnTertiary}" />
-                                    </Frame>
-                                    <Frame Padding="4,2" CornerRadius="4" HasShadow="False"
-                                           BackgroundColor="{StaticResource Secondary}">
-                                        <Label Text="{Binding Category}" FontSize="10"
-                                               TextColor="{StaticResource OnSecondary}" />
-                                    </Frame>
-                                </HorizontalStackLayout>
+        <Label Text="{Binding TotalShips, StringFormat='{0} ships in collection'}"
+               FontSize="12" TextColor="{StaticResource Gray500}" HorizontalTextAlignment="Center"
+               IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
 
-                                <Label Text="{Binding Title}" FontSize="16" FontAttributes="Bold" />
-                                <Label Text="{Binding Description}" FontSize="13" TextColor="{StaticResource Gray400}" />
-
-                                <!-- Crew Note -->
-                                <Label Text="{Binding CrewNote}" FontSize="11" TextColor="{StaticResource Tertiary}"
-                                       IsVisible="{Binding CrewNote, Converter={StaticResource IsNotNullConverter}}" />
-
-                                <!-- Acquisition Note -->
-                                <Label Text="{Binding AcquisitionNote}" FontSize="11" TextColor="{StaticResource Gray400}"
-                                       IsVisible="{Binding AcquisitionNote, Converter={StaticResource IsNotNullConverter}}" />
-
-                                <!-- Suggested ships -->
-                                <CollectionView ItemsSource="{Binding SuggestedShips}" HeightRequest="60">
-                                    <CollectionView.ItemsLayout>
-                                        <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
-                                    </CollectionView.ItemsLayout>
-                                    <CollectionView.ItemTemplate>
-                                        <DataTemplate x:DataType="models:Ship">
-                                            <Frame Padding="6,4" CornerRadius="4" HasShadow="False"
-                                                   BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}">
-                                                <VerticalStackLayout>
-                                                    <Label Text="{Binding Name}" FontSize="12" FontAttributes="Bold" />
-                                                    <Label Text="{Binding PriceUsd, StringFormat='${0:N0}'}" FontSize="10"
-                                                           TextColor="{StaticResource Tertiary}" />
-                                                </VerticalStackLayout>
-                                            </Frame>
-                                        </DataTemplate>
-                                    </CollectionView.ItemTemplate>
-                                </CollectionView>
-
-                            </VerticalStackLayout>
-                        </Frame>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-                <CollectionView.EmptyView>
-                    <Label Text="No recommendations at this time. Your fleet looks great!"
-                           Margin="0,32" HorizontalTextAlignment="Center" TextColor="{StaticResource Gray400}" />
-                </CollectionView.EmptyView>
-            </CollectionView>
-        </RefreshView>
-    </Grid>
+    </VerticalStackLayout>
 </ContentPage>

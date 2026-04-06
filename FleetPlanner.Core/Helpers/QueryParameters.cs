@@ -5,26 +5,15 @@ namespace FleetPlanner.Helpers;
 /// Using constants instead of inline strings means a typo causes a
 /// compile error rather than a silent runtime bug where the receiving
 /// ViewModel gets null/default instead of the intended value.
-///
-/// Usage:
-/// <code>
-/// await Shell.Current.GoToAsync(nameof(FleetDetailPage), new Dictionary&lt;string, object&gt;
-/// {
-///     { QueryParameters.FleetId, fleet.Id }
-/// });
-/// </code>
 /// </summary>
 public static class QueryParameters
 {
-    /// <summary>The integer Id of the fleet being viewed or edited.</summary>
-    public const string FleetId = "fleetId";
-
-    /// <summary>The integer Id of the ship being viewed.</summary>
+    /// <summary>The integer Id of the ship being viewed (catalogue ship).</summary>
     public const string ShipId = "shipId";
 
-    /// <summary>
-    /// Boolean flag passed to ShipBrowserPage to enable "select mode",
-    /// where tapping a ship adds it to a fleet rather than viewing its detail.
-    /// </summary>
-    public const string SelectMode = "selectMode";
+    /// <summary>The integer Id of the OwnedShip being edited.</summary>
+    public const string OwnedShipId = "ownedShipId";
+
+    /// <summary>The integer Id of the group being viewed or edited.</summary>
+    public const string GroupId = "groupId";
 }
