@@ -12,7 +12,23 @@ using SkiaSharp;
 namespace FleetPlanner.ViewModels;
 
 /// <summary>
-/// ViewModel for the Dashboard page — aggregates owned-ship statistics and renders charts.
+/// ViewModel for the Dashboard page — aggregates owned-ship statistics and renders
+/// LiveCharts2 pie and bar charts showing fleet composition and value distribution.
+///
+/// <para><b>Page lifecycle:</b> <see cref="LoadDataCommand"/> is executed from
+/// <c>DashboardPage.OnAppearing</c> on every navigation to the page (including
+/// back-navigation from detail pages). This ensures statistics reflect the latest
+/// data. The entire collection is re-resolved each time — there is no incremental update.</para>
+///
+/// <para><b>Data flow:</b> Loads owned ships from <see cref="IOwnedShipRepository"/>,
+/// all catalogue ships from <see cref="IShipDataService"/>, and all groups from
+/// <see cref="IUserFleetGroupRepository"/>. Resolves each OwnedShip to its catalogue
+/// Ship via an ID lookup dictionary, then computes aggregates (counts, sums, averages)
+/// and builds chart series.</para>
+///
+/// <para><b>Chart data:</b> <see cref="FleetCompositionSeries"/> (pie chart) groups
+/// ships by <c>Ship.Role</c>. <see cref="ValueDistributionSeries"/> (bar chart) shows
+/// the top 10 ships by <c>PriceUsd</c>. Both are rebuilt on every load.</para>
 /// </summary>
 public partial class DashboardViewModel : ObservableObject
 {

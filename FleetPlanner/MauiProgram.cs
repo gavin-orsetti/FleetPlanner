@@ -9,11 +9,37 @@ namespace FleetPlanner;
 
 /// <summary>
 /// The application entry point and dependency injection (DI) composition root.
+/// All service lifetimes, repository bindings, and the startup bootstrap sequence are defined here.
+///
+/// <para><b>Startup sequence (order matters):</b>
+/// <list type="number">
+///   <item>Initialise SQLitePCL native bindings (<c>Batteries_V2.Init()</c>).</item>
+///   <item>Create the MAUI builder and configure SkiaSharp, LiveCharts, and fonts.</item>
+///   <item>Register the named <c>"ShipData"</c> HttpClient (User-Agent + 30s timeout).</item>
+///   <item>Register all repositories as <b>singletons</b> (one DB connection per repo, lazily created).</item>
+///   <item>Register services: <c>DatabaseBootstrapService</c>, <c>ShipDataService</c> (concrete),
+///     <c>IShipDataService → CachedShipDataService</c> (via factory lambda), graph + recommendation services.</item>
+///   <item>Register ViewModels and Pages as <b>transient</b> (fresh instance per navigation).</item>
+///   <item>Register <c>AppShell</c> as <b>singleton</b> (one shell for the app lifetime).</item>
+///   <item><c>builder.Build()</c> — creates the DI container.</item>
+///   <item>Call <c>DatabaseBootstrapService.InitialiseAsync()</c> synchronously — creates tables and
+///     seeds the tag taxonomy. Blocking is required because <c>CreateMauiApp()</c> is synchronous
+///     per the MAUI contract, and no UI thread exists yet.</item>
+///   <item>Return the configured <see cref="MauiApp"/>.</item>
+/// </list></para>
+///
+/// <para><b>Why the IShipDataService factory lambda is needed:</b> Both <see cref="ShipDataService"/>
+/// and <see cref="CachedShipDataService"/> implement <see cref="IShipDataService"/>. If we registered
+/// both as <c>IShipDataService</c>, the DI container would hit a circular resolution loop:
+/// <c>IShipDataService → CachedShipDataService → needs IShipDataService → loop</c>. Instead,
+/// <c>ShipDataService</c> is registered as its concrete type, and the lambda resolves it directly:
+/// <c>sp.GetRequiredService&lt;ShipDataService&gt;()</c> — breaking the cycle.</para>
 /// </summary>
 public static class MauiProgram
 {
     /// <summary>
-    /// Creates and configures the MAUI application.
+    /// Creates and configures the MAUI application. See class-level documentation for the
+    /// full startup sequence.
     /// </summary>
     /// <returns>The configured <see cref="MauiApp"/>.</returns>
     public static MauiApp CreateMauiApp()

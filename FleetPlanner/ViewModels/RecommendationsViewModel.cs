@@ -9,8 +9,22 @@ using FleetPlanner.Services;
 namespace FleetPlanner.ViewModels;
 
 /// <summary>
-/// ViewModel for the Recommendations page — runs the graph-driven
-/// recommendation engine and displays results grouped by priority.
+/// ViewModel for the Recommendations page — builds the fleet graph, runs the 10-pattern
+/// recommendation engine, and displays results sorted by score descending.
+///
+/// <para><b>Page lifecycle:</b> <see cref="LoadRecommendationsCommand"/> runs on every
+/// <c>OnAppearing</c>. It calls <see cref="IGraphBuildService.GetOrRebuildAsync"/> (which
+/// may serve a cached graph if the data hasn't changed) and then
+/// <see cref="IRecommendationService.GetRecommendations"/>. The <see cref="Recommendations"/>
+/// ObservableCollection is cleared and rebuilt on each load.</para>
+///
+/// <para><b>Empty states:</b> <see cref="StatusMessage"/> provides context-aware messages:
+/// "Add some ships first" if the graph has no ships, "No recommendations — your fleet looks good"
+/// if analysis produced zero results, or an error message if an exception occurred.</para>
+///
+/// <para><b>Error handling:</b> Exceptions (e.g. from graph build failures) are caught and
+/// displayed in <see cref="StatusMessage"/> rather than crashing. The page shows the empty
+/// state in this case.</para>
 /// </summary>
 public partial class RecommendationsViewModel : ObservableObject
 {

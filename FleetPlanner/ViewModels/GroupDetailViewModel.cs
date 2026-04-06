@@ -10,7 +10,21 @@ using FleetPlanner.Services;
 namespace FleetPlanner.ViewModels;
 
 /// <summary>
-/// ViewModel for the Group Detail page — shows a group's doctrine tags and member ships.
+/// ViewModel for the Group Detail page — displays a group's metadata, doctrine/focus tags,
+/// and member ships (determined by contextual tag assignment).
+///
+/// <para><b>QueryProperty:</b> Receives <see cref="GroupId"/> via Shell navigation parameter
+/// <c>"groupId"</c> (an integer). The property is set before <c>OnAppearing</c> fires.</para>
+///
+/// <para><b>Page lifecycle:</b> <see cref="LoadGroupCommand"/> runs on every <c>OnAppearing</c>.
+/// It loads the group record, its <see cref="UserFleetGroupTag"/> records, and then iterates
+/// all owned ships to find members (ships with any contextual tag for this group). The
+/// <see cref="MemberShips"/> collection is rebuilt from scratch on each load.</para>
+///
+/// <para><b>Member ship resolution:</b> For each owned ship, queries
+/// <see cref="IOwnedShipTagRepository.GetTagsForOwnedShipAsync"/> with <c>("group", GroupId)</c>.
+/// If any tags are returned, the ship is a member. This is an O(n) scan of all owned ships —
+/// acceptable for small personal fleets but would need optimisation for large collections.</para>
 /// </summary>
 [QueryProperty(nameof(GroupId), "groupId")]
 public partial class GroupDetailViewModel : ObservableObject
