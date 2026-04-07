@@ -41,13 +41,15 @@ namespace FleetPlanner.Services;
 public class RecommendationService : IRecommendationService
 {
     /// <summary>
-    /// The 8 role tag keys that define a "well-rounded" fleet for
+    /// The role:economy and role:activity tag keys that define a "well-rounded" fleet for
     /// <see cref="AnalyseAccountRoleDistribution"/>. Missing any of these triggers a gap recommendation.
     /// </summary>
     private static readonly string[] MajorRoleCategories =
     [
-        "role:escort", "role:fighter", "role:cargo", "role:mining",
-        "role:salvage", "role:exploration", "role:medical", "role:repair"
+        "role:economy:combat", "role:economy:extraction", "role:economy:logistics",
+        "role:economy:support", "role:economy:intelligence",
+        "role:activity:fight", "role:activity:mine", "role:activity:salvage",
+        "role:activity:haul", "role:activity:heal", "role:activity:repair"
     ];
 
     /// <summary>
@@ -59,21 +61,21 @@ public class RecommendationService : IRecommendationService
     /// </summary>
     private static readonly Dictionary<string, string[]> DoctrineCapabilities = new()
     {
-        // Group-purpose tags that imply specific role requirements
-        ["doctrine:purpose:strike-element"] = ["role:fighter", "role:bomber", "role:gunship", "role:interceptor"],
-        ["doctrine:purpose:shield-element"] = ["role:escort", "role:electronic-warfare"],
-        ["doctrine:purpose:lift-element"] = ["role:cargo", "role:dropship", "role:passenger"],
-        ["doctrine:purpose:sustain-element"] = ["role:medical", "role:repair", "role:refuel", "role:logistics"],
-        ["doctrine:purpose:recon-element"] = ["role:exploration", "role:stealth", "role:science"],
-        ["doctrine:purpose:control-element"] = ["role:command", "role:electronic-warfare"],
-        // Ship-purpose tags that imply specific role requirements
-        ["doctrine:purpose:earner"] = ["role:mining", "role:salvage", "role:cargo"],
-        ["doctrine:purpose:protector"] = ["role:escort", "role:fighter"],
-        ["doctrine:purpose:enabler"] = ["role:medical", "role:repair", "role:refuel", "role:logistics"],
-        ["doctrine:purpose:suppressor"] = ["role:electronic-warfare", "role:interceptor"],
-        ["doctrine:purpose:expander"] = ["role:exploration", "role:science"],
-        ["doctrine:purpose:deliverer"] = ["role:cargo", "role:passenger", "role:dropship"],
-        ["doctrine:purpose:controller"] = ["role:command", "role:electronic-warfare"]
+        // Group-purpose tags that imply specific role:economy and role:activity requirements
+        ["doctrine:purpose:strike-element"] = ["role:economy:combat", "role:activity:fight", "role:activity:bomb", "role:activity:intercept"],
+        ["doctrine:purpose:shield-element"] = ["role:activity:escort", "role:activity:signal"],
+        ["doctrine:purpose:lift-element"] = ["role:activity:haul", "role:activity:board", "role:activity:ferry"],
+        ["doctrine:purpose:sustain-element"] = ["role:economy:support", "role:activity:heal", "role:activity:repair", "role:activity:refuel"],
+        ["doctrine:purpose:recon-element"] = ["role:economy:intelligence", "role:activity:scan", "role:activity:hack"],
+        ["doctrine:purpose:control-element"] = ["role:activity:signal", "role:activity:patrol"],
+        // Ship-purpose tags that imply specific role:economy and role:activity requirements
+        ["doctrine:purpose:earner"] = ["role:economy:extraction", "role:activity:mine", "role:activity:salvage", "role:activity:haul"],
+        ["doctrine:purpose:protector"] = ["role:economy:combat", "role:activity:escort", "role:activity:fight"],
+        ["doctrine:purpose:enabler"] = ["role:economy:support", "role:activity:heal", "role:activity:repair", "role:activity:refuel"],
+        ["doctrine:purpose:suppressor"] = ["role:activity:signal", "role:activity:intercept"],
+        ["doctrine:purpose:expander"] = ["role:economy:intelligence", "role:activity:scan"],
+        ["doctrine:purpose:deliverer"] = ["role:economy:logistics", "role:activity:haul", "role:activity:ferry"],
+        ["doctrine:purpose:controller"] = ["role:activity:signal", "role:activity:patrol"]
     };
 
     /// <inheritdoc/>
@@ -244,7 +246,7 @@ public class RecommendationService : IRecommendationService
                     continue; // already a member
 
                 var shipRoles = ship.GlobalTags
-                    .Where(t => t.Definition.Category == "role")
+                    .Where(t => t.Definition.Category.StartsWith("role:", StringComparison.Ordinal))
                     .Select(t => t.Definition.Key)
                     .ToList();
 
@@ -304,7 +306,7 @@ public class RecommendationService : IRecommendationService
                     Summary = $"{ship.CatalogueShip.Name} has only {meaningfulTags} tag(s)",
                     Explanation = "Ships with fewer than 2 tags may not be matched correctly by the recommendation engine. Add role, doctrine, or context tags.",
                     Evidence = [$"Current tags: {meaningfulTags}"],
-                    SuggestedActions = ["Add role tags (e.g. role:escort)", "Add context tags (e.g. ctx:solo)", "Add doctrine tags"]
+                    SuggestedActions = ["Add role tags (e.g. role:activity:escort)", "Add context tags (e.g. ctx:solo)", "Add doctrine tags"]
                 });
             }
         }
@@ -441,7 +443,7 @@ public class RecommendationService : IRecommendationService
 
         var coveredRoles = new HashSet<string>();
         foreach (var ship in graph.Ships)
-            foreach (var t in ship.GlobalTags.Where(t => t.Definition.Category == "role"))
+            foreach (var t in ship.GlobalTags.Where(t => t.Definition.Category.StartsWith("role:", StringComparison.Ordinal)))
                 coveredRoles.Add(t.Definition.Key);
 
         var missingRoles = MajorRoleCategories.Where(r => !coveredRoles.Contains(r)).ToList();
@@ -662,13 +664,13 @@ public class RecommendationService : IRecommendationService
 
     // ── Helpers ────────────────────────────────────────────────────────
 
-    /// <summary>Gets role-category tags for a ship in a specific group context.</summary>
+    /// <summary>Gets role-category tags (any role:* sub-dimension) for a ship in a specific group context.</summary>
     private static List<TagNode> GetRoleTags(ShipNode ship, int groupId)
     {
         var tags = new List<TagNode>();
-        tags.AddRange(ship.GlobalTags.Where(t => t.Definition.Category == "role"));
+        tags.AddRange(ship.GlobalTags.Where(t => t.Definition.Category.StartsWith("role:", StringComparison.Ordinal)));
         if (ship.ContextualTags.TryGetValue(groupId, out var ctxTags))
-            tags.AddRange(ctxTags.Where(t => t.Definition.Category == "role"));
+            tags.AddRange(ctxTags.Where(t => t.Definition.Category.StartsWith("role:", StringComparison.Ordinal)));
         return tags;
     }
 
@@ -691,12 +693,13 @@ public class RecommendationService : IRecommendationService
         return keys;
     }
 
-    /// <summary>Formats a tag key for display (e.g. "role:escort" → "Escort").</summary>
+    /// <summary>Formats a tag key for display (e.g. "role:activity:fight" → "Fight", "doctrine:weight:anchor" → "Anchor").</summary>
     private static string FormatTagKey(string key)
     {
         var parts = key.Split(':');
         if (parts.Length < 2) return key;
+        // Use the last segment as the display name
         return System.Globalization.CultureInfo.CurrentCulture.TextInfo
-            .ToTitleCase(parts[1].Replace('-', ' '));
+            .ToTitleCase(parts[^1].Replace('-', ' '));
     }
 }

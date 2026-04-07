@@ -68,8 +68,8 @@ public class RecommendationService_Tests
 
         // Ship with mining but no salvage/cargo
         var miner = MakeShipNode(1, "MISC Prospector");
-        miner.GlobalTags.Add(MakeTagNode("role:mining", "role"));
-        miner.ContextualTags[1] = new List<TagNode> { MakeTagNode("role:mining", "role") };
+        miner.GlobalTags.Add(MakeTagNode("role:activity:mine", "role:activity"));
+        miner.ContextualTags[1] = new List<TagNode> { MakeTagNode("role:activity:mine", "role:activity") };
         group.MemberShips.Add(miner);
 
         var graph = new FleetGraph { Ships = [miner], Groups = [group] };
@@ -88,11 +88,11 @@ public class RecommendationService_Tests
         var group = MakeGroupNode(1, "Combat Wing");
 
         var ship1 = MakeShipNode(1, "Arrow");
-        ship1.GlobalTags.Add(MakeTagNode("role:escort", "role", 1));
+        ship1.GlobalTags.Add(MakeTagNode("role:activity:escort", "role:activity", 1));
         ship1.ContextualTags[1] = new List<TagNode>();
 
         var ship2 = MakeShipNode(2, "Gladius");
-        ship2.GlobalTags.Add(MakeTagNode("role:escort", "role", 1));
+        ship2.GlobalTags.Add(MakeTagNode("role:activity:escort", "role:activity", 1));
         ship2.ContextualTags[1] = new List<TagNode>();
 
         group.MemberShips.AddRange([ship1, ship2]);
@@ -102,7 +102,7 @@ public class RecommendationService_Tests
 
         recs.Should().Contain(r =>
             r.Kind == RecommendationKind.Redundancy
-            && r.TargetTagKey == "role:escort");
+            && r.TargetTagKey == "role:activity:escort");
     }
 
     // ── Pattern 4: UnderDescribedShip ─────────────────────────────────
@@ -125,7 +125,7 @@ public class RecommendationService_Tests
     public void UnderDescribedShip_TwoMeaningfulTags_NotDetected()
     {
         var ship = MakeShipNode(1, "Well-Tagged Ship");
-        ship.GlobalTags.Add(MakeTagNode("role:escort", "role"));
+        ship.GlobalTags.Add(MakeTagNode("role:activity:escort", "role:activity"));
         ship.GlobalTags.Add(MakeTagNode("ctx:solo", "ctx"));
 
         var graph = new FleetGraph { Ships = [ship], Groups = [] };
