@@ -8,14 +8,16 @@ namespace FleetPlanner.Models;
 /// tags describe formations and task groups rather than individual ships.
 ///
 /// <para><strong>Key format:</strong> <see cref="Key"/> uses the pattern
-/// <c>"category:slug"</c> (e.g. <c>"role:strike"</c>, <c>"doctrine:primary-arm"</c>).
+/// <c>"category:slug"</c> (e.g. <c>"role:strike"</c>, <c>"doctrine:weight:primary-arm"</c>).
 /// Keys are the primary key and <strong>must never change once shipped</strong> — they
 /// serve as stable identifiers across schema migrations, are human-readable in
 /// diagnostics, and avoid auto-increment collision issues.</para>
 ///
-/// <para><strong>Dimensions (4 + custom):</strong> <c>role</c>, <c>ctx</c>,
-/// <c>doctrine</c>, <c>status</c>, <c>custom</c>. The category prefix is stored
-/// separately in <see cref="Category"/> for efficient filtering.</para>
+/// <para><strong>Dimensions (9 + custom):</strong> <c>role</c>, <c>ctx</c>,
+/// <c>doctrine:weight</c>, <c>doctrine:frequency</c>, <c>doctrine:purpose</c>,
+/// <c>doctrine:autonomy</c>, <c>doctrine:flexibility</c>, <c>doctrine:lifecycle</c>,
+/// <c>status</c>, <c>custom</c>. The category is stored separately in
+/// <see cref="Category"/> for efficient filtering.</para>
 ///
 /// <para><strong>Scoping:</strong> <see cref="AllowedScopes"/> is always
 /// <c>"UserFleetGroup"</c> for seeded group tags. This distinguishes them from
@@ -30,7 +32,7 @@ public class GroupTagDefinition
 {
     /// <summary>
     /// Stable unique key. NEVER changes once shipped.
-    /// Format: "category:slug" e.g. "role:strike", "doctrine:primary-arm".
+    /// Format: "category:slug" e.g. "role:strike", "doctrine:weight:primary-arm".
     /// </summary>
     [PrimaryKey]
     public string Key { get; set; } = string.Empty;
@@ -39,7 +41,8 @@ public class GroupTagDefinition
     public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Category prefix: role, ctx, doctrine, status, custom.
+    /// Category: role, ctx, doctrine:weight, doctrine:frequency, doctrine:purpose,
+    /// doctrine:autonomy, doctrine:flexibility, doctrine:lifecycle, status, custom.
     /// </summary>
     public string Category { get; set; } = string.Empty;
 

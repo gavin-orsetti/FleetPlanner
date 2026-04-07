@@ -23,11 +23,17 @@ namespace FleetPlanner.Services;
 /// <c>InsertOrReplaceAsync</c> keyed on the stable <see cref="TagDefinition.Key"/>, so
 /// duplicates are impossible.</para>
 ///
-/// <para><b>Seeding strategy — 4 tag dimensions:</b> The taxonomy seeds 60 tags across:
+/// <para><b>Seeding strategy — 10 tag categories:</b> The taxonomy seeds tags across:
 /// <list type="bullet">
 ///   <item><b>role</b> — what the ship does (gameplay loop)</item>
 ///   <item><b>ctx</b> — how and where the ship operates (crew, environment, legality)</item>
-///   <item><b>doctrine</b> — how the ship fits the fleet</item>
+///   <item><b>doctrine:weight</b> — how important the ship is to the fleet</item>
+///   <item><b>doctrine:frequency</b> — how often the ship deploys</item>
+///   <item><b>doctrine:purpose</b> — strategic function in the fleet</item>
+///   <item><b>doctrine:autonomy</b> — operational independence</item>
+///   <item><b>doctrine:flexibility</b> — role breadth</item>
+///   <item><b>doctrine:retention</b> — why the ship is kept (ship only)</item>
+///   <item><b>doctrine:lifecycle</b> — intended future of the asset</item>
 ///   <item><b>status</b> — acquisition and lifecycle state</item>
 /// </list></para>
 ///
@@ -74,7 +80,7 @@ public class DatabaseBootstrapService
     /// </summary>
     public async Task InitialiseAsync()
     {
-        const int currentSchemaVersion = 4;
+        const int currentSchemaVersion = 5;
 
         var db = new SQLiteAsyncConnection(_dbPath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache);
 
@@ -97,6 +103,13 @@ public class DatabaseBootstrapService
         // Migration: wipe old system tags when upgrading to new taxonomy
         if (storedVersion > 0 && storedVersion < currentSchemaVersion)
         {
+            // v4→v5: replace flat 'doctrine' category with 7 atomic intent sub-dimensions
+            if (storedVersion < 5)
+            {
+                await db.ExecuteAsync("DELETE FROM TagDefinitions WHERE Category = 'doctrine' AND IsSystemDefined = 1");
+                await db.ExecuteAsync("DELETE FROM GroupTagDefinition WHERE Category = 'doctrine' AND IsSystemDefined = 1");
+            }
+
             await db.ExecuteAsync("DELETE FROM TagDefinitions WHERE IsSystemDefined = 1");
             await db.ExecuteAsync("DELETE FROM GroupTagDefinition WHERE IsSystemDefined = 1");
             await db.InsertOrReplaceAsync(new AppMetadata
@@ -152,7 +165,7 @@ public class DatabaseBootstrapService
     /// <para>
     /// Each tag uses a stable <c>"category:slug"</c> key that NEVER changes once shipped.
     /// The slug is a lowercase, hyphenated identifier (e.g. <c>"role:fighter"</c>,
-    /// <c>"doctrine:backbone"</c>). Keys are the primary key in SQLite — renaming a slug
+    /// <c>"doctrine:weight:anchor"</c>). Keys are the primary key in SQLite — renaming a slug
     /// would orphan all existing tag assignments.
     /// </para>
     /// <para>
@@ -164,8 +177,9 @@ public class DatabaseBootstrapService
     /// This protects the recommendation engine's tag key references from breaking.
     /// </para>
     /// </summary>
-    /// <returns>A list of 60 <see cref="TagDefinition"/> records spanning 4 dimensions
-    /// (role, ctx, doctrine, status).</returns>
+    /// <returns>A list of <see cref="TagDefinition"/> records spanning role, ctx,
+    /// 7 doctrine sub-dimensions (weight, frequency, purpose, autonomy, flexibility,
+    /// retention, lifecycle), and status.</returns>
     internal static List<TagDefinition> BuildSystemTags()
     {
         var tags = new List<TagDefinition>();
@@ -230,22 +244,69 @@ public class DatabaseBootstrapService
         Add("ctx", ctxColor, 13, "org-dependent", "Org Dependent", "Only viable with org-level crew and coordination");
         Add("ctx", ctxColor, 14, "snub-requires-carrier", "Requires Carrier", "Must be deployed from a parent ship");
 
-        // ── doctrine (14 tags) — how the ship fits the fleet ───────────
-        const string doctrineColor = "#8B66B8";
-        Add("doctrine", doctrineColor, 1, "backbone", "Backbone", "Primary fleet ship — most-used, most critical asset");
-        Add("doctrine", doctrineColor, 2, "daily-driver", "Daily Driver", "Go-to ship for routine, mixed-loop sessions");
-        Add("doctrine", doctrineColor, 3, "specialist", "Specialist", "Pulled out only for a specific loop");
-        Add("doctrine", doctrineColor, 4, "support", "Support", "Enables other fleet ships to operate more effectively");
-        Add("doctrine", doctrineColor, 5, "reserve", "Reserve", "Kept for rare scenarios; not regularly deployed");
-        Add("doctrine", doctrineColor, 6, "aspirational", "Aspirational", "Wanted or planned but not yet reflecting capability");
-        Add("doctrine", doctrineColor, 7, "identity", "Identity", "Kept for personal attachment, lore, or expression");
-        Add("doctrine", doctrineColor, 8, "bridge", "Bridge", "Transitional ship; expected to be replaced or repurposed");
-        Add("doctrine", doctrineColor, 9, "escort-wing", "Escort Wing", "Part of a defensive combat screen for other fleet assets");
-        Add("doctrine", doctrineColor, 10, "strike-element", "Strike Element", "Offensive component; deploys for attack operations");
-        Add("doctrine", doctrineColor, 11, "logistics-train", "Logistics Train", "Part of a coordinated supply or support group");
-        Add("doctrine", doctrineColor, 12, "carrier-based", "Carrier Based", "Deployed from a parent ship as part of a carrier wing");
-        Add("doctrine", doctrineColor, 13, "flagship", "Flagship", "Command and coordination anchor for the fleet");
-        Add("doctrine", doctrineColor, 14, "redundant", "Redundant", "Backup for another ship in the fleet");
+        // ── doctrine:weight (5 tags) — how important this ship is ──────
+        const string weightColor = "#B87040";
+        Add("doctrine:weight", weightColor, 1, "anchor", "Anchor", "The fleet's single most load-bearing asset; losing it critically impairs the primary loop");
+        Add("doctrine:weight", weightColor, 2, "core", "Core", "Consistently important; a major contributor to the fleet's operational capacity");
+        Add("doctrine:weight", weightColor, 3, "supplementary", "Supplementary", "Adds meaningful value but is not essential; the fleet functions without it");
+        Add("doctrine:weight", weightColor, 4, "fringe", "Fringe", "Nice to have; minimal impact on primary loops");
+        Add("doctrine:weight", weightColor, 5, "luxury", "Luxury", "Kept for reasons other than operational necessity; fleet doesn't depend on it");
+
+        // ── doctrine:frequency (5 tags) — how often this ship deploys ──
+        const string frequencyColor = "#7A8499";
+        Add("doctrine:frequency", frequencyColor, 1, "always-on", "Always On", "Deployed every session; near-constant presence");
+        Add("doctrine:frequency", frequencyColor, 2, "regular", "Regular", "Deployed most sessions; reliably in rotation");
+        Add("doctrine:frequency", frequencyColor, 3, "occasional", "Occasional", "Pulled out for specific activities; not a default pick");
+        Add("doctrine:frequency", frequencyColor, 4, "standby", "Standby", "Held in reserve; deployed only when conditions call for it");
+        Add("doctrine:frequency", frequencyColor, 5, "rare", "Rare", "Almost never deployed; kept for theoretical scenarios");
+
+        // ── doctrine:purpose (9 tags) — strategic function ─────────────
+        const string purposeColor = "#8B66B8";
+        Add("doctrine:purpose", purposeColor, 1, "earner", "Earner", "Primary income/resource generator; the fleet's economic engine");
+        Add("doctrine:purpose", purposeColor, 2, "protector", "Protector", "Exists to keep other ships safe; value measured in losses prevented");
+        Add("doctrine:purpose", purposeColor, 3, "enabler", "Enabler", "Unlocks capabilities in other ships (refueling, repair, medical, logistics)");
+        Add("doctrine:purpose", purposeColor, 4, "suppressor", "Suppressor", "Denies the enemy options: EW, interdiction, area denial");
+        Add("doctrine:purpose", purposeColor, 5, "expander", "Expander", "Extends the fleet's operational reach or access");
+        Add("doctrine:purpose", purposeColor, 6, "deliverer", "Deliverer", "Moves things or people from one place to another as its core value");
+        Add("doctrine:purpose", purposeColor, 7, "controller", "Controller", "Commands and coordinates other assets; a force multiplier through organization");
+        Add("doctrine:purpose", purposeColor, 8, "wildcard", "Wildcard", "Keeps options open; exists to respond to unexpected situations");
+        Add("doctrine:purpose", purposeColor, 9, "experiment", "Experiment", "Being evaluated; no fixed purpose yet committed");
+
+        // ── doctrine:autonomy (6 tags) — operational independence ──────
+        const string autonomyColor = "#3A9CB8";
+        Add("doctrine:autonomy", autonomyColor, 1, "self-reliant", "Self-Reliant", "Fully operational without requiring other fleet assets");
+        Add("doctrine:autonomy", autonomyColor, 2, "paired", "Paired", "Designed to operate with one other ship/group as a consistent duo");
+        Add("doctrine:autonomy", autonomyColor, 3, "grouped", "Grouped", "Operates as part of a wing or small coordinated element");
+        Add("doctrine:autonomy", autonomyColor, 4, "fleet-linked", "Fleet Linked", "Requires broader fleet infrastructure to be effective");
+        Add("doctrine:autonomy", autonomyColor, 5, "carrier-based", "Carrier Based", "Depends entirely on a parent ship for deployment and recovery");
+        Add("doctrine:autonomy", autonomyColor, 6, "enables-others", "Enables Others", "Its value is realized through what it gives other assets");
+
+        // ── doctrine:flexibility (5 tags) — role breadth ──────────────
+        const string flexibilityColor = "#4A9E6B";
+        Add("doctrine:flexibility", flexibilityColor, 1, "dedicated", "Dedicated", "Strictly single-purpose; optimized for one role and poorly suited for others");
+        Add("doctrine:flexibility", flexibilityColor, 2, "specialist", "Specialist", "Primarily one role but with limited secondary capability");
+        Add("doctrine:flexibility", flexibilityColor, 3, "versatile", "Versatile", "Genuinely useful across two or three different roles");
+        Add("doctrine:flexibility", flexibilityColor, 4, "generalist", "Generalist", "Can contribute to almost any loop, but rarely dominates any of them");
+        Add("doctrine:flexibility", flexibilityColor, 5, "swing", "Swing", "A flexible ship held specifically to fill whatever gap appears in a session");
+
+        // ── doctrine:retention (7 tags) — why this ship is kept (ship only) ─
+        const string retentionColor = "#C4706A";
+        Add("doctrine:retention", retentionColor, 1, "utility", "Utility", "Kept because it is operationally useful; a rational acquisition");
+        Add("doctrine:retention", retentionColor, 2, "identity", "Identity", "Kept because it represents who the player is or wants to be");
+        Add("doctrine:retention", retentionColor, 3, "aspiration", "Aspiration", "Kept because the player wants to grow into using it");
+        Add("doctrine:retention", retentionColor, 4, "lore", "Lore", "Kept for narrative, worldbuilding, or roleplay reasons");
+        Add("doctrine:retention", retentionColor, 5, "social", "Social", "Kept to enable play with specific people");
+        Add("doctrine:retention", retentionColor, 6, "progression", "Progression", "A bridge ship; kept while working toward something else");
+        Add("doctrine:retention", retentionColor, 7, "attachment", "Attachment", "Kept due to sentimental value regardless of utility");
+
+        // ── doctrine:lifecycle (6 tags) — intended future ─────────────
+        const string lifecycleColor = "#6B7A8B";
+        Add("doctrine:lifecycle", lifecycleColor, 1, "permanent", "Permanent", "Intended as a long-term fleet member; not under consideration for replacement");
+        Add("doctrine:lifecycle", lifecycleColor, 2, "developing", "Developing", "New to the fleet; use case still being defined and refined");
+        Add("doctrine:lifecycle", lifecycleColor, 3, "transitional", "Transitional", "A placeholder until a better ship is acquired; expected to be replaced");
+        Add("doctrine:lifecycle", lifecycleColor, 4, "legacy", "Legacy", "An older ship from a previous fleet doctrine; still present but not actively developed");
+        Add("doctrine:lifecycle", lifecycleColor, 5, "evaluating", "Evaluating", "Being tested; a final keep/sell decision has not been made");
+        Add("doctrine:lifecycle", lifecycleColor, 6, "terminal", "Terminal", "Marked for eventual removal; kept for specific remaining purposes");
 
         // ── status (8 tags) — acquisition and lifecycle state ──────────
         const string statusColor = "#B8913A";
@@ -266,18 +327,25 @@ public class DatabaseBootstrapService
     /// <para>
     /// Each tag uses a stable <c>"category:slug"</c> key that NEVER changes once shipped.
     /// Group tags are stored in a separate <see cref="GroupTagDefinition"/> table from
-    /// ship tags. The taxonomy seeds 54 tags across four dimensions:
+    /// ship tags. The taxonomy seeds tags across:
     /// <list type="bullet">
     ///   <item><b>role</b> (18) — what the group is tasked to accomplish as a formation</item>
     ///   <item><b>ctx</b> (16) — operational conditions: scale, theater, autonomy, legality</item>
-    ///   <item><b>doctrine</b> (12) — structural role in the fleet's operational design</item>
+    ///   <item><b>doctrine:weight</b> (4) — group importance</item>
+    ///   <item><b>doctrine:frequency</b> (5) — deployment cadence (shared with ship)</item>
+    ///   <item><b>doctrine:purpose</b> (6) — group-specific strategic function</item>
+    ///   <item><b>doctrine:autonomy</b> (6) — operational independence (shared with ship)</item>
+    ///   <item><b>doctrine:flexibility</b> (5) — role breadth (shared with ship)</item>
+    ///   <item><b>doctrine:lifecycle</b> (7) — intended future (shared with ship + experimental)</item>
     ///   <item><b>status</b> (8) — formation readiness and planning lifecycle</item>
     /// </list></para>
     /// <para>
     /// <b>AllowedScopes:</b> All seeded group tags use <c>"UserFleetGroup"</c>.
     /// </para>
     /// </summary>
-    /// <returns>A list of 54 <see cref="GroupTagDefinition"/> records spanning 4 dimensions.</returns>
+    /// <returns>A list of <see cref="GroupTagDefinition"/> records spanning role, ctx,
+    /// 6 doctrine sub-dimensions (weight, frequency, purpose, autonomy, flexibility,
+    /// lifecycle), and status.</returns>
     internal static List<GroupTagDefinition> BuildSystemGroupTags()
     {
         var tags = new List<GroupTagDefinition>();
@@ -338,20 +406,56 @@ public class DatabaseBootstrapService
         Add("ctx", ctxColor, 15, "rapid-deployment", "Rapid Deployment", "Group is designed for quick scramble and fast operational tempo");
         Add("ctx", ctxColor, 16, "sustained-ops", "Sustained Ops", "Group is designed for long-duration, extended operations with logistics support");
 
-        // ── doctrine (12 tags) — structural role in the fleet ────────
-        const string doctrineColor = "#8B66B8";
-        Add("doctrine", doctrineColor, 1, "primary-arm", "Primary Arm", "This is the fleet's main operational group; it executes the fleet's declared primary loops");
-        Add("doctrine", doctrineColor, 2, "secondary-arm", "Secondary Arm", "A significant but subordinate group; handles a secondary declared loop");
-        Add("doctrine", doctrineColor, 3, "specialist-detachment", "Specialist Detachment", "A purpose-built group activated for specific operations; not regularly deployed");
-        Add("doctrine", doctrineColor, 4, "support-echelon", "Support Echelon", "Exists to enable other groups; provides logistics, repair, medical, or EW support");
-        Add("doctrine", doctrineColor, 5, "escort-screen", "Escort Screen", "Dedicated protective wrapper around another group or asset");
-        Add("doctrine", doctrineColor, 6, "rapid-response", "Rapid Response", "A fast, flexible group held in readiness for opportunistic or reactive deployment");
-        Add("doctrine", doctrineColor, 7, "standing-reserve", "Standing Reserve", "A group kept for contingency scenarios; rarely activated");
-        Add("doctrine", doctrineColor, 8, "carrier-element", "Carrier Element", "A group centered on a carrier ship; includes the carrier and its complement");
-        Add("doctrine", doctrineColor, 9, "strategic-asset", "Strategic Asset", "A high-value, low-frequency group built around a capital ship or irreplaceable asset");
-        Add("doctrine", doctrineColor, 10, "aspirational", "Aspirational", "A planned group that does not yet have sufficient ships or crew to field");
-        Add("doctrine", doctrineColor, 11, "experimental", "Experimental", "A group whose doctrine is still being tested or refined");
-        Add("doctrine", doctrineColor, 12, "legacy", "Legacy", "A group that reflects an older fleet doctrine; kept but not actively developed");
+        // ── doctrine:weight (4 tags) — group importance ────────────────
+        const string weightColor = "#B87040";
+        Add("doctrine:weight", weightColor, 1, "primary-arm", "Primary Arm", "The group executing the fleet's main declared loop");
+        Add("doctrine:weight", weightColor, 2, "secondary-arm", "Secondary Arm", "A significant but subordinate group; handles a secondary declared loop");
+        Add("doctrine:weight", weightColor, 3, "supporting-element", "Supporting Element", "Exists to enable other groups; does not execute primary loops directly");
+        Add("doctrine:weight", weightColor, 4, "contingency", "Contingency", "Exists for rare or specific scenarios; not regularly contributing");
+
+        // ── doctrine:frequency (5 tags) — shared with ship ──────────
+        const string frequencyColor = "#7A8499";
+        Add("doctrine:frequency", frequencyColor, 1, "always-on", "Always On", "Deployed every session; near-constant presence");
+        Add("doctrine:frequency", frequencyColor, 2, "regular", "Regular", "Deployed most sessions; reliably in rotation");
+        Add("doctrine:frequency", frequencyColor, 3, "occasional", "Occasional", "Pulled out for specific activities; not a default pick");
+        Add("doctrine:frequency", frequencyColor, 4, "standby", "Standby", "Held in reserve; deployed only when conditions call for it");
+        Add("doctrine:frequency", frequencyColor, 5, "rare", "Rare", "Almost never deployed; kept for theoretical scenarios");
+
+        // ── doctrine:purpose (6 tags) — group-specific ──────────────
+        const string purposeColor = "#8B66B8";
+        Add("doctrine:purpose", purposeColor, 1, "strike-element", "Strike Element", "Exists to project offensive force against targets");
+        Add("doctrine:purpose", purposeColor, 2, "shield-element", "Shield Element", "Exists to absorb, deflect, or deny offensive pressure");
+        Add("doctrine:purpose", purposeColor, 3, "lift-element", "Lift Element", "Exists to deliver forces, cargo, or passengers to objectives");
+        Add("doctrine:purpose", purposeColor, 4, "sustain-element", "Sustain Element", "Exists to extend the operational endurance of other groups");
+        Add("doctrine:purpose", purposeColor, 5, "recon-element", "Recon Element", "Exists to gather information and expand situational awareness");
+        Add("doctrine:purpose", purposeColor, 6, "control-element", "Control Element", "Exists to coordinate and command fleet operations");
+
+        // ── doctrine:autonomy (6 tags) — shared with ship ───────────
+        const string autonomyColor = "#3A9CB8";
+        Add("doctrine:autonomy", autonomyColor, 1, "self-reliant", "Self-Reliant", "Fully operational without requiring other fleet assets");
+        Add("doctrine:autonomy", autonomyColor, 2, "paired", "Paired", "Designed to operate with one other ship/group as a consistent duo");
+        Add("doctrine:autonomy", autonomyColor, 3, "grouped", "Grouped", "Operates as part of a wing or small coordinated element");
+        Add("doctrine:autonomy", autonomyColor, 4, "fleet-linked", "Fleet Linked", "Requires broader fleet infrastructure to be effective");
+        Add("doctrine:autonomy", autonomyColor, 5, "carrier-based", "Carrier Based", "Depends entirely on a parent ship for deployment and recovery");
+        Add("doctrine:autonomy", autonomyColor, 6, "enables-others", "Enables Others", "Its value is realized through what it gives other assets");
+
+        // ── doctrine:flexibility (5 tags) — shared with ship ────────
+        const string flexibilityColor = "#4A9E6B";
+        Add("doctrine:flexibility", flexibilityColor, 1, "dedicated", "Dedicated", "Strictly single-purpose; optimized for one role and poorly suited for others");
+        Add("doctrine:flexibility", flexibilityColor, 2, "specialist", "Specialist", "Primarily one role but with limited secondary capability");
+        Add("doctrine:flexibility", flexibilityColor, 3, "versatile", "Versatile", "Genuinely useful across two or three different roles");
+        Add("doctrine:flexibility", flexibilityColor, 4, "generalist", "Generalist", "Can contribute to almost any loop, but rarely dominates any of them");
+        Add("doctrine:flexibility", flexibilityColor, 5, "swing", "Swing", "A flexible ship held specifically to fill whatever gap appears in a session");
+
+        // ── doctrine:lifecycle (7 tags) — shared with ship + experimental ─
+        const string lifecycleColor = "#6B7A8B";
+        Add("doctrine:lifecycle", lifecycleColor, 1, "permanent", "Permanent", "Intended as a long-term fleet member; not under consideration for replacement");
+        Add("doctrine:lifecycle", lifecycleColor, 2, "developing", "Developing", "New to the fleet; use case still being defined and refined");
+        Add("doctrine:lifecycle", lifecycleColor, 3, "transitional", "Transitional", "A placeholder until a better ship is acquired; expected to be replaced");
+        Add("doctrine:lifecycle", lifecycleColor, 4, "legacy", "Legacy", "An older ship from a previous fleet doctrine; still present but not actively developed");
+        Add("doctrine:lifecycle", lifecycleColor, 5, "evaluating", "Evaluating", "Being tested; a final keep/sell decision has not been made");
+        Add("doctrine:lifecycle", lifecycleColor, 6, "terminal", "Terminal", "Marked for eventual removal; kept for specific remaining purposes");
+        Add("doctrine:lifecycle", lifecycleColor, 7, "experimental", "Experimental", "A group whose doctrine is still being tested or refined");
 
         // ── status (8 tags) — formation readiness and lifecycle ──────
         const string statusColor = "#B8913A";

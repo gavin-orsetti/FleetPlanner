@@ -10,14 +10,16 @@ namespace FleetPlanner.Models;
 ///
 /// <para><strong>Key format:</strong> <see cref="Key"/> uses the pattern
 /// <c>"category:slug"</c> (e.g. <c>"role:escort"</c>,
-/// <c>"doctrine:industrial"</c>). Keys are the primary key and
+/// <c>"doctrine:weight:anchor"</c>). Keys are the primary key and
 /// <strong>must never change once shipped</strong> -- they serve as stable
 /// identifiers across schema migrations, are human-readable in diagnostics, and
 /// avoid auto-increment collision issues that integer IDs would introduce when
 /// merging seed data with user-created tags.</para>
 ///
-/// <para><strong>Dimensions (4 + custom):</strong> <c>role</c>, <c>ctx</c>,
-/// <c>doctrine</c>, <c>status</c>, <c>custom</c>. The category prefix is stored
+/// <para><strong>Dimensions (10 + custom):</strong> <c>role</c>, <c>ctx</c>,
+/// <c>doctrine:weight</c>, <c>doctrine:frequency</c>, <c>doctrine:purpose</c>,
+/// <c>doctrine:autonomy</c>, <c>doctrine:flexibility</c>, <c>doctrine:retention</c>,
+/// <c>doctrine:lifecycle</c>, <c>status</c>, <c>custom</c>. The category is stored
 /// separately in <see cref="Category"/> for efficient filtering.</para>
 ///
 /// <para><strong>Scoping:</strong> <see cref="AllowedScopes"/> is a
@@ -46,7 +48,7 @@ public class TagDefinition
 {
     /// <summary>
     /// Stable unique key. NEVER changes once shipped.
-    /// Format: "category:slug" e.g. "role:escort", "doctrine:industrial".
+    /// Format: "category:slug" e.g. "role:escort", "doctrine:weight:anchor".
     /// </summary>
     [PrimaryKey]
     public string Key { get; set; } = string.Empty;
@@ -55,7 +57,9 @@ public class TagDefinition
     public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Category prefix: role, ctx, doctrine, status, custom.
+    /// Category: role, ctx, doctrine:weight, doctrine:frequency, doctrine:purpose,
+    /// doctrine:autonomy, doctrine:flexibility, doctrine:retention, doctrine:lifecycle,
+    /// status, custom.
     /// </summary>
     public string Category { get; set; } = string.Empty;
 

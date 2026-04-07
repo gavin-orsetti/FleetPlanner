@@ -15,7 +15,7 @@ namespace FleetPlanner.Models;
 ///
 /// Groups themselves carry doctrine tags via <see cref="UserFleetGroupTag"/>
 /// records that describe the group's intended operational focus (e.g.
-/// "doctrine:industrial", "doctrine:combat"). The recommendation engine reads
+/// "doctrine:purpose:earner", "doctrine:weight:primary-arm"). The recommendation engine reads
 /// these tags alongside <see cref="IntendedFocus"/> to suggest fleet composition.
 ///
 /// <para><strong>Crew model:</strong> <see cref="CrewTarget"/> represents the
