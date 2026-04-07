@@ -223,7 +223,13 @@ public class TagManagerCategoryGroup
     public TagManagerCategoryGroup(string categoryName, List<TagManagerItem> tags)
     {
         CategoryName = categoryName;
-        DisplayCategory = char.ToUpperInvariant(categoryName[0]) + categoryName[1..];
+        DisplayCategory = FormatCategoryDisplay(categoryName);
         Tags = tags;
     }
+
+    private static string FormatCategoryDisplay(string category) => category switch
+    {
+        "ctx" => "Context",
+        _     => char.ToUpperInvariant(category[0]) + category[1..]
+    };
 }

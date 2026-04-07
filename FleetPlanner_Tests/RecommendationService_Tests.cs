@@ -126,7 +126,7 @@ public class RecommendationService_Tests
     {
         var ship = MakeShipNode(1, "Well-Tagged Ship");
         ship.GlobalTags.Add(MakeTagNode("role:escort", "role"));
-        ship.GlobalTags.Add(MakeTagNode("crew:solo", "crew"));
+        ship.GlobalTags.Add(MakeTagNode("ctx:solo", "ctx"));
 
         var graph = new FleetGraph { Ships = [ship], Groups = [] };
         var recs = _service.GetRecommendations(graph);

@@ -95,7 +95,7 @@ public class GraphBuildService_Tests : IDisposable
         });
         await _shipTagRepo.ApplyTagAsync(new OwnedShipTag
         {
-            OwnedShipId = ship.Id, TagKey = "role:hauling",
+            OwnedShipId = ship.Id, TagKey = "role:cargo",
             ContextType = "group", ContextId = group2.Id
         });
 
@@ -129,7 +129,7 @@ public class GraphBuildService_Tests : IDisposable
         });
         await _shipTagRepo.ApplyTagAsync(new OwnedShipTag
         {
-            OwnedShipId = ship.Id, TagKey = "role:hauling",
+            OwnedShipId = ship.Id, TagKey = "role:cargo",
             ContextType = "group", ContextId = group2.Id
         });
 
@@ -139,7 +139,7 @@ public class GraphBuildService_Tests : IDisposable
         shipNode.ContextualTags.Should().ContainKey(group1.Id);
         shipNode.ContextualTags.Should().ContainKey(group2.Id);
         shipNode.ContextualTags[group1.Id].Should().Contain(t => t.Definition.Key == "role:escort");
-        shipNode.ContextualTags[group2.Id].Should().Contain(t => t.Definition.Key == "role:hauling");
+        shipNode.ContextualTags[group2.Id].Should().Contain(t => t.Definition.Key == "role:cargo");
     }
 
     [Fact]

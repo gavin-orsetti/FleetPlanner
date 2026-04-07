@@ -58,7 +58,7 @@ public class TagRepository_Tests : IDisposable
         await bootstrap.InitialiseAsync();
 
         var roleTags = await _repo.GetTagsByCategoryAsync("role");
-        roleTags.Should().HaveCount(15);
+        roleTags.Should().HaveCount(24);
         roleTags.Should().OnlyContain(t => t.Key.StartsWith("role:"));
     }
 
@@ -69,9 +69,9 @@ public class TagRepository_Tests : IDisposable
         await bootstrap.InitialiseAsync();
 
         var groupTags = await _repo.GetAssignableTagsForScopeAsync("UserFleetGroup");
-        // Only doctrine and constraint tags have UserFleetGroup in AllowedScopes
-        groupTags.Should().OnlyContain(t =>
-            t.Category == "doctrine" || t.Category == "constraint");
+        // All seeded tags now use "OwnedShip,UserFleetGroup" scope
+        var expectedCount = DatabaseBootstrapService.BuildSystemTags().Count;
+        groupTags.Should().HaveCount(expectedCount);
     }
 
     [Fact]

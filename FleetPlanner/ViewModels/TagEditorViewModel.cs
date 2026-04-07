@@ -37,7 +37,7 @@ public partial class TagEditorViewModel : ObservableObject
     [ObservableProperty]
     private string _displayName = string.Empty;
 
-    /// <summary>Tag category (role, doctrine, status, crew, capability, preference, constraint, custom).</summary>
+    /// <summary>Tag category (role, ctx, doctrine, status, custom).</summary>
     [ObservableProperty]
     private string _category = string.Empty;
 
@@ -93,7 +93,7 @@ public partial class TagEditorViewModel : ObservableObject
 
     /// <summary>Available category values for the picker.</summary>
     public List<string> Categories { get; } =
-        ["role", "doctrine", "status", "crew", "capability", "preference", "constraint", "custom"];
+        ["role", "ctx", "doctrine", "status", "custom"];
 
     /// <summary>
     /// Constructor — receives dependencies from the DI container.
@@ -290,14 +290,10 @@ public partial class TagEditorViewModel : ObservableObject
     /// </summary>
     private static string CategoryColor(string category) => category switch
     {
-        "role" => "#C4706A",
+        "role"     => "#C4706A",
+        "ctx"      => "#3A9CB8",
         "doctrine" => "#8B66B8",
-        "status" => "#B8913A",
-        "crew" => "#3A9CB8",
-        "capability" => "#4A9E6B",
-        "preference" => "#B87040",
-        "constraint" => "#7A8499",
-        "custom" => "#6B7A8B",
-        _ => "#7A8499"
+        "status"   => "#B8913A",
+        _          => "#6B7A8B"   // custom / unknown
     };
 }

@@ -361,7 +361,7 @@ public partial class TagPickerViewModel : ObservableObject
         displayName = editedName.Trim();
 
         // --- Step 2: Pick category ---
-        var categories = new[] { "role", "doctrine", "status", "crew", "capability", "preference", "constraint", "custom" };
+        var categories = new[] { "role", "ctx", "doctrine", "status", "custom" };
         var chosenCategory = await page.DisplayActionSheet(
             "Choose a category", "Cancel", null, categories);
 
@@ -455,15 +455,23 @@ public partial class TagPickerViewModel : ObservableObject
     /// </summary>
     private static string CategoryColor(string category) => category switch
     {
-        "role" => "#C4706A",
+        "role"     => "#C4706A",
+        "ctx"      => "#3A9CB8",
         "doctrine" => "#8B66B8",
-        "status" => "#B8913A",
-        "crew" => "#3A9CB8",
-        "capability" => "#4A9E6B",
-        "preference" => "#B87040",
-        "constraint" => "#7A8499",
-        "custom" => "#6B7A8B",
-        _ => "#7A8499"
+        "status"   => "#B8913A",
+        _          => "#6B7A8B"   // custom / unknown
+    };
+
+    /// <summary>
+    /// Returns a display-friendly name for a tag category.
+    /// </summary>
+    private static string CategoryDisplayName(string category) => category switch
+    {
+        "role"     => "Role",
+        "ctx"      => "Context",
+        "doctrine" => "Doctrine",
+        "status"   => "Status",
+        _          => "Custom"
     };
 }
 
@@ -530,6 +538,12 @@ public class TagCategoryGroup : List<SelectableTagItem>
     public TagCategoryGroup(string categoryName, List<SelectableTagItem> tags) : base(tags)
     {
         CategoryName = categoryName;
-        DisplayCategory = char.ToUpperInvariant(categoryName[0]) + categoryName[1..];
+        DisplayCategory = FormatCategoryDisplay(categoryName);
     }
+
+    private static string FormatCategoryDisplay(string category) => category switch
+    {
+        "ctx" => "Context",
+        _     => char.ToUpperInvariant(category[0]) + category[1..]
+    };
 }

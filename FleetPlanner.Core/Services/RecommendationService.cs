@@ -30,7 +30,7 @@ namespace FleetPlanner.Services;
 ///   <item><b>GroupCoherence</b> — ship role tags in a group align poorly with group doctrine.</item>
 ///   <item><b>AccountRoleDistribution</b> — the entire collection is missing major role categories.</item>
 ///   <item><b>DoctrineMismatch</b> — a ship's primary doctrine contradicts its group's doctrine.</item>
-///   <item><b>RemoveFromGroup</b> — a ship's tags don't align with any group doctrine capability.</item>
+///   <item><b>RemoveFromGroup</b> — a ship's tags don't align with any group doctrine role.</item>
 ///   <item><b>CrewEfficiency</b> — group crew requirements significantly exceed or underutilise the target.</item>
 /// </list></para>
 ///
@@ -46,7 +46,7 @@ public class RecommendationService : IRecommendationService
     /// </summary>
     private static readonly string[] MajorRoleCategories =
     [
-        "role:escort", "role:frontline", "role:hauling", "role:mining",
+        "role:escort", "role:fighter", "role:cargo", "role:mining",
         "role:salvage", "role:exploration", "role:medical", "role:repair"
     ];
 
@@ -268,7 +268,7 @@ public class RecommendationService : IRecommendationService
     /// <para><b>Score:</b> Fixed at <see cref="RecommendationWeights.UnderDescribedWeight"/> (0.4).
     /// Priority: always <see cref="RecommendationPriority.Low"/>.</para>
     /// <para><b>Evidence:</b> "Current tags: {count}".</para>
-    /// <para><b>Suggested actions:</b> "Add role tags", "Add crew tags", "Add doctrine tags".</para>
+    /// <para><b>Suggested actions:</b> "Add role tags", "Add context tags", "Add doctrine tags".</para>
     /// <para><b>Edge case:</b> A ship with zero global tags but many contextual tags is still
     /// flagged, because global tags are what the account-level patterns analyse.</para>
     /// </summary>
@@ -292,9 +292,9 @@ public class RecommendationService : IRecommendationService
                     Score = RecommendationWeights.UnderDescribedWeight,
                     Priority = RecommendationPriority.Low,
                     Summary = $"{ship.CatalogueShip.Name} has only {meaningfulTags} tag(s)",
-                    Explanation = "Ships with fewer than 2 tags may not be matched correctly by the recommendation engine. Add role, doctrine, or crew tags.",
+                    Explanation = "Ships with fewer than 2 tags may not be matched correctly by the recommendation engine. Add role, doctrine, or context tags.",
                     Evidence = [$"Current tags: {meaningfulTags}"],
-                    SuggestedActions = ["Add role tags (e.g. role:escort)", "Add crew tags (e.g. crew:solo)", "Add doctrine tags"]
+                    SuggestedActions = ["Add role tags (e.g. role:escort)", "Add context tags (e.g. ctx:solo)", "Add doctrine tags"]
                 });
             }
         }
@@ -345,7 +345,7 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 6: GroupCoherence — fewer than 50% of a group's ships have role/capability tags
+    /// Pattern 6: GroupCoherence — fewer than 50% of a group's ships have role tags
     /// that align with the group's doctrine.
     /// <para><b>Trigger:</b> For each group with at least one member ship and one doctrine tag,
     /// look up the doctrine's expected roles in <see cref="DoctrineCapabilities"/>. Count how many
@@ -517,16 +517,16 @@ public class RecommendationService : IRecommendationService
 
     /// <summary>
     /// Pattern 9: RemoveFromGroup — a member ship's tags don't match any of the group's
-    /// doctrine-derived capability requirements, suggesting it doesn't contribute to the group.
+    /// doctrine-derived role requirements, suggesting it doesn't contribute to the group.
     /// <para><b>Trigger:</b> For each group with doctrine tags, derive the set of desired
-    /// role/capability tags from <see cref="DoctrineCapabilities"/>. For each member ship,
+    /// role tags from <see cref="DoctrineCapabilities"/>. For each member ship,
     /// check if any of its tags (global + contextual) match the desired set. If none match,
     /// generate a RemoveFromGroup recommendation.</para>
     /// <para><b>Score:</b> <c>RedundancyWeight × 0.8</c> = 0.48. Priority: always
     /// <see cref="RecommendationPriority.Low"/>.</para>
     /// <para><b>Evidence:</b> "Ship tags: {list}", "Group needs: {list}".</para>
     /// <para><b>Suggested actions:</b> "Remove [ship] from this group",
-    /// "Add relevant role/capability tags to the ship".</para>
+    /// "Add relevant role tags to the ship".</para>
     /// <para><b>Edge case:</b> Groups with no doctrine tags or doctrines not in
     /// <see cref="DoctrineCapabilities"/> are skipped. If the derived desired set is empty
     /// (all doctrines are unmapped), the group is skipped.</para>
@@ -569,7 +569,7 @@ public class RecommendationService : IRecommendationService
                         Summary = $"{ship.CatalogueShip.Name} doesn't contribute to '{group.Group.Name}'",
                         Explanation = $"This ship's tags don't align with any of the group's doctrine capabilities. It may be better suited to a different group.",
                         Evidence = [$"Ship tags: {string.Join(", ", shipTags.Select(FormatTagKey))}", $"Group needs: {string.Join(", ", desiredTagKeys.Select(FormatTagKey))}"],
-                        SuggestedActions = [$"Remove {ship.CatalogueShip.Name} from this group", "Add relevant role/capability tags to the ship"]
+                        SuggestedActions = [$"Remove {ship.CatalogueShip.Name} from this group", "Add relevant role tags to the ship"]
                     });
                 }
             }
