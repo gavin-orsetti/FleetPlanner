@@ -19,6 +19,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(ShipDetailPage), typeof(ShipDetailPage));
         Routing.RegisterRoute(nameof(OwnedShipEditorPage), typeof(OwnedShipEditorPage));
         Routing.RegisterRoute(nameof(GroupDetailPage), typeof(GroupDetailPage));
+        Routing.RegisterRoute(nameof(TagPickerPage), typeof(TagPickerPage));
     }
 
     /// <summary>

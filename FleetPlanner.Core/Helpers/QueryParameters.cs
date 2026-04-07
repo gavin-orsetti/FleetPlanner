@@ -16,4 +16,16 @@ public static class QueryParameters
 
     /// <summary>The integer Id of the group being viewed or edited.</summary>
     public const string GroupId = "groupId";
+
+    /// <summary>OwnedShip Id passed to the tag picker (nullable — omit for group-only editing).</summary>
+    public const string TagPickerOwnedShipId = "tagPickerOwnedShipId";
+
+    /// <summary>Group Id passed to the tag picker (nullable — omit for global ship tag editing).</summary>
+    public const string TagPickerGroupId = "tagPickerGroupId";
+
+    /// <summary>Context type for contextual tag editing (e.g. "group"). Null = global scope.</summary>
+    public const string TagPickerContextType = "tagPickerContextType";
+
+    /// <summary>Context Id for contextual tag editing (e.g. the group Id). Null = global scope.</summary>
+    public const string TagPickerContextId = "tagPickerContextId";
 }
