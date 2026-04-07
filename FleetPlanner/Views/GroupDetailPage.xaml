@@ -62,6 +62,46 @@
                     Padding="16,8"
                     HorizontalOptions="Start" />
 
+            <!-- Add / Remove Ships -->
+            <Button Command="{Binding ToggleManageShipsCommand}"
+                    BackgroundColor="{StaticResource PrimaryContainer}"
+                    TextColor="{StaticResource Primary}"
+                    FontSize="13"
+                    Padding="16,8"
+                    HorizontalOptions="Start"
+                    Margin="0,4,0,0">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsManagingShips}" Value="False">
+                        <Setter Property="Text" Value="Add / Remove Ships" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsManagingShips}" Value="True">
+                        <Setter Property="Text" Value="Hide Ship List" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+
+            <CollectionView ItemsSource="{Binding ShipCandidates}"
+                            IsVisible="{Binding IsManagingShips}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="localModels:GroupShipCandidateItem">
+                        <Grid ColumnDefinitions="*,Auto" Padding="4,6" ColumnSpacing="8">
+                            <VerticalStackLayout Grid.Column="0" VerticalOptions="Center" Spacing="2">
+                                <Label Text="{Binding ShipName}" FontSize="14" FontAttributes="Bold" />
+                                <Label Text="{Binding Callsign}" FontSize="11"
+                                       TextColor="{StaticResource Gray400}" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding IsMember}"
+                                    Toggled="OnShipMembershipToggled" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                <CollectionView.EmptyView>
+                    <Label Text="No owned ships yet — add ships from the Ship Browser first."
+                           FontSize="12" TextColor="{StaticResource Gray400}" Margin="0,4" />
+                </CollectionView.EmptyView>
+            </CollectionView>
+
             <!-- Member Ships -->
             <Label Text="Member Ships" FontSize="16" FontAttributes="Bold" Margin="0,8,0,0" />
             <CollectionView ItemsSource="{Binding MemberShips}">

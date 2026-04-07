@@ -13,17 +13,25 @@ namespace FleetPlanner.ViewModels;
 
 /// <summary>
 /// ViewModel for the Owned Ship Editor page — allows editing callsign, notes,
-/// acquisition info, and viewing/editing tag assignments for a single owned ship.
+/// acquisition info, viewing/editing tag assignments, and managing group membership
+/// for a single owned ship.
 ///
 /// <para><b>QueryProperty:</b> Receives <see cref="OwnedShipId"/> via Shell navigation
 /// parameter <c>"ownedShipId"</c> (an integer). The property is set before <c>OnAppearing</c>.</para>
 ///
 /// <para><b>Page lifecycle:</b> <see cref="LoadShipCommand"/> runs on <c>OnAppearing</c>,
-/// loading the <see cref="OwnedShip"/> record, resolving the catalogue ship name, and
-/// loading all global tags into <see cref="GlobalTags"/> as display DTOs.</para>
+/// loading the <see cref="OwnedShip"/> record, resolving the catalogue ship name,
+/// loading all global tags into <see cref="GlobalTags"/> as display DTOs, and loading
+/// group memberships into <see cref="GroupMemberships"/>.</para>
 ///
 /// <para><b>Tag editing:</b> <see cref="EditTagsCommand"/> navigates to <see cref="TagPickerPage"/>
 /// for global tag assignment. Tags are reloaded on return via <c>OnAppearing</c>.</para>
+///
+/// <para><b>Group membership:</b> <see cref="GroupMemberships"/> lists all non-archived groups
+/// with an <see cref="GroupMembershipItem.IsMember"/> flag. Toggling membership inserts or
+/// removes a sentinel <see cref="OwnedShipTag"/> (<c>TagKey="status:placeholder"</c>,
+/// <c>ContextType="group"</c>, <c>ContextId=groupId</c>, <c>AppliedBySystem=true</c>).
+/// Removal deletes ALL contextual tags for the ship in that group.</para>
 ///
 /// <para><b>Save behaviour:</b> <see cref="SaveCommand"/> writes the edited fields back to
 /// the <c>OwnedShip</c> record via <see cref="IOwnedShipRepository.SaveOwnedShipAsync"/>
@@ -38,6 +46,7 @@ public partial class OwnedShipEditorViewModel : ObservableObject
     private readonly ITagRepository _tagRepository;
     private readonly IShipDataService _shipDataService;
     private readonly IGraphBuildService _graphBuildService;
+    private readonly IUserFleetGroupRepository _groupRepository;
 
     /// <summary>The OwnedShip Id received via query parameter.</summary>
     [ObservableProperty]
@@ -75,6 +84,14 @@ public partial class OwnedShipEditorViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<TagDisplayItem> _globalTags = [];
 
+    /// <summary>All groups with a flag indicating whether this ship is a member.</summary>
+    [ObservableProperty]
+    private ObservableCollection<GroupMembershipItem> _groupMemberships = [];
+
+    /// <summary>True when no groups exist yet (drives empty-state message).</summary>
+    [ObservableProperty]
+    private bool _hasNoGroups;
+
     /// <summary>True while loading.</summary>
     [ObservableProperty]
     private bool _isLoading;
@@ -89,13 +106,15 @@ public partial class OwnedShipEditorViewModel : ObservableObject
         IOwnedShipTagRepository ownedShipTagRepository,
         ITagRepository tagRepository,
         IShipDataService shipDataService,
-        IGraphBuildService graphBuildService)
+        IGraphBuildService graphBuildService,
+        IUserFleetGroupRepository groupRepository)
     {
         _ownedShipRepository = ownedShipRepository;
         _ownedShipTagRepository = ownedShipTagRepository;
         _tagRepository = tagRepository;
         _shipDataService = shipDataService;
         _graphBuildService = graphBuildService;
+        _groupRepository = groupRepository;
     }
 
     /// <summary>Loads the owned ship and its tags.</summary>
@@ -139,11 +158,35 @@ public partial class OwnedShipEditorViewModel : ObservableObject
             }
 
             GlobalTags = new ObservableCollection<TagDisplayItem>(displayItems);
+
+            // Load group memberships
+            await LoadGroupMembershipsAsync();
         }
         finally
         {
             IsLoading = false;
         }
+    }
+
+    /// <summary>Loads all groups and determines membership for the current ship.</summary>
+    private async Task LoadGroupMembershipsAsync()
+    {
+        var groups = await _groupRepository.GetAllGroupsAsync();
+        HasNoGroups = groups.Count == 0;
+
+        var items = new List<GroupMembershipItem>();
+        foreach (var group in groups)
+        {
+            var contextTags = await _ownedShipTagRepository.GetTagsForOwnedShipAsync(OwnedShipId, "group", group.Id);
+            items.Add(new GroupMembershipItem
+            {
+                GroupId = group.Id,
+                GroupName = group.Name,
+                IsMember = contextTags.Count > 0
+            });
+        }
+
+        GroupMemberships = new ObservableCollection<GroupMembershipItem>(items);
     }
 
     /// <summary>Navigates to the tag picker for global ship tag editing.</summary>
@@ -158,6 +201,41 @@ public partial class OwnedShipEditorViewModel : ObservableObject
             { QueryParameters.TagPickerContextType, string.Empty },
             { QueryParameters.TagPickerContextId, 0 }
         });
+    }
+
+    /// <summary>
+    /// Toggles a ship's membership in a group. Adding inserts a sentinel
+    /// <c>status:placeholder</c> contextual tag; removing deletes ALL contextual
+    /// tags for this ship in that group.
+    /// </summary>
+    [RelayCommand]
+    private async Task ToggleGroupMembershipAsync(GroupMembershipItem item)
+    {
+        if (item is null || OwnedShipId <= 0) return;
+
+        if (item.IsMember)
+        {
+            // Add sentinel tag to mark membership
+            await _ownedShipTagRepository.ApplyTagAsync(new OwnedShipTag
+            {
+                OwnedShipId = OwnedShipId,
+                TagKey = "status:placeholder",
+                ContextType = "group",
+                ContextId = item.GroupId,
+                AppliedBySystem = true
+            });
+        }
+        else
+        {
+            // Remove ALL contextual tags for this ship in this group
+            var contextTags = await _ownedShipTagRepository.GetTagsForOwnedShipAsync(OwnedShipId, "group", item.GroupId);
+            foreach (var tag in contextTags)
+            {
+                await _ownedShipTagRepository.RemoveTagAsync(OwnedShipId, tag.TagKey, "group", item.GroupId);
+            }
+        }
+
+        _graphBuildService.InvalidateCache();
     }
 
     /// <summary>Saves the owned ship with current edits.</summary>

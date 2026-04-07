@@ -13,8 +13,8 @@ namespace FleetPlanner.ViewModels;
 
 /// <summary>
 /// ViewModel for the Group Detail page — displays a group's metadata, doctrine/focus tags,
-/// and member ships (determined by contextual tag assignment). Supports editing group tags
-/// and per-ship contextual role tags within the group.
+/// and member ships (determined by contextual tag assignment). Supports editing group tags,
+/// per-ship contextual role tags within the group, and adding/removing ships from the group.
 ///
 /// <para><b>QueryProperty:</b> Receives <see cref="GroupId"/> via Shell navigation parameter
 /// <c>"groupId"</c> (an integer). The property is set before <c>OnAppearing</c> fires.</para>
@@ -27,6 +27,12 @@ namespace FleetPlanner.ViewModels;
 /// <para><b>Tag editing:</b> <see cref="EditGroupTagsCommand"/> navigates to <see cref="TagPickerPage"/>
 /// for group-level doctrine/focus tags. <see cref="EditShipRoleInGroupCommand"/> navigates to
 /// <see cref="TagPickerPage"/> for a specific ship's contextual tags within this group.</para>
+///
+/// <para><b>Ship membership:</b> <see cref="ShipCandidates"/> lists all owned ships with an
+/// <see cref="GroupShipCandidateItem.IsMember"/> flag. <see cref="ToggleShipMembershipCommand"/>
+/// inserts a sentinel tag (<c>status:placeholder</c>, <c>ContextType="group"</c>) to add, or
+/// removes ALL contextual tags to remove. <see cref="IsManagingShips"/> toggles the visibility
+/// of the candidate list.</para>
 /// </summary>
 [QueryProperty(nameof(GroupId), "groupId")]
 public partial class GroupDetailViewModel : ObservableObject
@@ -58,6 +64,14 @@ public partial class GroupDetailViewModel : ObservableObject
     /// <summary>Ships assigned to this group via contextual tags.</summary>
     [ObservableProperty]
     private ObservableCollection<OwnedShipDisplay> _memberShips = [];
+
+    /// <summary>All owned ships with a flag indicating whether they belong to this group.</summary>
+    [ObservableProperty]
+    private ObservableCollection<GroupShipCandidateItem> _shipCandidates = [];
+
+    /// <summary>Whether the Add/Remove Ships list is currently visible.</summary>
+    [ObservableProperty]
+    private bool _isManagingShips;
 
     /// <summary>True while loading.</summary>
     [ObservableProperty]
@@ -191,6 +205,79 @@ public partial class GroupDetailViewModel : ObservableObject
             { QueryParameters.TagPickerContextType, "group" },
             { QueryParameters.TagPickerContextId, GroupId }
         });
+    }
+
+    /// <summary>Toggles the Add/Remove Ships panel and loads candidates when opening.</summary>
+    [RelayCommand]
+    private async Task ToggleManageShipsAsync()
+    {
+        IsManagingShips = !IsManagingShips;
+        if (IsManagingShips)
+            await LoadShipCandidatesAsync();
+    }
+
+    /// <summary>Loads all owned ships and determines group membership for each.</summary>
+    [RelayCommand]
+    private async Task LoadShipCandidatesAsync()
+    {
+        var allOwned = await _ownedShipRepository.GetAllOwnedShipsAsync();
+        var allShips = await _shipDataService.GetAllShipsAsync();
+        var shipLookup = allShips.ToDictionary(s => s.Id);
+
+        var candidates = new List<GroupShipCandidateItem>();
+        foreach (var owned in allOwned)
+        {
+            var contextTags = await _ownedShipTagRepository.GetTagsForOwnedShipAsync(owned.Id, "group", GroupId);
+            shipLookup.TryGetValue(owned.ShipId, out var catalogueShip);
+
+            candidates.Add(new GroupShipCandidateItem
+            {
+                OwnedShipId = owned.Id,
+                Callsign = owned.Callsign,
+                ShipName = catalogueShip?.Name ?? "Unknown Ship",
+                IsMember = contextTags.Count > 0
+            });
+        }
+
+        ShipCandidates = new ObservableCollection<GroupShipCandidateItem>(candidates);
+    }
+
+    /// <summary>
+    /// Toggles a ship's membership in this group. Adding inserts a sentinel
+    /// <c>status:placeholder</c> contextual tag; removing deletes ALL contextual
+    /// tags for that ship in this group, then refreshes the member list.
+    /// </summary>
+    [RelayCommand]
+    private async Task ToggleShipMembershipAsync(GroupShipCandidateItem item)
+    {
+        if (item is null || GroupId <= 0) return;
+
+        if (item.IsMember)
+        {
+            await _ownedShipTagRepository.ApplyTagAsync(new OwnedShipTag
+            {
+                OwnedShipId = item.OwnedShipId,
+                TagKey = "status:placeholder",
+                ContextType = "group",
+                ContextId = GroupId,
+                AppliedBySystem = true
+            });
+        }
+        else
+        {
+            var contextTags = await _ownedShipTagRepository.GetTagsForOwnedShipAsync(item.OwnedShipId, "group", GroupId);
+            foreach (var tag in contextTags)
+            {
+                await _ownedShipTagRepository.RemoveTagAsync(item.OwnedShipId, tag.TagKey, "group", GroupId);
+            }
+        }
+
+        _graphBuildService.InvalidateCache();
+
+        // Refresh the member ships display and ship candidates
+        await LoadGroupAsync();
+        if (IsManagingShips)
+            await LoadShipCandidatesAsync();
     }
 
     /// <summary>Navigates back to the group overview.</summary>

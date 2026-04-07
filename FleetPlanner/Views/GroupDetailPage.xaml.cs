@@ -1,9 +1,11 @@
+using FleetPlanner.Models;
 using FleetPlanner.ViewModels;
 
 namespace FleetPlanner.Views;
 
 /// <summary>
-/// Code-behind for the Group Detail page — shows a group's doctrine tags and member ships.
+/// Code-behind for the Group Detail page — shows a group's doctrine tags, member ships,
+/// and provides an expandable list for adding or removing ships from the group.
 /// </summary>
 public partial class GroupDetailPage : ContentPage
 {
@@ -24,5 +26,12 @@ public partial class GroupDetailPage : ContentPage
     {
         base.OnAppearing();
         await _viewModel.LoadGroupCommand.ExecuteAsync(null);
+    }
+
+    /// <summary>Fires <see cref="GroupDetailViewModel.ToggleShipMembershipCommand"/> when a ship Switch is toggled.</summary>
+    private async void OnShipMembershipToggled(object? sender, ToggledEventArgs e)
+    {
+        if (sender is Switch { BindingContext: GroupShipCandidateItem item })
+            await _viewModel.ToggleShipMembershipCommand.ExecuteAsync(item);
     }
 }

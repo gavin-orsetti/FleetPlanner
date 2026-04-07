@@ -66,6 +66,31 @@
                     Padding="16,8"
                     HorizontalOptions="Start" />
 
+            <!-- Groups Section -->
+            <Label Text="Groups" FontSize="16" FontAttributes="Bold" Margin="0,8,0,0" />
+
+            <Label Text="No groups created yet — create one in the Groups tab"
+                   FontSize="12" TextColor="{StaticResource Gray400}"
+                   IsVisible="{Binding HasNoGroups}"
+                   Margin="0,4" />
+
+            <CollectionView ItemsSource="{Binding GroupMemberships}"
+                            IsVisible="{Binding HasNoGroups, Converter={StaticResource InvertedBoolConverter}}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="localModels:GroupMembershipItem">
+                        <Grid ColumnDefinitions="*,Auto" Padding="4,6" ColumnSpacing="8">
+                            <Label Grid.Column="0"
+                                   Text="{Binding GroupName}"
+                                   FontSize="14"
+                                   VerticalTextAlignment="Center" />
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding IsMember}"
+                                    Toggled="OnGroupMembershipToggled" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
             <!-- Action Buttons -->
             <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,16,0,0">
                 <Button Grid.Column="0" Text="Save" Command="{Binding SaveCommand}" />

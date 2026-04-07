@@ -1,9 +1,11 @@
+using FleetPlanner.Models;
 using FleetPlanner.ViewModels;
 
 namespace FleetPlanner.Views;
 
 /// <summary>
-/// Code-behind for the Owned Ship Editor page — edit callsign, notes, and tags for an owned ship.
+/// Code-behind for the Owned Ship Editor page — edit callsign, notes, tags, and group
+/// membership for an owned ship.
 /// </summary>
 public partial class OwnedShipEditorPage : ContentPage
 {
@@ -24,5 +26,12 @@ public partial class OwnedShipEditorPage : ContentPage
     {
         base.OnAppearing();
         await _viewModel.LoadShipCommand.ExecuteAsync(null);
+    }
+
+    /// <summary>Fires <see cref="OwnedShipEditorViewModel.ToggleGroupMembershipCommand"/> when a group Switch is toggled.</summary>
+    private async void OnGroupMembershipToggled(object? sender, ToggledEventArgs e)
+    {
+        if (sender is Switch { BindingContext: GroupMembershipItem item })
+            await _viewModel.ToggleGroupMembershipCommand.ExecuteAsync(item);
     }
 }
