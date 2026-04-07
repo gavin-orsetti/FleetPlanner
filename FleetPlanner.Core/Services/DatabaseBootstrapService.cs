@@ -12,9 +12,9 @@ namespace FleetPlanner.Services;
 ///
 /// <para><b>Schema versioning strategy:</b> An <see cref="AppMetadata"/> row with key
 /// <c>"schema_version"</c> gates whether seeding runs. On first launch the row does not
-/// exist, so <see cref="InitialiseAsync"/> seeds all system tags and writes version "4".
+/// exist, so <see cref="InitialiseAsync"/> seeds all system tags and writes version "6".
 /// On subsequent launches the row is found and the method checks whether a migration is
-/// needed (current version &lt; 4). Future schema migrations can bump the version and add
+/// needed (current version &lt; 6). Future schema migrations can bump the version and add
 /// migration logic between the version check and the version write.</para>
 ///
 /// <para><b>Idempotency:</b> Safe to call on every startup. <c>CreateTableAsync</c> is a
@@ -23,9 +23,13 @@ namespace FleetPlanner.Services;
 /// <c>InsertOrReplaceAsync</c> keyed on the stable <see cref="TagDefinition.Key"/>, so
 /// duplicates are impossible.</para>
 ///
-/// <para><b>Seeding strategy — 10 tag categories:</b> The taxonomy seeds tags across:
+/// <para><b>Seeding strategy — 15 tag categories:</b> The taxonomy seeds tags across:
 /// <list type="bullet">
-///   <item><b>role</b> — what the ship does (gameplay loop)</item>
+///   <item><b>role:economy</b> — career loop the ship supports</item>
+///   <item><b>role:activity</b> — moment-to-moment gameplay verb</item>
+///   <item><b>role:domain</b> — operational environment</item>
+///   <item><b>role:scale</b> — operational footprint (ship only)</item>
+///   <item><b>role:posture</b> — engagement stance</item>
 ///   <item><b>ctx</b> — how and where the ship operates (crew, environment, legality)</item>
 ///   <item><b>doctrine:weight</b> — how important the ship is to the fleet</item>
 ///   <item><b>doctrine:frequency</b> — how often the ship deploys</item>
@@ -80,7 +84,7 @@ public class DatabaseBootstrapService
     /// </summary>
     public async Task InitialiseAsync()
     {
-        const int currentSchemaVersion = 5;
+        const int currentSchemaVersion = 6;
 
         var db = new SQLiteAsyncConnection(_dbPath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache);
 
@@ -108,6 +112,13 @@ public class DatabaseBootstrapService
             {
                 await db.ExecuteAsync("DELETE FROM TagDefinitions WHERE Category = 'doctrine' AND IsSystemDefined = 1");
                 await db.ExecuteAsync("DELETE FROM GroupTagDefinition WHERE Category = 'doctrine' AND IsSystemDefined = 1");
+            }
+
+            // v5→v6: replace flat 'role' category with 5 atomic role sub-dimensions
+            if (storedVersion < 6)
+            {
+                await db.ExecuteAsync("DELETE FROM TagDefinitions WHERE Category = 'role' AND IsSystemDefined = 1");
+                await db.ExecuteAsync("DELETE FROM GroupTagDefinition WHERE Category = 'role' AND IsSystemDefined = 1");
             }
 
             await db.ExecuteAsync("DELETE FROM TagDefinitions WHERE IsSystemDefined = 1");
@@ -177,9 +188,9 @@ public class DatabaseBootstrapService
     /// This protects the recommendation engine's tag key references from breaking.
     /// </para>
     /// </summary>
-    /// <returns>A list of <see cref="TagDefinition"/> records spanning role, ctx,
-    /// 7 doctrine sub-dimensions (weight, frequency, purpose, autonomy, flexibility,
-    /// retention, lifecycle), and status.</returns>
+    /// <returns>A list of <see cref="TagDefinition"/> records spanning 5 role sub-dimensions
+    /// (economy, activity, domain, scale, posture), ctx, 7 doctrine sub-dimensions
+    /// (weight, frequency, purpose, autonomy, flexibility, retention, lifecycle), and status.</returns>
     internal static List<TagDefinition> BuildSystemTags()
     {
         var tags = new List<TagDefinition>();
@@ -200,32 +211,64 @@ public class DatabaseBootstrapService
             });
         }
 
-        // ── role (24 tags) — what the ship does ────────────────────────
-        const string roleColor = "#C4706A";
-        Add("role", roleColor, 1, "fighter", "Fighter", "Dogfighting, air superiority, point defense");
-        Add("role", roleColor, 2, "bomber", "Bomber", "Heavy ordnance delivery against capital and large ships");
-        Add("role", roleColor, 3, "gunship", "Gunship", "Sustained heavy fire, multi-crew weapons platform");
-        Add("role", roleColor, 4, "interceptor", "Interceptor", "High-speed pursuit, interdiction");
-        Add("role", roleColor, 5, "dropship", "Dropship", "Troop delivery, vehicle insertion, boarding");
-        Add("role", roleColor, 6, "escort", "Escort", "Protecting other ships in transit");
-        Add("role", roleColor, 7, "cargo", "Cargo", "Moving goods between locations");
-        Add("role", roleColor, 8, "mining", "Mining", "Extracting raw materials from asteroids or surface");
-        Add("role", roleColor, 9, "salvage", "Salvage", "Recovering components and materials from wrecks");
-        Add("role", roleColor, 10, "exploration", "Exploration", "Deep-space scanning, jump point discovery");
-        Add("role", roleColor, 11, "medical", "Medical", "Battlefield medicine, emergency rescue");
-        Add("role", roleColor, 12, "refuel", "Refuel", "Providing fuel to other ships in the field");
-        Add("role", roleColor, 13, "repair", "Repair", "Repairing other ships in the field");
-        Add("role", roleColor, 14, "science", "Science", "Research, scanning, data collection");
-        Add("role", roleColor, 15, "data-running", "Data Running", "High-speed cargo of information or contraband");
-        Add("role", roleColor, 16, "passenger", "Passenger", "Transporting NPC or player passengers");
-        Add("role", roleColor, 17, "racing", "Racing", "Competitive speed circuit flying");
-        Add("role", roleColor, 18, "ground-ops", "Ground Ops", "Planetary vehicle operations, FPS insertion");
-        Add("role", roleColor, 19, "command", "Command", "Fleet coordination, capital ship operations");
-        Add("role", roleColor, 20, "stealth", "Stealth", "Low-signature operations, infiltration");
-        Add("role", roleColor, 21, "electronic-warfare", "Electronic Warfare", "Sensor disruption, jamming, electronic interdiction");
-        Add("role", roleColor, 22, "logistics", "Logistics", "Coordinating supply, assets, and support for a fleet");
-        Add("role", roleColor, 23, "snub", "Snub", "Parasite/launch-bay craft, short-range sorties");
-        Add("role", roleColor, 24, "multi-role", "Multi-Role", "Genuinely versatile across multiple loops");
+        // ── role:economy (7 tags) — career loop ───────────────────────
+        const string roleEconomyColor = "#C4706A";
+        Add("role:economy", roleEconomyColor, 1, "combat", "Combat", "Value derived from destroying or neutralizing threats");
+        Add("role:economy", roleEconomyColor, 2, "extraction", "Extraction", "Value derived from gathering raw resources from the environment");
+        Add("role:economy", roleEconomyColor, 3, "logistics", "Logistics", "Value derived from moving people, goods, or data between locations");
+        Add("role:economy", roleEconomyColor, 4, "support", "Support", "Value derived from enabling, sustaining, or amplifying other actors");
+        Add("role:economy", roleEconomyColor, 5, "intelligence", "Intelligence", "Value derived from collecting, protecting, or denying information");
+        Add("role:economy", roleEconomyColor, 6, "competition", "Competition", "Value derived from racing or time-competitive events");
+        Add("role:economy", roleEconomyColor, 7, "roleplay", "Roleplay", "Value is social, narrative, or atmospheric rather than mechanical");
+
+        // ── role:activity (21 tags) — moment-to-moment loop ──────────
+        const string roleActivityColor = "#B87040";
+        Add("role:activity", roleActivityColor, 1, "fight", "Fight", "Direct weapons engagement against other ships or ground targets");
+        Add("role:activity", roleActivityColor, 2, "intercept", "Intercept", "High-speed pursuit and denial of other vessels");
+        Add("role:activity", roleActivityColor, 3, "bomb", "Bomb", "Ordnance delivery against hardened or capital targets");
+        Add("role:activity", roleActivityColor, 4, "board", "Board", "Deploying personnel onto other ships or structures");
+        Add("role:activity", roleActivityColor, 5, "mine", "Mine", "Fracturing and extracting mineral or gas resources");
+        Add("role:activity", roleActivityColor, 6, "salvage", "Salvage", "Stripping, scraping, or recovering material from wrecks");
+        Add("role:activity", roleActivityColor, 7, "haul", "Haul", "Moving bulk cargo between locations");
+        Add("role:activity", roleActivityColor, 8, "courier", "Courier", "Moving high-value low-volume cargo or data with speed or stealth premium");
+        Add("role:activity", roleActivityColor, 9, "ferry", "Ferry", "Moving passengers or crew between locations");
+        Add("role:activity", roleActivityColor, 10, "refuel", "Refuel", "Transferring fuel to other ships in the field");
+        Add("role:activity", roleActivityColor, 11, "repair", "Repair", "Restoring hull and component integrity of other ships");
+        Add("role:activity", roleActivityColor, 12, "heal", "Heal", "Providing medical treatment to players and NPCs");
+        Add("role:activity", roleActivityColor, 13, "scan", "Scan", "Active or passive sensor operations for detection, mapping, or science");
+        Add("role:activity", roleActivityColor, 14, "signal", "Signal", "Electronic warfare: jamming, spoofing, disrupting, or amplifying signals");
+        Add("role:activity", roleActivityColor, 15, "tug", "Tug", "Recovering disabled ships or objects and repositioning them");
+        Add("role:activity", roleActivityColor, 16, "patrol", "Patrol", "Area denial, presence, and threat deterrence through movement");
+        Add("role:activity", roleActivityColor, 17, "escort", "Escort", "Close protection of a specific asset or convoy");
+        Add("role:activity", roleActivityColor, 18, "race", "Race", "Pure speed competition on designated courses");
+        Add("role:activity", roleActivityColor, 19, "farm", "Farm", "Harvesting biological or agricultural resources");
+        Add("role:activity", roleActivityColor, 20, "hack", "Hack", "Intrusion into, extraction from, or manipulation of data systems");
+        Add("role:activity", roleActivityColor, 21, "rearm", "Rearm", "Resupplying ammunition and ordnance to other ships");
+
+        // ── role:domain (6 tags) — operational environment ───────────
+        const string roleDomainColor = "#4A9E6B";
+        Add("role:domain", roleDomainColor, 1, "ground", "Ground", "Planetary surface operations; vehicles, structures, EVA support");
+        Add("role:domain", roleDomainColor, 2, "atmo", "Atmo", "Within a planet's atmosphere");
+        Add("role:domain", roleDomainColor, 3, "orbit", "Orbit", "Low planetary orbit and transition zones");
+        Add("role:domain", roleDomainColor, 4, "asteroid", "Asteroid", "Asteroid fields and ring systems");
+        Add("role:domain", roleDomainColor, 5, "deep-space", "Deep Space", "Far from stations, jump points, or gravity wells");
+        Add("role:domain", roleDomainColor, 6, "urban", "Urban", "Dense station interiors, platforms, or city environments");
+
+        // ── role:scale (5 tags) — operational footprint (ship only) ──
+        const string roleScaleColor = "#7A8499";
+        Add("role:scale", roleScaleColor, 1, "solo", "Solo", "Designed for single-operator tasks");
+        Add("role:scale", roleScaleColor, 2, "pair", "Pair", "Optimized for two-ship cooperative operation");
+        Add("role:scale", roleScaleColor, 3, "cell", "Cell", "Optimized for a small squad or cell (3–6 ships)");
+        Add("role:scale", roleScaleColor, 4, "fleet", "Fleet", "Designed to operate as part of a coordinated multi-element fleet");
+        Add("role:scale", roleScaleColor, 5, "capital", "Capital", "Designed to anchor or command fleet-level engagements");
+
+        // ── role:posture (5 tags) — engagement stance ────────────────
+        const string rolePostureColor = "#3A9CB8";
+        Add("role:posture", rolePostureColor, 1, "offensive", "Offensive", "Built to find, close with, and destroy");
+        Add("role:posture", rolePostureColor, 2, "defensive", "Defensive", "Built to absorb punishment, hold ground, or protect others");
+        Add("role:posture", rolePostureColor, 3, "stealth", "Stealth", "Built to avoid detection; trades raw performance for signature reduction");
+        Add("role:posture", rolePostureColor, 4, "reactive", "Reactive", "Built to respond to events initiated by others");
+        Add("role:posture", rolePostureColor, 5, "enabling", "Enabling", "Built to amplify others' capabilities rather than act independently");
 
         // ── ctx (14 tags) — how and where the ship operates ────────────
         const string ctxColor = "#3A9CB8";
@@ -329,7 +372,11 @@ public class DatabaseBootstrapService
     /// Group tags are stored in a separate <see cref="GroupTagDefinition"/> table from
     /// ship tags. The taxonomy seeds tags across:
     /// <list type="bullet">
-    ///   <item><b>role</b> (18) — what the group is tasked to accomplish as a formation</item>
+    ///   <item><b>role:economy</b> (9) — career loop (7 shared + 2 group extras)</item>
+    ///   <item><b>role:activity</b> (21) — moment-to-moment gameplay verb (shared with ship)</item>
+    ///   <item><b>role:domain</b> (6) — operational environment (shared with ship)</item>
+    ///   <item><b>role:scope</b> (3) — group-only operational scope (replaces ship scale)</item>
+    ///   <item><b>role:posture</b> (5) — engagement stance (shared with ship)</item>
     ///   <item><b>ctx</b> (16) — operational conditions: scale, theater, autonomy, legality</item>
     ///   <item><b>doctrine:weight</b> (4) — group importance</item>
     ///   <item><b>doctrine:frequency</b> (5) — deployment cadence (shared with ship)</item>
@@ -343,9 +390,9 @@ public class DatabaseBootstrapService
     /// <b>AllowedScopes:</b> All seeded group tags use <c>"UserFleetGroup"</c>.
     /// </para>
     /// </summary>
-    /// <returns>A list of <see cref="GroupTagDefinition"/> records spanning role, ctx,
-    /// 6 doctrine sub-dimensions (weight, frequency, purpose, autonomy, flexibility,
-    /// lifecycle), and status.</returns>
+    /// <returns>A list of <see cref="GroupTagDefinition"/> records spanning 5 role sub-dimensions
+    /// (economy, activity, domain, scope, posture), ctx, 6 doctrine sub-dimensions
+    /// (weight, frequency, purpose, autonomy, flexibility, lifecycle), and status.</returns>
     internal static List<GroupTagDefinition> BuildSystemGroupTags()
     {
         var tags = new List<GroupTagDefinition>();
@@ -366,26 +413,64 @@ public class DatabaseBootstrapService
             });
         }
 
-        // ── role (18 tags) — what the group is tasked to accomplish ───
-        const string roleColor = "#C4706A";
-        Add("role", roleColor, 1, "combat-air", "Combat Air", "Space superiority, dogfighting, fleet interception");
-        Add("role", roleColor, 2, "strike", "Strike", "Offensive attacks against capital ships, stations, or infrastructure");
-        Add("role", roleColor, 3, "escort", "Escort", "Protecting other groups or assets during transit or operation");
-        Add("role", roleColor, 4, "interdiction", "Interdiction", "Catching, stopping, and disabling target vessels");
-        Add("role", roleColor, 5, "boarding", "Boarding", "Capturing ships or stations; FPS assault delivery");
-        Add("role", roleColor, 6, "ground-assault", "Ground Assault", "Planetary surface combat, vehicle deployment, FPS insertion");
-        Add("role", roleColor, 7, "cargo", "Cargo", "Moving goods between locations as a coordinated group");
-        Add("role", roleColor, 8, "mining", "Mining", "Extracting raw resources as a coordinated operation");
-        Add("role", roleColor, 9, "salvage", "Salvage", "Recovering wrecks and materials at scale");
-        Add("role", roleColor, 10, "exploration", "Exploration", "Deep-space survey, jump point discovery, charting");
-        Add("role", roleColor, 11, "patrol", "Patrol", "Area denial, security sweep, picket duty");
-        Add("role", roleColor, 12, "logistics", "Logistics", "Coordinating supply, repair, refueling, and medical support for other groups");
-        Add("role", roleColor, 13, "medical", "Medical", "Dedicated search, rescue, and trauma response");
-        Add("role", roleColor, 14, "electronic-warfare", "Electronic Warfare", "Disrupting, jamming, and suppressing enemy sensors and comms");
-        Add("role", roleColor, 15, "recon", "Recon", "Intelligence gathering, scouting, advance surveillance");
-        Add("role", roleColor, 16, "carrier-wing", "Carrier Wing", "Deploying and recovering parasite/snub craft from a carrier");
-        Add("role", roleColor, 17, "passenger", "Passenger", "Organized transport of people as a group operation");
-        Add("role", roleColor, 18, "multi-mission", "Multi-Mission", "Intentionally versatile group covering several loops without specialization");
+        // ── role:economy (9 tags) — career loop (7 shared + 2 group extras) ─
+        const string roleEconomyColor = "#C4706A";
+        Add("role:economy", roleEconomyColor, 1, "combat", "Combat", "Value derived from destroying or neutralizing threats");
+        Add("role:economy", roleEconomyColor, 2, "extraction", "Extraction", "Value derived from gathering raw resources from the environment");
+        Add("role:economy", roleEconomyColor, 3, "logistics", "Logistics", "Value derived from moving people, goods, or data between locations");
+        Add("role:economy", roleEconomyColor, 4, "support", "Support", "Value derived from enabling, sustaining, or amplifying other actors");
+        Add("role:economy", roleEconomyColor, 5, "intelligence", "Intelligence", "Value derived from collecting, protecting, or denying information");
+        Add("role:economy", roleEconomyColor, 6, "competition", "Competition", "Value derived from racing or time-competitive events");
+        Add("role:economy", roleEconomyColor, 7, "roleplay", "Roleplay", "Value is social, narrative, or atmospheric rather than mechanical");
+        Add("role:economy", roleEconomyColor, 8, "power-projection", "Power Projection", "Group exists to project force or presence into contested space");
+        Add("role:economy", roleEconomyColor, 9, "self-sufficiency", "Self-Sufficiency", "Group designed to operate for extended periods without external resupply");
+
+        // ── role:activity (21 tags) — shared with ship, identical ────
+        const string roleActivityColor = "#B87040";
+        Add("role:activity", roleActivityColor, 1, "fight", "Fight", "Direct weapons engagement against other ships or ground targets");
+        Add("role:activity", roleActivityColor, 2, "intercept", "Intercept", "High-speed pursuit and denial of other vessels");
+        Add("role:activity", roleActivityColor, 3, "bomb", "Bomb", "Ordnance delivery against hardened or capital targets");
+        Add("role:activity", roleActivityColor, 4, "board", "Board", "Deploying personnel onto other ships or structures");
+        Add("role:activity", roleActivityColor, 5, "mine", "Mine", "Fracturing and extracting mineral or gas resources");
+        Add("role:activity", roleActivityColor, 6, "salvage", "Salvage", "Stripping, scraping, or recovering material from wrecks");
+        Add("role:activity", roleActivityColor, 7, "haul", "Haul", "Moving bulk cargo between locations");
+        Add("role:activity", roleActivityColor, 8, "courier", "Courier", "Moving high-value low-volume cargo or data with speed or stealth premium");
+        Add("role:activity", roleActivityColor, 9, "ferry", "Ferry", "Moving passengers or crew between locations");
+        Add("role:activity", roleActivityColor, 10, "refuel", "Refuel", "Transferring fuel to other ships in the field");
+        Add("role:activity", roleActivityColor, 11, "repair", "Repair", "Restoring hull and component integrity of other ships");
+        Add("role:activity", roleActivityColor, 12, "heal", "Heal", "Providing medical treatment to players and NPCs");
+        Add("role:activity", roleActivityColor, 13, "scan", "Scan", "Active or passive sensor operations for detection, mapping, or science");
+        Add("role:activity", roleActivityColor, 14, "signal", "Signal", "Electronic warfare: jamming, spoofing, disrupting, or amplifying signals");
+        Add("role:activity", roleActivityColor, 15, "tug", "Tug", "Recovering disabled ships or objects and repositioning them");
+        Add("role:activity", roleActivityColor, 16, "patrol", "Patrol", "Area denial, presence, and threat deterrence through movement");
+        Add("role:activity", roleActivityColor, 17, "escort", "Escort", "Close protection of a specific asset or convoy");
+        Add("role:activity", roleActivityColor, 18, "race", "Race", "Pure speed competition on designated courses");
+        Add("role:activity", roleActivityColor, 19, "farm", "Farm", "Harvesting biological or agricultural resources");
+        Add("role:activity", roleActivityColor, 20, "hack", "Hack", "Intrusion into, extraction from, or manipulation of data systems");
+        Add("role:activity", roleActivityColor, 21, "rearm", "Rearm", "Resupplying ammunition and ordnance to other ships");
+
+        // ── role:domain (6 tags) — shared with ship, identical ───────
+        const string roleDomainColor = "#4A9E6B";
+        Add("role:domain", roleDomainColor, 1, "ground", "Ground", "Planetary surface operations; vehicles, structures, EVA support");
+        Add("role:domain", roleDomainColor, 2, "atmo", "Atmo", "Within a planet's atmosphere");
+        Add("role:domain", roleDomainColor, 3, "orbit", "Orbit", "Low planetary orbit and transition zones");
+        Add("role:domain", roleDomainColor, 4, "asteroid", "Asteroid", "Asteroid fields and ring systems");
+        Add("role:domain", roleDomainColor, 5, "deep-space", "Deep Space", "Far from stations, jump points, or gravity wells");
+        Add("role:domain", roleDomainColor, 6, "urban", "Urban", "Dense station interiors, platforms, or city environments");
+
+        // ── role:scope (3 tags) — group-only, replaces scale ─────────
+        const string roleScopeColor = "#7A8499";
+        Add("role:scope", roleScopeColor, 1, "tactical", "Tactical", "Designed for engagements or tasks at the individual-encounter level");
+        Add("role:scope", roleScopeColor, 2, "operational", "Operational", "Designed for sustained multi-engagement campaigns in a region or system");
+        Add("role:scope", roleScopeColor, 3, "strategic", "Strategic", "Designed to shape theater-level outcomes across multiple systems");
+
+        // ── role:posture (5 tags) — shared with ship, identical ──────
+        const string rolePostureColor = "#3A9CB8";
+        Add("role:posture", rolePostureColor, 1, "offensive", "Offensive", "Built to find, close with, and destroy");
+        Add("role:posture", rolePostureColor, 2, "defensive", "Defensive", "Built to absorb punishment, hold ground, or protect others");
+        Add("role:posture", rolePostureColor, 3, "stealth", "Stealth", "Built to avoid detection; trades raw performance for signature reduction");
+        Add("role:posture", rolePostureColor, 4, "reactive", "Reactive", "Built to respond to events initiated by others");
+        Add("role:posture", rolePostureColor, 5, "enabling", "Enabling", "Built to amplify others' capabilities rather than act independently");
 
         // ── ctx (16 tags) — operational conditions ───────────────────
         const string ctxColor = "#3A9CB8";

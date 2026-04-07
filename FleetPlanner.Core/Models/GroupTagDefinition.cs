@@ -13,10 +13,12 @@ namespace FleetPlanner.Models;
 /// serve as stable identifiers across schema migrations, are human-readable in
 /// diagnostics, and avoid auto-increment collision issues.</para>
 ///
-/// <para><strong>Dimensions (9 + custom):</strong> <c>role</c>, <c>ctx</c>,
-/// <c>doctrine:weight</c>, <c>doctrine:frequency</c>, <c>doctrine:purpose</c>,
-/// <c>doctrine:autonomy</c>, <c>doctrine:flexibility</c>, <c>doctrine:lifecycle</c>,
-/// <c>status</c>, <c>custom</c>. The category is stored separately in
+/// <para><strong>Dimensions (14 + custom):</strong> <c>role:economy</c>,
+/// <c>role:activity</c>, <c>role:domain</c>, <c>role:scope</c>,
+/// <c>role:posture</c>, <c>ctx</c>, <c>doctrine:weight</c>,
+/// <c>doctrine:frequency</c>, <c>doctrine:purpose</c>, <c>doctrine:autonomy</c>,
+/// <c>doctrine:flexibility</c>, <c>doctrine:lifecycle</c>, <c>status</c>,
+/// <c>custom</c>. The category is stored separately in
 /// <see cref="Category"/> for efficient filtering.</para>
 ///
 /// <para><strong>Scoping:</strong> <see cref="AllowedScopes"/> is always
@@ -41,8 +43,9 @@ public class GroupTagDefinition
     public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Category: role, ctx, doctrine:weight, doctrine:frequency, doctrine:purpose,
-    /// doctrine:autonomy, doctrine:flexibility, doctrine:lifecycle, status, custom.
+    /// Category: role:economy, role:activity, role:domain, role:scope, role:posture,
+    /// ctx, doctrine:weight, doctrine:frequency, doctrine:purpose, doctrine:autonomy,
+    /// doctrine:flexibility, doctrine:lifecycle, status, custom.
     /// </summary>
     public string Category { get; set; } = string.Empty;
 

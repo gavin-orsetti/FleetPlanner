@@ -16,9 +16,11 @@ namespace FleetPlanner.Models;
 /// avoid auto-increment collision issues that integer IDs would introduce when
 /// merging seed data with user-created tags.</para>
 ///
-/// <para><strong>Dimensions (10 + custom):</strong> <c>role</c>, <c>ctx</c>,
-/// <c>doctrine:weight</c>, <c>doctrine:frequency</c>, <c>doctrine:purpose</c>,
-/// <c>doctrine:autonomy</c>, <c>doctrine:flexibility</c>, <c>doctrine:retention</c>,
+/// <para><strong>Dimensions (15 + custom):</strong> <c>role:economy</c>,
+/// <c>role:activity</c>, <c>role:domain</c>, <c>role:scale</c>,
+/// <c>role:posture</c>, <c>ctx</c>, <c>doctrine:weight</c>,
+/// <c>doctrine:frequency</c>, <c>doctrine:purpose</c>, <c>doctrine:autonomy</c>,
+/// <c>doctrine:flexibility</c>, <c>doctrine:retention</c>,
 /// <c>doctrine:lifecycle</c>, <c>status</c>, <c>custom</c>. The category is stored
 /// separately in <see cref="Category"/> for efficient filtering.</para>
 ///
@@ -57,9 +59,9 @@ public class TagDefinition
     public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Category: role, ctx, doctrine:weight, doctrine:frequency, doctrine:purpose,
-    /// doctrine:autonomy, doctrine:flexibility, doctrine:retention, doctrine:lifecycle,
-    /// status, custom.
+    /// Category: role:economy, role:activity, role:domain, role:scale, role:posture,
+    /// ctx, doctrine:weight, doctrine:frequency, doctrine:purpose, doctrine:autonomy,
+    /// doctrine:flexibility, doctrine:retention, doctrine:lifecycle, status, custom.
     /// </summary>
     public string Category { get; set; } = string.Empty;
 
