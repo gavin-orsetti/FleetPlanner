@@ -3,30 +3,32 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using FleetPlanner.Helpers;
 using FleetPlanner.Models;
 using FleetPlanner.Repositories;
 using FleetPlanner.Services;
+using FleetPlanner.Views;
 
 namespace FleetPlanner.ViewModels;
 
 /// <summary>
 /// ViewModel for the Owned Ship Editor page — allows editing callsign, notes,
-/// acquisition info, and viewing tag assignments for a single owned ship.
+/// acquisition info, and viewing/editing tag assignments for a single owned ship.
 ///
 /// <para><b>QueryProperty:</b> Receives <see cref="OwnedShipId"/> via Shell navigation
 /// parameter <c>"ownedShipId"</c> (an integer). The property is set before <c>OnAppearing</c>.</para>
 ///
 /// <para><b>Page lifecycle:</b> <see cref="LoadShipCommand"/> runs on <c>OnAppearing</c>,
 /// loading the <see cref="OwnedShip"/> record, resolving the catalogue ship name, and
-/// loading all tags (global + contextual) into <see cref="AppliedTags"/>.</para>
+/// loading all global tags into <see cref="GlobalTags"/> as display DTOs.</para>
+///
+/// <para><b>Tag editing:</b> <see cref="EditTagsCommand"/> navigates to <see cref="TagPickerPage"/>
+/// for global tag assignment. Tags are reloaded on return via <c>OnAppearing</c>.</para>
 ///
 /// <para><b>Save behaviour:</b> <see cref="SaveCommand"/> writes the edited fields back to
 /// the <c>OwnedShip</c> record via <see cref="IOwnedShipRepository.SaveOwnedShipAsync"/>
 /// (which stamps <c>UpdatedUtc</c>) and navigates back. <see cref="CancelCommand"/> navigates
 /// back without saving.</para>
-///
-/// <para><b>Destructive operations:</b> None — this page only edits metadata. Archive/delete
-/// are handled on the <c>OwnedShipLibraryPage</c>.</para>
 /// </summary>
 [QueryProperty(nameof(OwnedShipId), "ownedShipId")]
 public partial class OwnedShipEditorViewModel : ObservableObject
@@ -65,9 +67,13 @@ public partial class OwnedShipEditorViewModel : ObservableObject
     [ObservableProperty]
     private string _shipName = string.Empty;
 
-    /// <summary>Tags currently applied to this ship.</summary>
+    /// <summary>Tags currently applied to this ship (raw model — kept for backwards compatibility).</summary>
     [ObservableProperty]
     private ObservableCollection<OwnedShipTag> _appliedTags = [];
+
+    /// <summary>Global tags displayed as styled chips.</summary>
+    [ObservableProperty]
+    private ObservableCollection<TagDisplayItem> _globalTags = [];
 
     /// <summary>True while loading.</summary>
     [ObservableProperty]
@@ -113,14 +119,45 @@ public partial class OwnedShipEditorViewModel : ObservableObject
             var catalogueShip = await _shipDataService.GetShipAsync(_currentShip.ShipId);
             ShipName = catalogueShip?.Name ?? "Unknown Ship";
 
-            // Load tags
+            // Load tags and build display items
             var tags = await _ownedShipTagRepository.GetTagsForOwnedShipAsync(OwnedShipId);
             AppliedTags = new ObservableCollection<OwnedShipTag>(tags);
+
+            var globalRawTags = tags.Where(t => t.ContextType is null).ToList();
+            var displayItems = new List<TagDisplayItem>();
+            foreach (var rawTag in globalRawTags)
+            {
+                var def = await _tagRepository.GetTagAsync(rawTag.TagKey);
+                displayItems.Add(new TagDisplayItem
+                {
+                    TagKey = rawTag.TagKey,
+                    DisplayName = def?.DisplayName ?? rawTag.TagKey,
+                    Category = def?.Category ?? "unknown",
+                    ColorHex = def?.ColorHex,
+                    Weight = rawTag.Weight
+                });
+            }
+
+            GlobalTags = new ObservableCollection<TagDisplayItem>(displayItems);
         }
         finally
         {
             IsLoading = false;
         }
+    }
+
+    /// <summary>Navigates to the tag picker for global ship tag editing.</summary>
+    [RelayCommand]
+    private async Task EditTagsAsync()
+    {
+        if (OwnedShipId <= 0) return;
+        await Shell.Current.GoToAsync(nameof(TagPickerPage), new Dictionary<string, object>
+        {
+            { QueryParameters.TagPickerOwnedShipId, OwnedShipId },
+            { QueryParameters.TagPickerGroupId, 0 },
+            { QueryParameters.TagPickerContextType, string.Empty },
+            { QueryParameters.TagPickerContextId, 0 }
+        });
     }
 
     /// <summary>Saves the owned ship with current edits.</summary>

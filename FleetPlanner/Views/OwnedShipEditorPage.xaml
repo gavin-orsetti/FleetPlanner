@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
-             xmlns:models="clr-namespace:FleetPlanner.Models;assembly=FleetPlanner.Core"
+             xmlns:localModels="clr-namespace:FleetPlanner.Models"
              x:Class="FleetPlanner.Views.OwnedShipEditorPage"
              x:DataType="vm:OwnedShipEditorViewModel"
              Title="{Binding ShipName, StringFormat='Edit: {0}'}">
@@ -24,24 +24,47 @@
             <Label Text="Notes" FontSize="12" TextColor="{StaticResource Gray400}" />
             <Editor Text="{Binding Notes}" Placeholder="Add notes..." HeightRequest="100" />
 
-            <!-- Applied Tags -->
-            <Label Text="Applied Tags" FontSize="14" FontAttributes="Bold" Margin="0,8,0,0" />
-            <CollectionView ItemsSource="{Binding AppliedTags}" HeightRequest="60">
-                <CollectionView.ItemsLayout>
-                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
-                </CollectionView.ItemsLayout>
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:OwnedShipTag">
-                        <Frame Padding="6,4" CornerRadius="4" HasShadow="False"
-                               BackgroundColor="{StaticResource PrimaryContainer}">
-                            <Label Text="{Binding TagKey}" FontSize="12" />
-                        </Frame>
+            <!-- Tags Section -->
+            <Label Text="Tags" FontSize="16" FontAttributes="Bold" Margin="0,8,0,0" />
+
+            <!-- Tag Chips -->
+            <FlexLayout BindableLayout.ItemsSource="{Binding GlobalTags}"
+                        Wrap="Wrap" JustifyContent="Start" Direction="Row"
+                        MinimumHeightRequest="36">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="localModels:TagDisplayItem">
+                        <Border StrokeShape="RoundRectangle 12"
+                                Padding="8,4"
+                                Margin="0,0,8,8"
+                                StrokeThickness="1.5"
+                                Stroke="{Binding ChipColor}"
+                                BackgroundColor="{Binding ChipColor}">
+                            <HorizontalStackLayout Spacing="4">
+                                <Label Text="{Binding DisplayName}"
+                                       FontSize="12"
+                                       TextColor="{StaticResource OnPrimary}" />
+                                <Label Text="{Binding WeightLabel}"
+                                       FontSize="10"
+                                       TextColor="{StaticResource OnPrimary}"
+                                       IsVisible="{Binding IsRoleTag}"
+                                       Opacity="0.8" />
+                            </HorizontalStackLayout>
+                        </Border>
                     </DataTemplate>
-                </CollectionView.ItemTemplate>
-                <CollectionView.EmptyView>
-                    <Label Text="No tags applied yet" FontSize="12" TextColor="{StaticResource Gray400}" />
-                </CollectionView.EmptyView>
-            </CollectionView>
+                </BindableLayout.ItemTemplate>
+                <BindableLayout.EmptyView>
+                    <Label Text="No tags yet — tap Edit Tags to describe this ship"
+                           FontSize="12" TextColor="{StaticResource Gray400}"
+                           Margin="0,4" />
+                </BindableLayout.EmptyView>
+            </FlexLayout>
+
+            <Button Text="Edit Tags" Command="{Binding EditTagsCommand}"
+                    BackgroundColor="{StaticResource PrimaryContainer}"
+                    TextColor="{StaticResource Primary}"
+                    FontSize="13"
+                    Padding="16,8"
+                    HorizontalOptions="Start" />
 
             <!-- Action Buttons -->
             <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,16,0,0">
