@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -75,6 +76,10 @@ public partial class TagPickerViewModel : ObservableObject
     /// <summary>Title reflecting the editing context.</summary>
     [ObservableProperty]
     private string _pageTitle = "Select Tags";
+
+    /// <summary>True when the search text doesn't exactly match any existing tag, enabling the "Create tag" affordance.</summary>
+    [ObservableProperty]
+    private bool _showCreateTag;
 
     /// <summary>
     /// Constructor — receives dependencies from the DI container.
@@ -298,11 +303,15 @@ public partial class TagPickerViewModel : ObservableObject
         if (AllTags is null || AllTags.Count == 0)
         {
             MainThread.BeginInvokeOnMainThread(() =>
-                GroupedTags = new ObservableCollection<TagCategoryGroup>());
+            {
+                GroupedTags = new ObservableCollection<TagCategoryGroup>();
+                ShowCreateTag = false;
+            });
             return;
         }
 
         var filtered = AllTags.AsEnumerable();
+        bool hasExactMatch = true;
 
         if (!string.IsNullOrWhiteSpace(SearchText))
         {
@@ -310,6 +319,10 @@ public partial class TagPickerViewModel : ObservableObject
             filtered = filtered.Where(t =>
                 t.DisplayName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                 t.TagKey.Contains(search, StringComparison.OrdinalIgnoreCase));
+
+            // Show "Create tag" when no tag display name matches exactly
+            hasExactMatch = AllTags.Any(t =>
+                t.DisplayName.Equals(search, StringComparison.OrdinalIgnoreCase));
         }
 
         var groups = filtered
@@ -320,8 +333,142 @@ public partial class TagPickerViewModel : ObservableObject
             .ToList();
 
         MainThread.BeginInvokeOnMainThread(() =>
-            GroupedTags = new ObservableCollection<TagCategoryGroup>(groups));
+        {
+            GroupedTags = new ObservableCollection<TagCategoryGroup>(groups);
+            ShowCreateTag = !string.IsNullOrWhiteSpace(SearchText) && !hasExactMatch;
+        });
     }
+
+    /// <summary>
+    /// Opens an inline creation flow to create a custom tag from the current search text.
+    /// Collects category and optional description via platform prompts, validates uniqueness,
+    /// persists the new <see cref="TagDefinition"/>, and adds it to the picker pre-selected.
+    /// </summary>
+    [RelayCommand]
+    private async Task CreateTagAsync()
+    {
+        var page = Shell.Current.CurrentPage;
+        if (page is null || string.IsNullOrWhiteSpace(SearchText)) return;
+
+        var displayName = SearchText.Trim();
+
+        // --- Step 1: Confirm / edit display name ---
+        var editedName = await page.DisplayPromptAsync(
+            "Create Custom Tag",
+            "Custom tags work best when they describe intent, role, or constraint — not ship names or one-off notes. System tags use stable keys; yours will too once created.",
+            accept: "Next",
+            cancel: "Cancel",
+            initialValue: displayName,
+            maxLength: 60);
+
+        if (string.IsNullOrWhiteSpace(editedName)) return;
+        displayName = editedName.Trim();
+
+        // --- Step 2: Pick category ---
+        var categories = new[] { "role", "doctrine", "status", "crew", "capability", "preference", "constraint", "custom" };
+        var chosenCategory = await page.DisplayActionSheet(
+            "Choose a category", "Cancel", null, categories);
+
+        if (string.IsNullOrWhiteSpace(chosenCategory) || chosenCategory == "Cancel") return;
+
+        // --- Step 3: Optional description ---
+        var description = await page.DisplayPromptAsync(
+            "Description (optional)",
+            "A short description for this tag.",
+            accept: "Create",
+            cancel: "Skip",
+            maxLength: 120) ?? string.Empty;
+
+        // --- Step 4: Generate key and validate uniqueness ---
+        var slug = Slugify(displayName);
+        var key = $"{chosenCategory}:{slug}";
+
+        var existingTag = AllTags.FirstOrDefault(t =>
+            t.TagKey.Equals(key, StringComparison.OrdinalIgnoreCase));
+        if (existingTag is not null)
+        {
+            await page.DisplayAlert("Duplicate",
+                $"A tag with key \"{key}\" already exists. Adjust the display name and try again.", "OK");
+            return;
+        }
+
+        // Double-check against the database
+        var dbTag = await _tagRepository.GetTagAsync(key);
+        if (dbTag is not null)
+        {
+            await page.DisplayAlert("Duplicate",
+                $"A tag with key \"{key}\" already exists in the database. Adjust the display name and try again.", "OK");
+            return;
+        }
+
+        // --- Step 5: Resolve color from category ---
+        var colorHex = CategoryColor(chosenCategory);
+
+        // --- Step 6: Create and save ---
+        var newTag = new TagDefinition
+        {
+            Key = key,
+            DisplayName = displayName,
+            Category = chosenCategory,
+            Description = description,
+            ColorHex = colorHex,
+            SortOrder = 999, // user tags sort last within category
+            IsSystemDefined = false,
+            IsUserEditable = true,
+            IsArchived = false,
+            AllowedScopes = "OwnedShip,UserFleetGroup"
+        };
+
+        await _tagRepository.SaveTagAsync(newTag);
+        _graphBuildService.InvalidateCache();
+
+        // --- Step 7: Add to picker, pre-selected ---
+        var selectableItem = new SelectableTagItem
+        {
+            TagKey = newTag.Key,
+            DisplayName = newTag.DisplayName,
+            Category = newTag.Category,
+            Description = newTag.Description,
+            ColorHex = newTag.ColorHex,
+            IsSelected = true,
+            Weight = 1
+        };
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            AllTags.Add(selectableItem);
+            SearchText = string.Empty; // clears filter, shows all tags including the new one
+        });
+
+        await page.DisplayAlert("Tag Created", $"Tag \"{displayName}\" created and applied.", "OK");
+    }
+
+    /// <summary>
+    /// Converts a display name into a lowercase hyphenated slug suitable for tag keys.
+    /// Strips all characters except letters, digits, and hyphens.
+    /// </summary>
+    /// <example><c>Slugify("My Ship Role")</c> → <c>"my-ship-role"</c></example>
+    internal static string Slugify(string input) =>
+        Regex.Replace(
+            input.Trim().ToLowerInvariant().Replace(" ", "-"),
+            @"[^a-z0-9\-]", "");
+
+    /// <summary>
+    /// Returns the standard hex colour for a given tag category, matching the seeded palette.
+    /// Falls back to gray for unknown categories.
+    /// </summary>
+    private static string CategoryColor(string category) => category switch
+    {
+        "role" => "#ef4444",
+        "doctrine" => "#a855f7",
+        "status" => "#f59e0b",
+        "crew" => "#06b6d4",
+        "capability" => "#22c55e",
+        "preference" => "#f97316",
+        "constraint" => "#8890a8",
+        "custom" => "#64748b",
+        _ => "#8890a8"
+    };
 }
 
 /// <summary>

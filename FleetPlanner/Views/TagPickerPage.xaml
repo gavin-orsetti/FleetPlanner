@@ -6,7 +6,7 @@
              x:DataType="vm:TagPickerViewModel"
              Title="{Binding PageTitle}">
 
-    <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="16" RowSpacing="8">
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Padding="16" RowSpacing="8">
 
         <!-- Loading -->
         <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
@@ -21,8 +21,32 @@
                    PlaceholderColor="{StaticResource Gray400}"
                    CancelButtonColor="{StaticResource Primary}" />
 
+        <!-- Create Tag Affordance -->
+        <Border Grid.Row="2"
+                StrokeShape="RoundRectangle 12"
+                Padding="12,8"
+                Margin="0,4"
+                StrokeThickness="1.5"
+                Stroke="{StaticResource Primary}"
+                BackgroundColor="Transparent"
+                IsVisible="{Binding ShowCreateTag}"
+                HeightRequest="40"
+                VerticalOptions="Start">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding CreateTagCommand}" />
+            </Border.GestureRecognizers>
+            <Label TextColor="{StaticResource Primary}" FontSize="14" VerticalTextAlignment="Center">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="＋ Create tag: " FontAttributes="Bold" />
+                        <Span Text="{Binding SearchText}" FontAttributes="Italic" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+        </Border>
+
         <!-- Tag Groups -->
-        <CollectionView Grid.Row="2"
+        <CollectionView Grid.Row="3"
                         ItemsSource="{Binding GroupedTags}"
                         IsGrouped="False">
             <CollectionView.ItemTemplate>
@@ -130,7 +154,7 @@
         </CollectionView>
 
         <!-- Action Buttons -->
-        <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,8,0,0">
+        <Grid Grid.Row="4" ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,8,0,0">
             <Button Grid.Column="0" Text="Save" Command="{Binding SaveCommand}" />
             <Button Grid.Column="1" Text="Cancel" Command="{Binding CancelCommand}"
                     BackgroundColor="{StaticResource Gray500}" />
