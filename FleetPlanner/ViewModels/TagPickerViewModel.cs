@@ -489,11 +489,11 @@ public partial class TagPickerViewModel : ObservableObject
         // --- Step 7: Add to picker, pre-selected ---
         var selectableItem = new SelectableTagItem
         {
-            TagKey = newTag.Key,
-            DisplayName = newTag.DisplayName,
-            Category = newTag.Category,
-            Description = newTag.Description,
-            ColorHex = newTag.ColorHex,
+            TagKey = key,
+            DisplayName = displayName,
+            Category = chosenCategory,
+            Description = description,
+            ColorHex = colorHex,
             IsSelected = true,
             Weight = 1
         };
