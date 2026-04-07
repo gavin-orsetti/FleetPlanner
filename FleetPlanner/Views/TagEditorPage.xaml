@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             x:Class="FleetPlanner.Views.TagEditorPage"
+             x:DataType="vm:TagEditorViewModel"
+             Title="{Binding PageTitle}">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="12">
+
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                               HorizontalOptions="Center" />
+
+            <!-- Error Message -->
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="{StaticResource Error}"
+                   FontSize="13"
+                   IsVisible="{Binding HasError}" />
+
+            <!-- System Tag Banner -->
+            <Border StrokeShape="RoundRectangle 8"
+                    Padding="12,8"
+                    StrokeThickness="0"
+                    BackgroundColor="{StaticResource SurfaceVariant}"
+                    IsVisible="{Binding IsSystemTag}">
+                <HorizontalStackLayout Spacing="8">
+                    <Label Text="🔒" FontSize="16" VerticalTextAlignment="Center" />
+                    <Label Text="System tag — read-only"
+                           FontSize="13" TextColor="{StaticResource Gray400}"
+                           VerticalTextAlignment="Center" />
+                </HorizontalStackLayout>
+            </Border>
+
+            <!-- Display Name -->
+            <Label Text="Display Name" FontSize="12" TextColor="{StaticResource Gray400}" />
+            <Entry Text="{Binding DisplayName}"
+                   Placeholder="Enter tag name..."
+                   IsReadOnly="{Binding IsSystemTag}" />
+
+            <!-- Category -->
+            <Label Text="Category" FontSize="12" TextColor="{StaticResource Gray400}" />
+            <Picker ItemsSource="{Binding Categories}"
+                    SelectedIndex="{Binding SelectedCategoryIndex}"
+                    Title="Select category"
+                    IsEnabled="{Binding IsEditMode, Converter={StaticResource InvertedBoolConverter}}" />
+
+            <!-- Key Preview -->
+            <Label Text="Generated Key" FontSize="12" TextColor="{StaticResource Gray400}" />
+            <Border StrokeShape="RoundRectangle 8"
+                    Padding="12,8"
+                    StrokeThickness="1"
+                    Stroke="{StaticResource SurfaceVariant}"
+                    BackgroundColor="{StaticResource Surface}">
+                <Label Text="{Binding KeyPreview}"
+                       FontSize="13" FontAttributes="Bold"
+                       TextColor="{StaticResource Primary}" />
+            </Border>
+
+            <!-- Description -->
+            <Label Text="Description" FontSize="12" TextColor="{StaticResource Gray400}" />
+            <Editor Text="{Binding Description}"
+                    Placeholder="What does this tag mean?"
+                    HeightRequest="80"
+                    IsReadOnly="{Binding IsSystemTag}" />
+
+            <!-- Color Hex -->
+            <Label Text="Color (hex)" FontSize="12" TextColor="{StaticResource Gray400}" />
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Entry Grid.Column="0"
+                       Text="{Binding ColorHex}"
+                       Placeholder="#00BCD4"
+                       IsReadOnly="{Binding IsSystemTag}" />
+                <!-- Color Preview Swatch -->
+                <Border Grid.Column="1"
+                        StrokeShape="RoundRectangle 8"
+                        WidthRequest="40" HeightRequest="40"
+                        StrokeThickness="0"
+                        BackgroundColor="{Binding ColorHex}" />
+            </Grid>
+
+            <!-- Action Buttons — hidden for system tags -->
+            <Grid ColumnDefinitions="*,Auto,*" ColumnSpacing="8" Margin="0,16,0,0"
+                  IsVisible="{Binding IsEditable}">
+                <Button Grid.Column="0" Text="Save" Command="{Binding SaveCommand}" />
+                <Button Grid.Column="1" Text="Archive"
+                        Command="{Binding ArchiveCommand}"
+                        BackgroundColor="#4Aef4444"
+                        TextColor="#ef4444"
+                        IsVisible="{Binding IsEditMode}" />
+                <Button Grid.Column="2" Text="Cancel" Command="{Binding CancelCommand}"
+                        BackgroundColor="{StaticResource Gray500}" />
+            </Grid>
+
+            <!-- Read-only dismiss for system tags -->
+            <Button Text="Back" Command="{Binding CancelCommand}"
+                    BackgroundColor="{StaticResource Gray500}"
+                    IsVisible="{Binding IsSystemTag}"
+                    Margin="0,16,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -97,6 +97,8 @@ public static class MauiProgram
         builder.Services.AddTransient<RecommendationsViewModel>();
         builder.Services.AddTransient<SettingsViewModel>();
         builder.Services.AddTransient<TagPickerViewModel>();
+        builder.Services.AddTransient<TagManagerViewModel>();
+        builder.Services.AddTransient<TagEditorViewModel>();
 
         // ── Page registrations ────────────────────────────────────────────
         builder.Services.AddTransient<DashboardPage>();
@@ -109,6 +111,8 @@ public static class MauiProgram
         builder.Services.AddTransient<RecommendationsPage>();
         builder.Services.AddTransient<SettingsPage>();
         builder.Services.AddTransient<TagPickerPage>();
+        builder.Services.AddTransient<TagManagerPage>();
+        builder.Services.AddTransient<TagEditorPage>();
 
         // ── Shell registration ────────────────────────────────────────────
         builder.Services.AddSingleton<AppShell>();

@@ -28,4 +28,7 @@ public static class QueryParameters
 
     /// <summary>Context Id for contextual tag editing (e.g. the group Id). Null = global scope.</summary>
     public const string TagPickerContextId = "tagPickerContextId";
+
+    /// <summary>Tag definition key passed to the tag editor (nullable — null = create mode, value = edit mode).</summary>
+    public const string TagEditorTagKey = "tagEditorTagKey";
 }
