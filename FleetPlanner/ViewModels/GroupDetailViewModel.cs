@@ -43,6 +43,7 @@ public partial class GroupDetailViewModel : ObservableObject
     private readonly IOwnedShipRepository _ownedShipRepository;
     private readonly IShipDataService _shipDataService;
     private readonly ITagRepository _tagRepository;
+    private readonly IGroupTagRepository _groupTagDefinitionRepository;
     private readonly IGraphBuildService _graphBuildService;
 
     /// <summary>The group Id received via query parameter.</summary>
@@ -87,6 +88,7 @@ public partial class GroupDetailViewModel : ObservableObject
         IOwnedShipRepository ownedShipRepository,
         IShipDataService shipDataService,
         ITagRepository tagRepository,
+        IGroupTagRepository groupTagDefinitionRepository,
         IGraphBuildService graphBuildService)
     {
         _groupRepository = groupRepository;
@@ -95,6 +97,7 @@ public partial class GroupDetailViewModel : ObservableObject
         _ownedShipRepository = ownedShipRepository;
         _shipDataService = shipDataService;
         _tagRepository = tagRepository;
+        _groupTagDefinitionRepository = groupTagDefinitionRepository;
         _graphBuildService = graphBuildService;
     }
 
@@ -116,13 +119,30 @@ public partial class GroupDetailViewModel : ObservableObject
             var groupDisplayItems = new List<TagDisplayItem>();
             foreach (var gt in tags)
             {
-                var def = await _tagRepository.GetTagAsync(gt.TagKey);
+                // Look up tag definition from GroupTagDefinition first, fall back to TagDefinition
+                var groupDef = await _groupTagDefinitionRepository.GetTagByKeyAsync(gt.TagKey);
+                var displayName = groupDef?.DisplayName ?? gt.TagKey;
+                var category = groupDef?.Category ?? "unknown";
+                var colorHex = groupDef?.ColorHex;
+
+                if (groupDef is null)
+                {
+                    // Fall back to ship tag table for backward compatibility
+                    var shipDef = await _tagRepository.GetTagAsync(gt.TagKey);
+                    if (shipDef is not null)
+                    {
+                        displayName = shipDef.DisplayName;
+                        category = shipDef.Category;
+                        colorHex = shipDef.ColorHex;
+                    }
+                }
+
                 groupDisplayItems.Add(new TagDisplayItem
                 {
                     TagKey = gt.TagKey,
-                    DisplayName = def?.DisplayName ?? gt.TagKey,
-                    Category = def?.Category ?? "unknown",
-                    ColorHex = def?.ColorHex,
+                    DisplayName = displayName,
+                    Category = category,
+                    ColorHex = colorHex,
                     Weight = gt.Weight
                 });
             }
@@ -189,7 +209,8 @@ public partial class GroupDetailViewModel : ObservableObject
             { QueryParameters.TagPickerOwnedShipId, 0 },
             { QueryParameters.TagPickerGroupId, GroupId },
             { QueryParameters.TagPickerContextType, string.Empty },
-            { QueryParameters.TagPickerContextId, 0 }
+            { QueryParameters.TagPickerContextId, 0 },
+            { QueryParameters.TagPickerIsGroupContext, "true" }
         });
     }
 

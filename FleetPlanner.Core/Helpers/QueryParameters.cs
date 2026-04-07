@@ -31,4 +31,10 @@ public static class QueryParameters
 
     /// <summary>Tag definition key passed to the tag editor (nullable — null = create mode, value = edit mode).</summary>
     public const string TagEditorTagKey = "tagEditorTagKey";
+
+    /// <summary>Boolean flag ("true"/"false") passed to the tag picker to indicate group tag context vs ship tag context.</summary>
+    public const string TagPickerIsGroupContext = "tagPickerIsGroupContext";
+
+    /// <summary>Boolean flag ("true"/"false") passed to the tag editor to indicate group tag context vs ship tag context.</summary>
+    public const string TagEditorIsGroupContext = "tagEditorIsGroupContext";
 }

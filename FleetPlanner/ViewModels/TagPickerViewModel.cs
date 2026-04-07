@@ -30,9 +30,11 @@ namespace FleetPlanner.ViewModels;
 [QueryProperty(nameof(TagPickerGroupId), QueryParameters.TagPickerGroupId)]
 [QueryProperty(nameof(TagPickerContextType), QueryParameters.TagPickerContextType)]
 [QueryProperty(nameof(TagPickerContextId), QueryParameters.TagPickerContextId)]
+[QueryProperty(nameof(TagPickerIsGroupContext), QueryParameters.TagPickerIsGroupContext)]
 public partial class TagPickerViewModel : ObservableObject
 {
     private readonly ITagRepository _tagRepository;
+    private readonly IGroupTagRepository _groupTagDefinitionRepository;
     private readonly IOwnedShipTagRepository _ownedShipTagRepository;
     private readonly IUserFleetGroupTagRepository _groupTagRepository;
     private readonly IGraphBuildService _graphBuildService;
@@ -52,6 +54,13 @@ public partial class TagPickerViewModel : ObservableObject
     /// <summary>Context Id for scoped tags. 0 = global.</summary>
     [ObservableProperty]
     private int _tagPickerContextId;
+
+    /// <summary>Whether the picker is selecting group-level tags (from GroupTagDefinition table) rather than ship tags.</summary>
+    [ObservableProperty]
+    private string _tagPickerIsGroupContext = "false";
+
+    /// <summary>Parsed boolean: true when picking group tags from the GroupTagDefinition table.</summary>
+    private bool IsGroupContext => string.Equals(TagPickerIsGroupContext, "true", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>All selectable tag items grouped by category.</summary>
     [ObservableProperty]
@@ -86,11 +95,13 @@ public partial class TagPickerViewModel : ObservableObject
     /// </summary>
     public TagPickerViewModel(
         ITagRepository tagRepository,
+        IGroupTagRepository groupTagDefinitionRepository,
         IOwnedShipTagRepository ownedShipTagRepository,
         IUserFleetGroupTagRepository groupTagRepository,
         IGraphBuildService graphBuildService)
     {
         _tagRepository = tagRepository;
+        _groupTagDefinitionRepository = groupTagDefinitionRepository;
         _ownedShipTagRepository = ownedShipTagRepository;
         _groupTagRepository = groupTagRepository;
         _graphBuildService = graphBuildService;
@@ -117,26 +128,40 @@ public partial class TagPickerViewModel : ObservableObject
             else
                 PageTitle = "Ship Tags";
 
-            // Load ALL non-archived tags — no scope filter.
-            // Scope filtering was the root cause of the empty-list bug: the
-            // in-memory Contains check silently returned zero rows when the
-            // stored AllowedScopes string didn't match the expected scope token
-            // exactly. Showing all tags is the safe fallback; scope filtering
-            // can be re-added once display is confirmed working.
-            var availableTags = await _tagRepository.GetAllTagsAsync(includeArchived: false);
-
-            // Build selectable items
-            var selectableItems = availableTags
-                .Select(td => new SelectableTagItem
-                {
-                    TagKey = td.Key,
-                    DisplayName = td.DisplayName,
-                    Category = td.Category,
-                    Description = td.Description,
-                    ColorHex = td.ColorHex,
-                    Weight = 1
-                })
-                .ToList();
+            // Load tags from the appropriate table based on context.
+            // When IsGroupContext is true, load from GroupTagDefinition (group-level tags).
+            // Otherwise load from TagDefinition (ship-level tags).
+            List<SelectableTagItem> selectableItems;
+            if (IsGroupContext)
+            {
+                var groupTags = await _groupTagDefinitionRepository.GetAllTagsAsync(includeArchived: false);
+                selectableItems = groupTags
+                    .Select(td => new SelectableTagItem
+                    {
+                        TagKey = td.Key,
+                        DisplayName = td.DisplayName,
+                        Category = td.Category,
+                        Description = td.Description,
+                        ColorHex = td.ColorHex,
+                        Weight = 1
+                    })
+                    .ToList();
+            }
+            else
+            {
+                var availableTags = await _tagRepository.GetAllTagsAsync(includeArchived: false);
+                selectableItems = availableTags
+                    .Select(td => new SelectableTagItem
+                    {
+                        TagKey = td.Key,
+                        DisplayName = td.DisplayName,
+                        Category = td.Category,
+                        Description = td.Description,
+                        ColorHex = td.ColorHex,
+                        Weight = 1
+                    })
+                    .ToList();
+            }
 
             // Pre-select currently applied tags
             if (isGroupTagEditing)
@@ -388,34 +413,66 @@ public partial class TagPickerViewModel : ObservableObject
             return;
         }
 
-        // Double-check against the database
-        var dbTag = await _tagRepository.GetTagAsync(key);
-        if (dbTag is not null)
+        // Double-check against the appropriate database table
+        if (IsGroupContext)
         {
-            await page.DisplayAlert("Duplicate",
-                $"A tag with key \"{key}\" already exists in the database. Adjust the display name and try again.", "OK");
-            return;
+            var dbGroupTag = await _groupTagDefinitionRepository.GetTagByKeyAsync(key);
+            if (dbGroupTag is not null)
+            {
+                await page.DisplayAlert("Duplicate",
+                    $"A tag with key \"{key}\" already exists in the database. Adjust the display name and try again.", "OK");
+                return;
+            }
+        }
+        else
+        {
+            var dbTag = await _tagRepository.GetTagAsync(key);
+            if (dbTag is not null)
+            {
+                await page.DisplayAlert("Duplicate",
+                    $"A tag with key \"{key}\" already exists in the database. Adjust the display name and try again.", "OK");
+                return;
+            }
         }
 
         // --- Step 5: Resolve color from category ---
         var colorHex = CategoryColor(chosenCategory);
 
-        // --- Step 6: Create and save ---
-        var newTag = new TagDefinition
+        // --- Step 6: Create and save to the appropriate table ---
+        if (IsGroupContext)
         {
-            Key = key,
-            DisplayName = displayName,
-            Category = chosenCategory,
-            Description = description,
-            ColorHex = colorHex,
-            SortOrder = 999, // user tags sort last within category
-            IsSystemDefined = false,
-            IsUserEditable = true,
-            IsArchived = false,
-            AllowedScopes = "OwnedShip,UserFleetGroup"
-        };
-
-        await _tagRepository.SaveTagAsync(newTag);
+            var newGroupTag = new GroupTagDefinition
+            {
+                Key = key,
+                DisplayName = displayName,
+                Category = chosenCategory,
+                Description = description,
+                ColorHex = colorHex,
+                SortOrder = 999,
+                IsSystemDefined = false,
+                IsUserEditable = true,
+                IsArchived = false,
+                AllowedScopes = "UserFleetGroup"
+            };
+            await _groupTagDefinitionRepository.SaveTagAsync(newGroupTag);
+        }
+        else
+        {
+            var newTag = new TagDefinition
+            {
+                Key = key,
+                DisplayName = displayName,
+                Category = chosenCategory,
+                Description = description,
+                ColorHex = colorHex,
+                SortOrder = 999,
+                IsSystemDefined = false,
+                IsUserEditable = true,
+                IsArchived = false,
+                AllowedScopes = "OwnedShip,UserFleetGroup"
+            };
+            await _tagRepository.SaveTagAsync(newTag);
+        }
         _graphBuildService.InvalidateCache();
 
         // --- Step 7: Add to picker, pre-selected ---
