@@ -24,14 +24,23 @@ namespace FleetPlanner.ViewModels;
 /// only display name, description, and colour are editable (for non-system tags).</para>
 /// </summary>
 [QueryProperty(nameof(TagEditorTagKey), QueryParameters.TagEditorTagKey)]
+[QueryProperty(nameof(TagEditorIsGroupContext), QueryParameters.TagEditorIsGroupContext)]
 public partial class TagEditorViewModel : ObservableObject
 {
     private readonly ITagRepository _tagRepository;
+    private readonly IGroupTagRepository _groupTagRepository;
     private readonly IGraphBuildService _graphBuildService;
 
     /// <summary>Tag key passed via navigation — null/empty = create mode.</summary>
     [ObservableProperty]
     private string? _tagEditorTagKey;
+
+    /// <summary>Whether editing/creating a group tag (from GroupTagDefinition table) rather than a ship tag.</summary>
+    [ObservableProperty]
+    private string _tagEditorIsGroupContext = "false";
+
+    /// <summary>Parsed boolean: true when editing/creating group tags.</summary>
+    private bool IsGroupContext => string.Equals(TagEditorIsGroupContext, "true", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Human-readable display name.</summary>
     [ObservableProperty]
@@ -98,9 +107,10 @@ public partial class TagEditorViewModel : ObservableObject
     /// <summary>
     /// Constructor — receives dependencies from the DI container.
     /// </summary>
-    public TagEditorViewModel(ITagRepository tagRepository, IGraphBuildService graphBuildService)
+    public TagEditorViewModel(ITagRepository tagRepository, IGroupTagRepository groupTagRepository, IGraphBuildService graphBuildService)
     {
         _tagRepository = tagRepository;
+        _groupTagRepository = groupTagRepository;
         _graphBuildService = graphBuildService;
     }
 
@@ -126,26 +136,55 @@ public partial class TagEditorViewModel : ObservableObject
         {
             if (!string.IsNullOrEmpty(TagEditorTagKey))
             {
-                // Edit mode
-                var tag = await _tagRepository.GetTagAsync(TagEditorTagKey);
-                if (tag is null)
+                // Edit mode — load from the appropriate table
+                string? displayName = null, category = null, description = null, colorHex = null, key = null;
+                bool isSystem = false;
+
+                if (IsGroupContext)
+                {
+                    var groupTag = await _groupTagRepository.GetTagByKeyAsync(TagEditorTagKey);
+                    if (groupTag is not null)
+                    {
+                        displayName = groupTag.DisplayName;
+                        category = groupTag.Category;
+                        description = groupTag.Description;
+                        colorHex = groupTag.ColorHex;
+                        key = groupTag.Key;
+                        isSystem = groupTag.IsSystemDefined;
+                    }
+                }
+                else
+                {
+                    var tag = await _tagRepository.GetTagAsync(TagEditorTagKey);
+                    if (tag is not null)
+                    {
+                        displayName = tag.DisplayName;
+                        category = tag.Category;
+                        description = tag.Description;
+                        colorHex = tag.ColorHex;
+                        key = tag.Key;
+                        isSystem = tag.IsSystemDefined;
+                    }
+                }
+
+                if (displayName is null)
                 {
                     ErrorMessage = $"Tag \"{TagEditorTagKey}\" not found.";
                     return;
                 }
 
                 IsEditMode = true;
-                IsSystemTag = tag.IsSystemDefined;
-                IsEditable = !tag.IsSystemDefined;
-                PageTitle = tag.IsSystemDefined ? $"View: {tag.DisplayName}" : $"Edit: {tag.DisplayName}";
+                IsSystemTag = isSystem;
+                IsEditable = !isSystem;
+                PageTitle = isSystem ? $"View: {displayName}" : $"Edit: {displayName}";
 
-                DisplayName = tag.DisplayName;
-                Category = tag.Category;
-                Description = tag.Description;
-                ColorHex = tag.ColorHex;
-                KeyPreview = tag.Key;
+                DisplayName = displayName;
+                Category = category!;
+                Description = description ?? string.Empty;
+                ColorHex = colorHex ?? "#7A8499";
+                KeyPreview = key!;
 
-                var idx = Categories.IndexOf(tag.Category);
+                var idx = Categories.IndexOf(category!);
                 SelectedCategoryIndex = idx >= 0 ? idx : -1;
             }
             else
@@ -154,7 +193,7 @@ public partial class TagEditorViewModel : ObservableObject
                 IsEditMode = false;
                 IsSystemTag = false;
                 IsEditable = true;
-                PageTitle = "Create Tag";
+                PageTitle = IsGroupContext ? "Create Group Tag" : "Create Tag";
                 SelectedCategoryIndex = Categories.IndexOf("custom");
             }
         }
@@ -189,49 +228,89 @@ public partial class TagEditorViewModel : ObservableObject
         {
             if (IsEditMode)
             {
-                // Edit mode: update only mutable fields
-                var existing = await _tagRepository.GetTagAsync(TagEditorTagKey!);
-                if (existing is null)
+                // Edit mode: update only mutable fields in the appropriate table
+                if (IsGroupContext)
                 {
-                    ErrorMessage = "Tag no longer exists.";
-                    return;
+                    var existing = await _groupTagRepository.GetTagByKeyAsync(TagEditorTagKey!);
+                    if (existing is null)
+                    {
+                        ErrorMessage = "Tag no longer exists.";
+                        return;
+                    }
+                    existing.DisplayName = DisplayName.Trim();
+                    existing.Description = Description.Trim();
+                    existing.ColorHex = string.IsNullOrWhiteSpace(ColorHex) ? "#7A8499" : ColorHex.Trim();
+                    await _groupTagRepository.SaveTagAsync(existing);
                 }
-
-                existing.DisplayName = DisplayName.Trim();
-                existing.Description = Description.Trim();
-                existing.ColorHex = string.IsNullOrWhiteSpace(ColorHex) ? "#7A8499" : ColorHex.Trim();
-
-                await _tagRepository.SaveTagAsync(existing);
+                else
+                {
+                    var existing = await _tagRepository.GetTagAsync(TagEditorTagKey!);
+                    if (existing is null)
+                    {
+                        ErrorMessage = "Tag no longer exists.";
+                        return;
+                    }
+                    existing.DisplayName = DisplayName.Trim();
+                    existing.Description = Description.Trim();
+                    existing.ColorHex = string.IsNullOrWhiteSpace(ColorHex) ? "#7A8499" : ColorHex.Trim();
+                    await _tagRepository.SaveTagAsync(existing);
+                }
             }
             else
             {
-                // Create mode: build new TagDefinition
                 var slug = StringHelpers.Slugify(DisplayName);
                 var key = $"{Category}:{slug}";
 
-                // Check uniqueness
-                var existingTag = await _tagRepository.GetTagAsync(key);
-                if (existingTag is not null)
+                if (IsGroupContext)
                 {
-                    ErrorMessage = $"A tag with key \"{key}\" already exists.";
-                    return;
+                    // Create group tag
+                    var existingTag = await _groupTagRepository.GetTagByKeyAsync(key);
+                    if (existingTag is not null)
+                    {
+                        ErrorMessage = $"A tag with key \"{key}\" already exists.";
+                        return;
+                    }
+
+                    var newTag = new GroupTagDefinition
+                    {
+                        Key = key,
+                        DisplayName = DisplayName.Trim(),
+                        Category = Category,
+                        Description = Description.Trim(),
+                        ColorHex = string.IsNullOrWhiteSpace(ColorHex) ? CategoryColor(Category) : ColorHex.Trim(),
+                        SortOrder = 999,
+                        IsSystemDefined = false,
+                        IsUserEditable = true,
+                        IsArchived = false,
+                        AllowedScopes = "UserFleetGroup"
+                    };
+                    await _groupTagRepository.SaveTagAsync(newTag);
                 }
-
-                var newTag = new TagDefinition
+                else
                 {
-                    Key = key,
-                    DisplayName = DisplayName.Trim(),
-                    Category = Category,
-                    Description = Description.Trim(),
-                    ColorHex = string.IsNullOrWhiteSpace(ColorHex) ? CategoryColor(Category) : ColorHex.Trim(),
-                    SortOrder = 999,
-                    IsSystemDefined = false,
-                    IsUserEditable = true,
-                    IsArchived = false,
-                    AllowedScopes = "OwnedShip,UserFleetGroup"
-                };
+                    // Create ship tag
+                    var existingTag = await _tagRepository.GetTagAsync(key);
+                    if (existingTag is not null)
+                    {
+                        ErrorMessage = $"A tag with key \"{key}\" already exists.";
+                        return;
+                    }
 
-                await _tagRepository.SaveTagAsync(newTag);
+                    var newTag = new TagDefinition
+                    {
+                        Key = key,
+                        DisplayName = DisplayName.Trim(),
+                        Category = Category,
+                        Description = Description.Trim(),
+                        ColorHex = string.IsNullOrWhiteSpace(ColorHex) ? CategoryColor(Category) : ColorHex.Trim(),
+                        SortOrder = 999,
+                        IsSystemDefined = false,
+                        IsUserEditable = true,
+                        IsArchived = false,
+                        AllowedScopes = "OwnedShip,UserFleetGroup"
+                    };
+                    await _tagRepository.SaveTagAsync(newTag);
+                }
             }
 
             _graphBuildService.InvalidateCache();
@@ -257,7 +336,10 @@ public partial class TagEditorViewModel : ObservableObject
 
         if (!confirmed) return;
 
-        await _tagRepository.ArchiveTagAsync(TagEditorTagKey);
+        if (IsGroupContext)
+            await _groupTagRepository.ArchiveTagAsync(TagEditorTagKey);
+        else
+            await _tagRepository.ArchiveTagAsync(TagEditorTagKey);
         _graphBuildService.InvalidateCache();
         await Shell.Current.GoToAsync("..");
     }

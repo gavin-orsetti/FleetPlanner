@@ -25,6 +25,7 @@ namespace FleetPlanner.ViewModels;
 public partial class TagManagerViewModel : ObservableObject
 {
     private readonly ITagRepository _tagRepository;
+    private readonly IGroupTagRepository _groupTagRepository;
     private readonly IGraphBuildService _graphBuildService;
 
     private List<TagManagerItem> _allItems = [];
@@ -41,6 +42,10 @@ public partial class TagManagerViewModel : ObservableObject
     [ObservableProperty]
     private bool _showArchived;
 
+    /// <summary>When true, shows group tags from GroupTagDefinition table; otherwise ship tags from TagDefinition.</summary>
+    [ObservableProperty]
+    private bool _showGroupTags;
+
     /// <summary>True while loading data.</summary>
     [ObservableProperty]
     private bool _isLoading;
@@ -48,9 +53,10 @@ public partial class TagManagerViewModel : ObservableObject
     /// <summary>
     /// Constructor — receives dependencies from the DI container.
     /// </summary>
-    public TagManagerViewModel(ITagRepository tagRepository, IGraphBuildService graphBuildService)
+    public TagManagerViewModel(ITagRepository tagRepository, IGroupTagRepository groupTagRepository, IGraphBuildService graphBuildService)
     {
         _tagRepository = tagRepository;
+        _groupTagRepository = groupTagRepository;
         _graphBuildService = graphBuildService;
     }
 
@@ -60,25 +66,51 @@ public partial class TagManagerViewModel : ObservableObject
     /// <summary>Reloads tags when the archived toggle changes.</summary>
     partial void OnShowArchivedChanged(bool value) => LoadTagsCommand.Execute(null);
 
-    /// <summary>Loads all tag definitions from the repository.</summary>
+    /// <summary>Reloads tags when the group toggle changes.</summary>
+    partial void OnShowGroupTagsChanged(bool value) => LoadTagsCommand.Execute(null);
+
+    /// <summary>Toggles between ship tags and group tags and reloads.</summary>
+    [RelayCommand]
+    private void ToggleTagType()
+    {
+        ShowGroupTags = !ShowGroupTags;
+    }
+
+    /// <summary>Loads all tag definitions from the appropriate repository.</summary>
     [RelayCommand]
     private async Task LoadTagsAsync()
     {
         IsLoading = true;
         try
         {
-            var tags = await _tagRepository.GetAllTagsAsync(includeArchived: ShowArchived);
-
-            _allItems = tags.Select(td => new TagManagerItem
+            if (ShowGroupTags)
             {
-                TagKey = td.Key,
-                DisplayName = td.DisplayName,
-                Category = td.Category,
-                Description = td.Description,
-                ColorHex = td.ColorHex,
-                IsSystemDefined = td.IsSystemDefined,
-                IsArchived = td.IsArchived
-            }).ToList();
+                var groupTags = await _groupTagRepository.GetAllTagsAsync(includeArchived: ShowArchived);
+                _allItems = groupTags.Select(td => new TagManagerItem
+                {
+                    TagKey = td.Key,
+                    DisplayName = td.DisplayName,
+                    Category = td.Category,
+                    Description = td.Description,
+                    ColorHex = td.ColorHex,
+                    IsSystemDefined = td.IsSystemDefined,
+                    IsArchived = td.IsArchived
+                }).ToList();
+            }
+            else
+            {
+                var tags = await _tagRepository.GetAllTagsAsync(includeArchived: ShowArchived);
+                _allItems = tags.Select(td => new TagManagerItem
+                {
+                    TagKey = td.Key,
+                    DisplayName = td.DisplayName,
+                    Category = td.Category,
+                    Description = td.Description,
+                    ColorHex = td.ColorHex,
+                    IsSystemDefined = td.IsSystemDefined,
+                    IsArchived = td.IsArchived
+                }).ToList();
+            }
 
             ApplyFilter();
         }
@@ -92,7 +124,10 @@ public partial class TagManagerViewModel : ObservableObject
     [RelayCommand]
     private async Task CreateTagAsync()
     {
-        await Shell.Current.GoToAsync(nameof(TagEditorPage));
+        await Shell.Current.GoToAsync(nameof(TagEditorPage), new Dictionary<string, object>
+        {
+            [QueryParameters.TagEditorIsGroupContext] = ShowGroupTags ? "true" : "false"
+        });
     }
 
     /// <summary>Navigates to TagEditorPage in edit mode with the given tag key.</summary>
@@ -102,7 +137,8 @@ public partial class TagManagerViewModel : ObservableObject
         if (item is null) return;
         await Shell.Current.GoToAsync(nameof(TagEditorPage), new Dictionary<string, object>
         {
-            [QueryParameters.TagEditorTagKey] = item.TagKey
+            [QueryParameters.TagEditorTagKey] = item.TagKey,
+            [QueryParameters.TagEditorIsGroupContext] = ShowGroupTags ? "true" : "false"
         });
     }
 
@@ -121,19 +157,37 @@ public partial class TagManagerViewModel : ObservableObject
 
         if (!confirmed) return;
 
-        if (item.IsArchived)
+        if (ShowGroupTags)
         {
-            // Restore: reload the tag, set IsArchived = false, save
-            var tag = await _tagRepository.GetTagAsync(item.TagKey);
-            if (tag is not null)
+            if (item.IsArchived)
             {
-                tag.IsArchived = false;
-                await _tagRepository.SaveTagAsync(tag);
+                var tag = await _groupTagRepository.GetTagByKeyAsync(item.TagKey);
+                if (tag is not null)
+                {
+                    tag.IsArchived = false;
+                    await _groupTagRepository.SaveTagAsync(tag);
+                }
+            }
+            else
+            {
+                await _groupTagRepository.ArchiveTagAsync(item.TagKey);
             }
         }
         else
         {
-            await _tagRepository.ArchiveTagAsync(item.TagKey);
+            if (item.IsArchived)
+            {
+                var tag = await _tagRepository.GetTagAsync(item.TagKey);
+                if (tag is not null)
+                {
+                    tag.IsArchived = false;
+                    await _tagRepository.SaveTagAsync(tag);
+                }
+            }
+            else
+            {
+                await _tagRepository.ArchiveTagAsync(item.TagKey);
+            }
         }
 
         _graphBuildService.InvalidateCache();

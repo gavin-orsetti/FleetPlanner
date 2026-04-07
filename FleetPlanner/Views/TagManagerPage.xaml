@@ -23,7 +23,7 @@
                        CancelButtonColor="{StaticResource Primary}" />
         </Grid>
 
-        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="8">
             <Button Grid.Column="0"
                     Text="＋ Create Tag"
                     Command="{Binding CreateTagCommand}"
@@ -33,7 +33,14 @@
                     Padding="16,8"
                     HorizontalOptions="Start" />
 
-            <HorizontalStackLayout Grid.Column="2" Spacing="8" VerticalOptions="Center">
+            <HorizontalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                <Label Text="Group Tags" FontSize="12" TextColor="{StaticResource Gray400}"
+                       VerticalTextAlignment="Center" />
+                <Switch IsToggled="{Binding ShowGroupTags}"
+                        OnColor="{StaticResource Primary}" />
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout Grid.Column="3" Spacing="8" VerticalOptions="Center">
                 <Label Text="Show Archived" FontSize="12" TextColor="{StaticResource Gray400}"
                        VerticalTextAlignment="Center" />
                 <Switch IsToggled="{Binding ShowArchived}"
