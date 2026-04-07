@@ -51,19 +51,29 @@ public class RecommendationService : IRecommendationService
     ];
 
     /// <summary>
-    /// Maps each doctrine tag key to the role/capability tag keys that doctrine implies.
+    /// Maps doctrine tag keys to the role/capability tag keys that doctrine implies.
     /// Used by <see cref="AnalyseCapabilityGaps"/>, <see cref="AnalyseGroupCoherence"/>,
     /// and <see cref="AnalyseRemoveFromGroup"/> to determine what a group "needs".
-    /// Doctrines not in this dictionary (e.g. "doctrine:solo", "doctrine:multipurpose") have
-    /// no specific capability requirements and are silently skipped by those patterns.
+    /// Doctrine tags not in this dictionary have no specific capability requirements and
+    /// are silently skipped by those patterns.
     /// </summary>
     private static readonly Dictionary<string, string[]> DoctrineCapabilities = new()
     {
-        ["doctrine:industrial"] = ["role:mining", "role:salvage", "role:hauling", "role:refinery", "capability:cargo"],
-        ["doctrine:combat"] = ["role:escort", "role:frontline", "role:interdiction", "role:bomber"],
-        ["doctrine:exploration"] = ["role:exploration", "role:scanning"],
-        ["doctrine:trade"] = ["role:hauling", "capability:cargo"],
-        ["doctrine:support"] = ["role:medical", "role:repair", "role:refuel", "capability:medical", "capability:repair", "capability:refuel"]
+        // Group-purpose tags that imply specific role requirements
+        ["doctrine:purpose:strike-element"] = ["role:fighter", "role:bomber", "role:gunship", "role:interceptor"],
+        ["doctrine:purpose:shield-element"] = ["role:escort", "role:electronic-warfare"],
+        ["doctrine:purpose:lift-element"] = ["role:cargo", "role:dropship", "role:passenger"],
+        ["doctrine:purpose:sustain-element"] = ["role:medical", "role:repair", "role:refuel", "role:logistics"],
+        ["doctrine:purpose:recon-element"] = ["role:exploration", "role:stealth", "role:science"],
+        ["doctrine:purpose:control-element"] = ["role:command", "role:electronic-warfare"],
+        // Ship-purpose tags that imply specific role requirements
+        ["doctrine:purpose:earner"] = ["role:mining", "role:salvage", "role:cargo"],
+        ["doctrine:purpose:protector"] = ["role:escort", "role:fighter"],
+        ["doctrine:purpose:enabler"] = ["role:medical", "role:repair", "role:refuel", "role:logistics"],
+        ["doctrine:purpose:suppressor"] = ["role:electronic-warfare", "role:interceptor"],
+        ["doctrine:purpose:expander"] = ["role:exploration", "role:science"],
+        ["doctrine:purpose:deliverer"] = ["role:cargo", "role:passenger", "role:dropship"],
+        ["doctrine:purpose:controller"] = ["role:command", "role:electronic-warfare"]
     };
 
     /// <inheritdoc/>
@@ -97,9 +107,9 @@ public class RecommendationService : IRecommendationService
     /// Priority: always <see cref="RecommendationPriority.High"/>.</para>
     /// <para><b>Evidence:</b> One entry per missing tag key (e.g. "Missing: Mining").</para>
     /// <para><b>Suggested actions:</b> "Add a ship with the [missing role] tag to this group".</para>
-    /// <para><b>Edge cases:</b> Doctrines not in <see cref="DoctrineCapabilities"/> (e.g.
-    /// "doctrine:solo", "doctrine:multipurpose") are silently skipped — they have no specific
-    /// capability requirements. Groups with no member ships generate gaps for all capabilities.</para>
+    /// <para><b>Edge cases:</b> Doctrine tags not in <see cref="DoctrineCapabilities"/> (e.g.
+    /// "doctrine:weight:core", "doctrine:frequency:regular") are silently skipped — they have no
+    /// specific capability requirements. Groups with no member ships generate gaps for all capabilities.</para>
     /// </summary>
     private static List<Recommendation> AnalyseCapabilityGaps(FleetGraph graph)
     {
@@ -357,7 +367,7 @@ public class RecommendationService : IRecommendationService
     /// <para><b>Evidence:</b> "{aligned}/{total} ships aligned".</para>
     /// <para><b>Suggested actions:</b> "Add ships that match the group's doctrine",
     /// "Reassign misaligned ships to a different group".</para>
-    /// <para><b>Edge case:</b> Doctrines not in <see cref="DoctrineCapabilities"/> are skipped.
+    /// <para><b>Edge case:</b> Doctrine tags not in <see cref="DoctrineCapabilities"/> are skipped.
     /// Groups with 0 members or 0 doctrine tags are skipped entirely.</para>
     /// </summary>
     private static List<Recommendation> AnalyseGroupCoherence(FleetGraph graph)
@@ -477,7 +487,7 @@ public class RecommendationService : IRecommendationService
         foreach (var group in graph.Groups)
         {
             var groupDoctrine = group.DoctrineAndFocusTags
-                .Where(t => t.Definition.Category == "doctrine")
+                .Where(t => t.Definition.Category.StartsWith("doctrine:", StringComparison.Ordinal))
                 .Select(t => t.Definition.Key)
                 .ToHashSet();
 
@@ -487,7 +497,7 @@ public class RecommendationService : IRecommendationService
             foreach (var ship in group.MemberShips)
             {
                 var shipDoctrine = GetAllTags(ship, group.Group.Id)
-                    .Where(t => t.Definition.Category == "doctrine" && t.Weight == 1)
+                    .Where(t => t.Definition.Category.StartsWith("doctrine:", StringComparison.Ordinal) && t.Weight == 1)
                     .ToList();
 
                 foreach (var dt in shipDoctrine)
@@ -527,9 +537,9 @@ public class RecommendationService : IRecommendationService
     /// <para><b>Evidence:</b> "Ship tags: {list}", "Group needs: {list}".</para>
     /// <para><b>Suggested actions:</b> "Remove [ship] from this group",
     /// "Add relevant role tags to the ship".</para>
-    /// <para><b>Edge case:</b> Groups with no doctrine tags or doctrines not in
+    /// <para><b>Edge case:</b> Groups with no doctrine tags or doctrine tags not in
     /// <see cref="DoctrineCapabilities"/> are skipped. If the derived desired set is empty
-    /// (all doctrines are unmapped), the group is skipped.</para>
+    /// (all doctrine tags are unmapped), the group is skipped.</para>
     /// </summary>
     private static List<Recommendation> AnalyseRemoveFromGroup(FleetGraph graph)
     {

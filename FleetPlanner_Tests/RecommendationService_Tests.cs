@@ -61,12 +61,12 @@ public class RecommendationService_Tests
     // ── Pattern 1: CapabilityGap ──────────────────────────────────────
 
     [Fact]
-    public void CapabilityGap_IndustrialGroup_NoSalvageShips_Detected()
+    public void CapabilityGap_EarnerGroup_NoSalvageShips_Detected()
     {
         var group = MakeGroupNode(1, "Industrial Ops");
-        group.DoctrineAndFocusTags.Add(MakeTagNode("doctrine:industrial", "doctrine"));
+        group.DoctrineAndFocusTags.Add(MakeTagNode("doctrine:purpose:earner", "doctrine:purpose"));
 
-        // Ship with mining but no salvage/hauling/refinery
+        // Ship with mining but no salvage/cargo
         var miner = MakeShipNode(1, "MISC Prospector");
         miner.GlobalTags.Add(MakeTagNode("role:mining", "role"));
         miner.ContextualTags[1] = new List<TagNode> { MakeTagNode("role:mining", "role") };
@@ -163,13 +163,13 @@ public class RecommendationService_Tests
     // ── Pattern 8: DoctrineMismatch ───────────────────────────────────
 
     [Fact]
-    public void DoctrineMismatch_ShipCombat_GroupIndustrial_Detected()
+    public void DoctrineMismatch_ShipProtector_GroupEarner_Detected()
     {
         var group = MakeGroupNode(1, "Mining Group");
-        group.DoctrineAndFocusTags.Add(MakeTagNode("doctrine:industrial", "doctrine"));
+        group.DoctrineAndFocusTags.Add(MakeTagNode("doctrine:purpose:earner", "doctrine:purpose"));
 
         var ship = MakeShipNode(1, "F7C Hornet");
-        ship.GlobalTags.Add(MakeTagNode("doctrine:combat", "doctrine", 1));
+        ship.GlobalTags.Add(MakeTagNode("doctrine:purpose:protector", "doctrine:purpose", 1));
         ship.ContextualTags[1] = new List<TagNode>();
         group.MemberShips.Add(ship);
 

@@ -143,7 +143,7 @@ public class GraphBuildService : IGraphBuildService
         {
             var groupNode = new GroupNode { Group = group };
 
-            // Load group doctrine/focus tags
+            // Load group doctrine sub-dimension and focus tags
             var groupTags = await _groupTagRepo.GetTagsForGroupAsync(group.Id);
             foreach (var gt in groupTags)
             {
