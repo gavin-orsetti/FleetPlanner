@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 using FleetPlanner.Services;
+using FleetPlanner.Views;
 
 namespace FleetPlanner.ViewModels;
 
@@ -108,6 +109,13 @@ public partial class SettingsViewModel : ObservableObject
         {
             IsRefreshing = false;
         }
+    }
+
+    /// <summary>Navigates to the Tag Manager page.</summary>
+    [RelayCommand]
+    private async Task ManageTagsAsync()
+    {
+        await Shell.Current.GoToAsync(nameof(TagManagerPage));
     }
 
     /// <summary>

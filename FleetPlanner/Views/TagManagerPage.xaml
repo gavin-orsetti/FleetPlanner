@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             x:Class="FleetPlanner.Views.TagManagerPage"
+             x:DataType="vm:TagManagerViewModel"
+             Title="Tag Manager">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="16" RowSpacing="8">
+
+        <!-- Loading -->
+        <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center" />
+
+        <!-- Toolbar: Search + Create + Archive Toggle -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <SearchBar Grid.Column="0"
+                       Text="{Binding SearchText}"
+                       Placeholder="Search tags..."
+                       BackgroundColor="{StaticResource SurfaceVariant}"
+                       TextColor="{StaticResource OnSurface}"
+                       PlaceholderColor="{StaticResource Gray400}"
+                       CancelButtonColor="{StaticResource Primary}" />
+        </Grid>
+
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+            <Button Grid.Column="0"
+                    Text="＋ Create Tag"
+                    Command="{Binding CreateTagCommand}"
+                    BackgroundColor="{StaticResource PrimaryContainer}"
+                    TextColor="{StaticResource Primary}"
+                    FontSize="13"
+                    Padding="16,8"
+                    HorizontalOptions="Start" />
+
+            <HorizontalStackLayout Grid.Column="2" Spacing="8" VerticalOptions="Center">
+                <Label Text="Show Archived" FontSize="12" TextColor="{StaticResource Gray400}"
+                       VerticalTextAlignment="Center" />
+                <Switch IsToggled="{Binding ShowArchived}"
+                        OnColor="{StaticResource Primary}" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <!-- Tag Groups -->
+        <CollectionView Grid.Row="3"
+                        ItemsSource="{Binding GroupedTags}"
+                        IsGrouped="False">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:TagManagerCategoryGroup">
+                    <VerticalStackLayout Spacing="6" Padding="0,8">
+
+                        <!-- Category Header -->
+                        <Label Text="{Binding DisplayCategory}"
+                               FontSize="16" FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}"
+                               Margin="0,4,0,2" />
+
+                        <!-- Tag Items -->
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Tags}" Spacing="4">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:TagManagerItem">
+                                    <Border StrokeShape="RoundRectangle 8"
+                                            Padding="12,8"
+                                            StrokeThickness="1"
+                                            Stroke="{StaticResource SurfaceVariant}"
+                                            BackgroundColor="{StaticResource Surface}">
+                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10" RowDefinitions="Auto,Auto" RowSpacing="2">
+
+                                            <!-- Colored Chip -->
+                                            <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="0"
+                                                    StrokeShape="RoundRectangle 12"
+                                                    Padding="8,4"
+                                                    BackgroundColor="{Binding ChipColor}"
+                                                    StrokeThickness="0"
+                                                    VerticalOptions="Center">
+                                                <Label Text="{Binding DisplayName}"
+                                                       FontSize="12"
+                                                       TextColor="{StaticResource OnPrimary}" />
+                                            </Border>
+
+                                            <!-- Info: description + badges -->
+                                            <HorizontalStackLayout Grid.Row="0" Grid.Column="1" Spacing="6">
+                                                <Label Text="{Binding ShortDescription}"
+                                                       FontSize="12"
+                                                       TextColor="{StaticResource Gray400}"
+                                                       LineBreakMode="TailTruncation"
+                                                       MaxLines="1"
+                                                       VerticalTextAlignment="Center" />
+                                            </HorizontalStackLayout>
+
+                                            <HorizontalStackLayout Grid.Row="1" Grid.Column="1" Spacing="6">
+                                                <!-- System/Custom badge -->
+                                                <Border StrokeShape="RoundRectangle 8"
+                                                        Padding="6,2"
+                                                        StrokeThickness="0"
+                                                        BackgroundColor="{StaticResource SurfaceVariant}">
+                                                    <HorizontalStackLayout Spacing="4">
+                                                        <Label Text="🔒"
+                                                               FontSize="10"
+                                                               IsVisible="{Binding IsSystemDefined}" />
+                                                        <Label Text="{Binding BadgeText}"
+                                                               FontSize="10"
+                                                               TextColor="{StaticResource Gray400}" />
+                                                    </HorizontalStackLayout>
+                                                </Border>
+
+                                                <!-- Archived badge -->
+                                                <Border StrokeShape="RoundRectangle 8"
+                                                        Padding="6,2"
+                                                        StrokeThickness="0"
+                                                        BackgroundColor="#4Aef4444"
+                                                        IsVisible="{Binding IsArchived}">
+                                                    <Label Text="Archived"
+                                                           FontSize="10"
+                                                           TextColor="#ef4444" />
+                                                </Border>
+                                            </HorizontalStackLayout>
+
+                                            <!-- Action Buttons -->
+                                            <HorizontalStackLayout Grid.Row="0" Grid.RowSpan="2" Grid.Column="2"
+                                                                   Spacing="4" VerticalOptions="Center">
+                                                <!-- Edit button (user tags only) -->
+                                                <Button Text="Edit"
+                                                        FontSize="11"
+                                                        Padding="8,4"
+                                                        IsVisible="{Binding IsUserDefined}"
+                                                        BackgroundColor="{StaticResource PrimaryContainer}"
+                                                        TextColor="{StaticResource Primary}"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TagManagerViewModel}}, Path=EditTagCommand}"
+                                                        CommandParameter="{Binding}" />
+
+                                                <!-- Archive/Restore button -->
+                                                <Button FontSize="11"
+                                                        Padding="8,4"
+                                                        BackgroundColor="{StaticResource SurfaceVariant}"
+                                                        TextColor="{StaticResource Gray400}"
+                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TagManagerViewModel}}, Path=ArchiveTagCommand}"
+                                                        CommandParameter="{Binding}">
+                                                    <Button.Triggers>
+                                                        <DataTrigger TargetType="Button"
+                                                                     Binding="{Binding IsArchived}"
+                                                                     Value="True">
+                                                            <Setter Property="Text" Value="Restore" />
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Button"
+                                                                     Binding="{Binding IsArchived}"
+                                                                     Value="False">
+                                                            <Setter Property="Text" Value="Archive" />
+                                                        </DataTrigger>
+                                                    </Button.Triggers>
+                                                </Button>
+                                            </HorizontalStackLayout>
+
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <CollectionView.EmptyView>
+                <Label Text="No tags found"
+                       FontSize="14" TextColor="{StaticResource Gray400}"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+    </Grid>
+</ContentPage>

@@ -40,6 +40,20 @@
                 </VerticalStackLayout>
             </Frame>
 
+            <!-- Tag Management -->
+            <Frame Padding="16" CornerRadius="8">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Tags" FontSize="18" FontAttributes="Bold" />
+                    <Label Text="Browse, create, and manage tag definitions used to describe ships and groups."
+                           FontSize="12" TextColor="{StaticResource Gray400}" />
+                    <Button Text="Manage Tags"
+                            Command="{Binding ManageTagsCommand}"
+                            BackgroundColor="{StaticResource PrimaryContainer}"
+                            TextColor="{StaticResource Primary}"
+                            CornerRadius="8" />
+                </VerticalStackLayout>
+            </Frame>
+
             <!-- Cache Management -->
             <Frame Padding="16" CornerRadius="8">
                 <VerticalStackLayout Spacing="8">
