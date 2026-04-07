@@ -10,9 +10,15 @@ namespace FleetPlanner;
 /// </summary>
 public partial class AppShell : Shell
 {
-    /// <summary>Constructor — loads the XAML and registers detail-page routes for Shell navigation.</summary>
-    public AppShell()
+    private readonly DatabaseBootstrapService _bootstrap;
+
+    /// <summary>
+    /// Constructor — receives <see cref="DatabaseBootstrapService"/> via DI, loads the XAML,
+    /// and registers detail-page routes for Shell navigation.
+    /// </summary>
+    public AppShell(DatabaseBootstrapService bootstrap)
     {
+        _bootstrap = bootstrap;
         InitializeComponent();
 
         // Detail/sub-pages navigated to programmatically
@@ -34,6 +40,14 @@ public partial class AppShell : Shell
     /// ready, so async work executes safely.
     /// </para>
     /// <para>
+    /// <b>Why constructor injection?</b> <c>AppShell</c> is registered as a singleton in
+    /// <see cref="MauiProgram"/>, so the DI container resolves it and can inject
+    /// <see cref="DatabaseBootstrapService"/> directly. The previous approach resolved the
+    /// service via <c>Handler?.MauiContext?.Services</c>, which silently returned
+    /// <see langword="null"/> on Android because the platform handler is not yet attached
+    /// when <c>OnAppearing</c> fires — causing bootstrap to be skipped entirely.
+    /// </para>
+    /// <para>
     /// <c>InitialiseAsync()</c> is idempotent (it checks <c>schema_version</c> before seeding),
     /// so repeated <c>OnAppearing</c> calls are harmless.
     /// </para>
@@ -41,9 +55,6 @@ public partial class AppShell : Shell
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-
-        var bootstrap = Handler?.MauiContext?.Services.GetRequiredService<DatabaseBootstrapService>();
-        if (bootstrap is not null)
-            await bootstrap.InitialiseAsync();
+        await _bootstrap.InitialiseAsync();
     }
 }
