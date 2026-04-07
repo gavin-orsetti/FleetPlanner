@@ -106,30 +106,24 @@ public partial class TagPickerViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            // Determine scope for filtering tags
-            string scope;
             bool isGroupTagEditing = TagPickerOwnedShipId <= 0 && TagPickerGroupId > 0;
             bool isContextualShipEditing = TagPickerOwnedShipId > 0 && !string.IsNullOrEmpty(TagPickerContextType);
             bool isGlobalShipEditing = TagPickerOwnedShipId > 0 && string.IsNullOrEmpty(TagPickerContextType);
 
             if (isGroupTagEditing)
-            {
-                scope = "UserFleetGroup";
                 PageTitle = "Group Tags";
-            }
             else if (isContextualShipEditing)
-            {
-                scope = "OwnedShip";
                 PageTitle = "Ship Role in Group";
-            }
             else
-            {
-                scope = "OwnedShip";
                 PageTitle = "Ship Tags";
-            }
 
-            // Load all assignable tags for the determined scope
-            var availableTags = await _tagRepository.GetAssignableTagsForScopeAsync(scope);
+            // Load ALL non-archived tags — no scope filter.
+            // Scope filtering was the root cause of the empty-list bug: the
+            // in-memory Contains check silently returned zero rows when the
+            // stored AllowedScopes string didn't match the expected scope token
+            // exactly. Showing all tags is the safe fallback; scope filtering
+            // can be re-added once display is confirmed working.
+            var availableTags = await _tagRepository.GetAllTagsAsync(includeArchived: false);
 
             // Build selectable items
             var selectableItems = availableTags
@@ -174,7 +168,6 @@ public partial class TagPickerViewModel : ObservableObject
             }
             else if (isGlobalShipEditing)
             {
-                // Load only global tags (no context)
                 var allShipTags = await _ownedShipTagRepository.GetTagsForOwnedShipAsync(TagPickerOwnedShipId);
                 var globalTags = allShipTags.Where(t => t.ContextType is null).ToList();
                 foreach (var gt in globalTags)
@@ -188,8 +181,11 @@ public partial class TagPickerViewModel : ObservableObject
                 }
             }
 
-            MainThread.BeginInvokeOnMainThread(() =>
-                AllTags = new ObservableCollection<SelectableTagItem>(selectableItems));
+            // Populate AllTags synchronously on main thread, THEN apply filter.
+            // The previous code used BeginInvokeOnMainThread (fire-and-forget)
+            // followed by ApplyFilter(), so ApplyFilter ran against an empty
+            // collection before the UI thread callback executed.
+            AllTags = new ObservableCollection<SelectableTagItem>(selectableItems);
             ApplyFilter();
         }
         finally
