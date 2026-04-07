@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
              x:Class="FleetPlanner.Views.TagPickerPage"
+             x:Name="TagPickerPageRoot"
              x:DataType="vm:TagPickerViewModel"
              Title="{Binding PageTitle}">
 
@@ -45,104 +46,91 @@
             </Label>
         </Border>
 
-        <!-- Tag Groups -->
+        <!-- Tag Groups (native CollectionView grouping) -->
         <CollectionView Grid.Row="3"
                         ItemsSource="{Binding GroupedTags}"
-                        IsGrouped="False">
-            <CollectionView.ItemTemplate>
+                        IsGrouped="True">
+            <CollectionView.GroupHeaderTemplate>
                 <DataTemplate x:DataType="vm:TagCategoryGroup">
-                    <VerticalStackLayout Spacing="6" Padding="0,8">
+                    <Label Text="{Binding DisplayCategory}"
+                           FontSize="16" FontAttributes="Bold"
+                           TextColor="{StaticResource Primary}"
+                           Padding="0,12,0,4" />
+                </DataTemplate>
+            </CollectionView.GroupHeaderTemplate>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:SelectableTagItem">
+                    <Border StrokeShape="RoundRectangle 12"
+                            Padding="10,6"
+                            Margin="0,0,8,8"
+                            StrokeThickness="1.5"
+                            Stroke="{Binding ChipColor}"
+                            BackgroundColor="Transparent">
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border"
+                                         Binding="{Binding IsSelected}"
+                                         Value="True">
+                                <Setter Property="BackgroundColor" Value="{Binding ChipColor}" />
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding Source={x:Reference TagPickerPageRoot}, Path=BindingContext.ToggleTagCommand}"
+                                CommandParameter="{Binding}" />
+                        </Border.GestureRecognizers>
 
-                        <!-- Category Header -->
-                        <Label Text="{Binding DisplayCategory}"
-                               FontSize="16" FontAttributes="Bold"
-                               TextColor="{StaticResource Primary}"
-                               Margin="0,4,0,2" />
+                        <VerticalStackLayout Spacing="2">
+                            <HorizontalStackLayout Spacing="6">
+                                <Label Text="{Binding DisplayName}"
+                                       FontSize="13"
+                                       TextColor="{Binding ChipColor}">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label"
+                                                     Binding="{Binding IsSelected}"
+                                                     Value="True">
+                                            <Setter Property="TextColor" Value="{StaticResource OnPrimary}" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
 
-                        <!-- Tag Chips -->
-                        <FlexLayout BindableLayout.ItemsSource="{Binding Tags}"
-                                    Wrap="Wrap"
-                                    JustifyContent="Start"
-                                    AlignItems="Start"
-                                    Direction="Row">
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="vm:SelectableTagItem">
-                                    <Border StrokeShape="RoundRectangle 12"
-                                            Padding="10,6"
-                                            Margin="0,0,8,8"
-                                            StrokeThickness="1.5"
-                                            Stroke="{Binding ChipColor}"
-                                            BackgroundColor="Transparent">
-                                        <Border.Triggers>
-                                            <DataTrigger TargetType="Border"
-                                                         Binding="{Binding IsSelected}"
-                                                         Value="True">
-                                                <Setter Property="BackgroundColor" Value="{Binding ChipColor}" />
-                                            </DataTrigger>
-                                        </Border.Triggers>
-                                        <Border.GestureRecognizers>
-                                            <TapGestureRecognizer
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TagPickerViewModel}}, Path=ToggleTagCommand}"
-                                                CommandParameter="{Binding}" />
-                                        </Border.GestureRecognizers>
+                                <!-- Weight badge for role tags -->
+                                <Label Text="{Binding WeightLabel}"
+                                       FontSize="10"
+                                       IsVisible="False"
+                                       TextColor="{StaticResource OnPrimary}">
+                                    <Label.Triggers>
+                                        <MultiTrigger TargetType="Label">
+                                            <MultiTrigger.Conditions>
+                                                <BindingCondition Binding="{Binding IsRoleTag}" Value="True" />
+                                                <BindingCondition Binding="{Binding IsSelected}" Value="True" />
+                                            </MultiTrigger.Conditions>
+                                            <Setter Property="IsVisible" Value="True" />
+                                        </MultiTrigger>
+                                    </Label.Triggers>
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={x:Reference TagPickerPageRoot}, Path=BindingContext.SetWeightCommand}"
+                                            CommandParameter="{Binding}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </HorizontalStackLayout>
 
-                                        <VerticalStackLayout Spacing="2">
-                                            <HorizontalStackLayout Spacing="6">
-                                                <Label Text="{Binding DisplayName}"
-                                                       FontSize="13"
-                                                       TextColor="{Binding ChipColor}">
-                                                    <Label.Triggers>
-                                                        <DataTrigger TargetType="Label"
-                                                                     Binding="{Binding IsSelected}"
-                                                                     Value="True">
-                                                            <Setter Property="TextColor" Value="{StaticResource OnPrimary}" />
-                                                        </DataTrigger>
-                                                    </Label.Triggers>
-                                                </Label>
-
-                                                <!-- Weight badge for role tags -->
-                                                <Label Text="{Binding WeightLabel}"
-                                                       FontSize="10"
-                                                       IsVisible="False"
-                                                       TextColor="{StaticResource OnPrimary}">
-                                                    <Label.Triggers>
-                                                        <MultiTrigger TargetType="Label">
-                                                            <MultiTrigger.Conditions>
-                                                                <BindingCondition Binding="{Binding IsRoleTag}" Value="True" />
-                                                                <BindingCondition Binding="{Binding IsSelected}" Value="True" />
-                                                            </MultiTrigger.Conditions>
-                                                            <Setter Property="IsVisible" Value="True" />
-                                                        </MultiTrigger>
-                                                    </Label.Triggers>
-                                                    <Label.GestureRecognizers>
-                                                        <TapGestureRecognizer
-                                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TagPickerViewModel}}, Path=SetWeightCommand}"
-                                                            CommandParameter="{Binding}" />
-                                                    </Label.GestureRecognizers>
-                                                </Label>
-                                            </HorizontalStackLayout>
-
-                                            <Label Text="{Binding Description}"
-                                                   FontSize="10"
-                                                   MaxLines="1"
-                                                   LineBreakMode="TailTruncation"
-                                                   TextColor="{StaticResource Gray400}">
-                                                <Label.Triggers>
-                                                    <DataTrigger TargetType="Label"
-                                                                 Binding="{Binding IsSelected}"
-                                                                 Value="True">
-                                                        <Setter Property="TextColor" Value="{StaticResource OnPrimary}" />
-                                                        <Setter Property="Opacity" Value="0.7" />
-                                                    </DataTrigger>
-                                                </Label.Triggers>
-                                            </Label>
-                                        </VerticalStackLayout>
-                                    </Border>
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
-                        </FlexLayout>
-
-                    </VerticalStackLayout>
+                            <Label Text="{Binding Description}"
+                                   FontSize="10"
+                                   MaxLines="1"
+                                   LineBreakMode="TailTruncation"
+                                   TextColor="{StaticResource Gray400}">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label"
+                                                 Binding="{Binding IsSelected}"
+                                                 Value="True">
+                                        <Setter Property="TextColor" Value="{StaticResource OnPrimary}" />
+                                        <Setter Property="Opacity" Value="0.7" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                        </VerticalStackLayout>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
 

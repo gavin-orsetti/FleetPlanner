@@ -325,7 +325,7 @@ public partial class TagPickerViewModel : ObservableObject
             .GroupBy(t => t.Category)
             .OrderBy(g => g.Key)
             .Select(g => new TagCategoryGroup(g.Key, g.ToList()))
-            .Where(g => g.Tags.Count > 0) // Skip empty groups
+            .Where(g => g.Count > 0) // Skip empty groups
             .ToList();
 
         MainThread.BeginInvokeOnMainThread(() =>
@@ -512,8 +512,10 @@ public partial class SelectableTagItem : ObservableObject
 
 /// <summary>
 /// Groups selectable tag items by category for display in the picker.
+/// Extends <see cref="List{T}"/> so it can serve as a native MAUI
+/// <see cref="CollectionView"/> grouped data source (each group *is* the item list).
 /// </summary>
-public class TagCategoryGroup
+public class TagCategoryGroup : List<SelectableTagItem>
 {
     /// <summary>The category name (e.g. "role", "doctrine").</summary>
     public string CategoryName { get; }
@@ -521,14 +523,10 @@ public class TagCategoryGroup
     /// <summary>Display-friendly capitalised category name.</summary>
     public string DisplayCategory { get; }
 
-    /// <summary>Tags in this category.</summary>
-    public List<SelectableTagItem> Tags { get; }
-
-    /// <summary>Creates a new category group.</summary>
-    public TagCategoryGroup(string categoryName, List<SelectableTagItem> tags)
+    /// <summary>Creates a new category group from an existing list of tags.</summary>
+    public TagCategoryGroup(string categoryName, List<SelectableTagItem> tags) : base(tags)
     {
         CategoryName = categoryName;
         DisplayCategory = char.ToUpperInvariant(categoryName[0]) + categoryName[1..];
-        Tags = tags;
     }
 }
