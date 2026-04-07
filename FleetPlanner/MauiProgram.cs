@@ -73,6 +73,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<IOwnedShipTagRepository, OwnedShipTagRepository>();
         builder.Services.AddSingleton<IUserFleetGroupRepository, UserFleetGroupRepository>();
         builder.Services.AddSingleton<IUserFleetGroupTagRepository, UserFleetGroupTagRepository>();
+        builder.Services.AddSingleton<IGroupTagRepository, GroupTagRepository>();
 
         // ── Service registrations ─────────────────────────────────────────
         builder.Services.AddSingleton<DatabaseBootstrapService>();

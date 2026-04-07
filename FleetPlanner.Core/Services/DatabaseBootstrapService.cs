@@ -12,9 +12,9 @@ namespace FleetPlanner.Services;
 ///
 /// <para><b>Schema versioning strategy:</b> An <see cref="AppMetadata"/> row with key
 /// <c>"schema_version"</c> gates whether seeding runs. On first launch the row does not
-/// exist, so <see cref="InitialiseAsync"/> seeds all system tags and writes version "3".
+/// exist, so <see cref="InitialiseAsync"/> seeds all system tags and writes version "4".
 /// On subsequent launches the row is found and the method checks whether a migration is
-/// needed (current version &lt; 3). Future schema migrations can bump the version and add
+/// needed (current version &lt; 4). Future schema migrations can bump the version and add
 /// migration logic between the version check and the version write.</para>
 ///
 /// <para><b>Idempotency:</b> Safe to call on every startup. <c>CreateTableAsync</c> is a
@@ -74,7 +74,7 @@ public class DatabaseBootstrapService
     /// </summary>
     public async Task InitialiseAsync()
     {
-        const int currentSchemaVersion = 3;
+        const int currentSchemaVersion = 4;
 
         var db = new SQLiteAsyncConnection(_dbPath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache);
 
@@ -86,6 +86,7 @@ public class DatabaseBootstrapService
         await db.CreateTableAsync<UserFleetGroupTag>();
         await db.CreateTableAsync<AppMetadata>();
         await db.CreateTableAsync<ShipCacheMetadata>();
+        await db.CreateTableAsync<GroupTagDefinition>();
 
         // Check schema version for migration
         var versionRecord = await db.FindAsync<AppMetadata>("schema_version");
@@ -97,6 +98,7 @@ public class DatabaseBootstrapService
         if (storedVersion > 0 && storedVersion < currentSchemaVersion)
         {
             await db.ExecuteAsync("DELETE FROM TagDefinitions WHERE IsSystemDefined = 1");
+            await db.ExecuteAsync("DELETE FROM GroupTagDefinition WHERE IsSystemDefined = 1");
             await db.InsertOrReplaceAsync(new AppMetadata
             {
                 Key = "schema_version",
@@ -105,11 +107,18 @@ public class DatabaseBootstrapService
             });
         }
 
-        // Seed if no system tags exist (first launch or post-migration wipe)
+        // Seed ship tags if no system tags exist (first launch or post-migration wipe)
         var existingSystemTags = await db.Table<TagDefinition>().Where(t => t.IsSystemDefined).CountAsync();
         if (existingSystemTags == 0)
         {
             await SeedTagsAsync(db);
+        }
+
+        // Seed group tags if no system group tags exist (first launch or post-migration wipe)
+        var existingGroupSystemTags = await db.Table<GroupTagDefinition>().Where(t => t.IsSystemDefined).CountAsync();
+        if (existingGroupSystemTags == 0)
+        {
+            await SeedGroupTagsAsync(db);
         }
 
         // Record schema version on first launch
@@ -127,6 +136,13 @@ public class DatabaseBootstrapService
     private static async Task SeedTagsAsync(SQLiteAsyncConnection db)
     {
         var tags = BuildSystemTags();
+        foreach (var tag in tags)
+            await db.InsertOrReplaceAsync(tag);
+    }
+
+    private static async Task SeedGroupTagsAsync(SQLiteAsyncConnection db)
+    {
+        var tags = BuildSystemGroupTags();
         foreach (var tag in tags)
             await db.InsertOrReplaceAsync(tag);
     }
@@ -241,6 +257,112 @@ public class DatabaseBootstrapService
         Add("status", statusColor, 6, "on-loan", "On Loan", "Borrowed from org or friend; not permanently owned");
         Add("status", statusColor, 7, "for-review", "For Review", "Under evaluation; undecided whether to keep");
         Add("status", statusColor, 8, "retired", "Retired", "No longer part of the active fleet");
+
+        return tags;
+    }
+
+    /// <summary>
+    /// Builds the complete list of system-defined group tags that form the group tag taxonomy.
+    /// <para>
+    /// Each tag uses a stable <c>"category:slug"</c> key that NEVER changes once shipped.
+    /// Group tags are stored in a separate <see cref="GroupTagDefinition"/> table from
+    /// ship tags. The taxonomy seeds 54 tags across four dimensions:
+    /// <list type="bullet">
+    ///   <item><b>role</b> (18) — what the group is tasked to accomplish as a formation</item>
+    ///   <item><b>ctx</b> (16) — operational conditions: scale, theater, autonomy, legality</item>
+    ///   <item><b>doctrine</b> (12) — structural role in the fleet's operational design</item>
+    ///   <item><b>status</b> (8) — formation readiness and planning lifecycle</item>
+    /// </list></para>
+    /// <para>
+    /// <b>AllowedScopes:</b> All seeded group tags use <c>"UserFleetGroup"</c>.
+    /// </para>
+    /// </summary>
+    /// <returns>A list of 54 <see cref="GroupTagDefinition"/> records spanning 4 dimensions.</returns>
+    internal static List<GroupTagDefinition> BuildSystemGroupTags()
+    {
+        var tags = new List<GroupTagDefinition>();
+
+        void Add(string category, string colorHex, int sortOrder, string slug, string displayName, string description)
+        {
+            tags.Add(new GroupTagDefinition
+            {
+                Key = $"{category}:{slug}",
+                DisplayName = displayName,
+                Category = category,
+                Description = description,
+                ColorHex = colorHex,
+                SortOrder = sortOrder,
+                IsSystemDefined = true,
+                IsUserEditable = false,
+                AllowedScopes = "UserFleetGroup"
+            });
+        }
+
+        // ── role (18 tags) — what the group is tasked to accomplish ───
+        const string roleColor = "#C4706A";
+        Add("role", roleColor, 1, "combat-air", "Combat Air", "Space superiority, dogfighting, fleet interception");
+        Add("role", roleColor, 2, "strike", "Strike", "Offensive attacks against capital ships, stations, or infrastructure");
+        Add("role", roleColor, 3, "escort", "Escort", "Protecting other groups or assets during transit or operation");
+        Add("role", roleColor, 4, "interdiction", "Interdiction", "Catching, stopping, and disabling target vessels");
+        Add("role", roleColor, 5, "boarding", "Boarding", "Capturing ships or stations; FPS assault delivery");
+        Add("role", roleColor, 6, "ground-assault", "Ground Assault", "Planetary surface combat, vehicle deployment, FPS insertion");
+        Add("role", roleColor, 7, "cargo", "Cargo", "Moving goods between locations as a coordinated group");
+        Add("role", roleColor, 8, "mining", "Mining", "Extracting raw resources as a coordinated operation");
+        Add("role", roleColor, 9, "salvage", "Salvage", "Recovering wrecks and materials at scale");
+        Add("role", roleColor, 10, "exploration", "Exploration", "Deep-space survey, jump point discovery, charting");
+        Add("role", roleColor, 11, "patrol", "Patrol", "Area denial, security sweep, picket duty");
+        Add("role", roleColor, 12, "logistics", "Logistics", "Coordinating supply, repair, refueling, and medical support for other groups");
+        Add("role", roleColor, 13, "medical", "Medical", "Dedicated search, rescue, and trauma response");
+        Add("role", roleColor, 14, "electronic-warfare", "Electronic Warfare", "Disrupting, jamming, and suppressing enemy sensors and comms");
+        Add("role", roleColor, 15, "recon", "Recon", "Intelligence gathering, scouting, advance surveillance");
+        Add("role", roleColor, 16, "carrier-wing", "Carrier Wing", "Deploying and recovering parasite/snub craft from a carrier");
+        Add("role", roleColor, 17, "passenger", "Passenger", "Organized transport of people as a group operation");
+        Add("role", roleColor, 18, "multi-mission", "Multi-Mission", "Intentionally versatile group covering several loops without specialization");
+
+        // ── ctx (16 tags) — operational conditions ───────────────────
+        const string ctxColor = "#3A9CB8";
+        Add("ctx", ctxColor, 1, "solo-operated", "Solo Operated", "Entire group is operated by a single player across its ships");
+        Add("ctx", ctxColor, 2, "small-team", "Small Team", "Group requires 2–5 players to function at intended capacity");
+        Add("ctx", ctxColor, 3, "full-crew", "Full Crew", "Group requires 6–15 players across its ships");
+        Add("ctx", ctxColor, 4, "org-scale", "Org Scale", "Group requires 15+ players; only viable with substantial org coordination");
+        Add("ctx", ctxColor, 5, "autonomous", "Autonomous", "Group operates independently without requiring coordination with the rest of the fleet");
+        Add("ctx", ctxColor, 6, "fleet-dependent", "Fleet Dependent", "Group relies on other fleet elements to be effective");
+        Add("ctx", ctxColor, 7, "space-theater", "Space Theater", "Operates exclusively in space");
+        Add("ctx", ctxColor, 8, "atmospheric", "Atmospheric", "Designed to conduct operations in planetary atmospheres");
+        Add("ctx", ctxColor, 9, "planetary-surface", "Planetary Surface", "Operates on planetary surfaces; includes ground vehicles and landing craft");
+        Add("ctx", ctxColor, 10, "deep-space", "Deep Space", "Intended for extended operations far from stations or populated systems");
+        Add("ctx", ctxColor, 11, "local-space", "Local Space", "Operates within a single system or near a station/planet");
+        Add("ctx", ctxColor, 12, "lawful", "Lawful", "Group operates within legal bounds");
+        Add("ctx", ctxColor, 13, "unlawful", "Unlawful", "Group conducts criminal operations (piracy, smuggling, griefing)");
+        Add("ctx", ctxColor, 14, "neutral", "Neutral", "Grey-area operations: mercenary, bounty hunting, free trade");
+        Add("ctx", ctxColor, 15, "rapid-deployment", "Rapid Deployment", "Group is designed for quick scramble and fast operational tempo");
+        Add("ctx", ctxColor, 16, "sustained-ops", "Sustained Ops", "Group is designed for long-duration, extended operations with logistics support");
+
+        // ── doctrine (12 tags) — structural role in the fleet ────────
+        const string doctrineColor = "#8B66B8";
+        Add("doctrine", doctrineColor, 1, "primary-arm", "Primary Arm", "This is the fleet's main operational group; it executes the fleet's declared primary loops");
+        Add("doctrine", doctrineColor, 2, "secondary-arm", "Secondary Arm", "A significant but subordinate group; handles a secondary declared loop");
+        Add("doctrine", doctrineColor, 3, "specialist-detachment", "Specialist Detachment", "A purpose-built group activated for specific operations; not regularly deployed");
+        Add("doctrine", doctrineColor, 4, "support-echelon", "Support Echelon", "Exists to enable other groups; provides logistics, repair, medical, or EW support");
+        Add("doctrine", doctrineColor, 5, "escort-screen", "Escort Screen", "Dedicated protective wrapper around another group or asset");
+        Add("doctrine", doctrineColor, 6, "rapid-response", "Rapid Response", "A fast, flexible group held in readiness for opportunistic or reactive deployment");
+        Add("doctrine", doctrineColor, 7, "standing-reserve", "Standing Reserve", "A group kept for contingency scenarios; rarely activated");
+        Add("doctrine", doctrineColor, 8, "carrier-element", "Carrier Element", "A group centered on a carrier ship; includes the carrier and its complement");
+        Add("doctrine", doctrineColor, 9, "strategic-asset", "Strategic Asset", "A high-value, low-frequency group built around a capital ship or irreplaceable asset");
+        Add("doctrine", doctrineColor, 10, "aspirational", "Aspirational", "A planned group that does not yet have sufficient ships or crew to field");
+        Add("doctrine", doctrineColor, 11, "experimental", "Experimental", "A group whose doctrine is still being tested or refined");
+        Add("doctrine", doctrineColor, 12, "legacy", "Legacy", "A group that reflects an older fleet doctrine; kept but not actively developed");
+
+        // ── status (8 tags) — formation readiness and lifecycle ──────
+        const string statusColor = "#B8913A";
+        Add("status", statusColor, 1, "operational", "Operational", "Group is fully assembled, assigned, and deployable as declared");
+        Add("status", statusColor, 2, "partial", "Partial", "Group exists but is missing ships or crew to reach declared capacity");
+        Add("status", statusColor, 3, "undermanned", "Undermanned", "Group has the ships but lacks the players to crew them at intended scale");
+        Add("status", statusColor, 4, "paper", "Paper", "Group is defined in doctrine only; no ships have been assigned yet");
+        Add("status", statusColor, 5, "assembling", "Assembling", "Actively being built; ships are being added and assignments made");
+        Add("status", statusColor, 6, "on-hold", "On Hold", "Group is defined and has ships but is not being actively developed or deployed");
+        Add("status", statusColor, 7, "retired", "Retired", "Group has been dissolved or superseded; kept for historical reference");
+        Add("status", statusColor, 8, "contingency", "Contingency", "Group exists purely for a specific scenario; not a standing formation");
 
         return tags;
     }
