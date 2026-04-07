@@ -64,7 +64,7 @@ public class TagDefinition
     public string Description { get; set; } = string.Empty;
 
     /// <summary>Hex color for UI chip display e.g. "#00d4ff".</summary>
-    public string ColorHex { get; set; } = "#8890a8";
+    public string ColorHex { get; set; } = "#7A8499";
 
     /// <summary>Sort order within category for UI display.</summary>
     public int SortOrder { get; set; } = 0;

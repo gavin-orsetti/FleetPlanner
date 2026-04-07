@@ -455,15 +455,15 @@ public partial class TagPickerViewModel : ObservableObject
     /// </summary>
     private static string CategoryColor(string category) => category switch
     {
-        "role" => "#ef4444",
-        "doctrine" => "#a855f7",
-        "status" => "#f59e0b",
-        "crew" => "#06b6d4",
-        "capability" => "#22c55e",
-        "preference" => "#f97316",
-        "constraint" => "#8890a8",
-        "custom" => "#64748b",
-        _ => "#8890a8"
+        "role" => "#C4706A",
+        "doctrine" => "#8B66B8",
+        "status" => "#B8913A",
+        "crew" => "#3A9CB8",
+        "capability" => "#4A9E6B",
+        "preference" => "#B87040",
+        "constraint" => "#7A8499",
+        "custom" => "#6B7A8B",
+        _ => "#7A8499"
     };
 }
 
@@ -487,7 +487,7 @@ public partial class SelectableTagItem : ObservableObject
     public string Description { get; set; } = string.Empty;
 
     /// <summary>Hex colour for the chip.</summary>
-    public string ColorHex { get; set; } = "#8890a8";
+    public string ColorHex { get; set; } = "#7A8499";
 
     /// <summary>Whether this tag is currently selected.</summary>
     [ObservableProperty]
@@ -503,8 +503,11 @@ public partial class SelectableTagItem : ObservableObject
     /// <summary>Human-readable weight label.</summary>
     public string WeightLabel => Weight switch { 1 => "● Primary", 2 => "◉ Secondary", 3 => "○ Tertiary", _ => "" };
 
-    /// <summary>Resolved chip colour.</summary>
+    /// <summary>Resolved chip colour (full opacity, used for border/stroke).</summary>
     public Color ChipColor => Color.FromArgb(ColorHex);
+
+    /// <summary>Chip fill colour with 30% alpha for unselected background.</summary>
+    public Color ChipFillColor => Color.FromArgb("4D" + (ColorHex?.TrimStart('#') ?? "6B7A8B"));
 
     /// <summary>Notifies dependent properties when weight changes.</summary>
     partial void OnWeightChanged(int value) => OnPropertyChanged(nameof(WeightLabel));

@@ -47,7 +47,7 @@ public partial class TagEditorViewModel : ObservableObject
 
     /// <summary>Optional hex colour for chip display.</summary>
     [ObservableProperty]
-    private string _colorHex = "#8890a8";
+    private string _colorHex = "#7A8499";
 
     /// <summary>Auto-generated preview of the tag key.</summary>
     [ObservableProperty]
@@ -199,7 +199,7 @@ public partial class TagEditorViewModel : ObservableObject
 
                 existing.DisplayName = DisplayName.Trim();
                 existing.Description = Description.Trim();
-                existing.ColorHex = string.IsNullOrWhiteSpace(ColorHex) ? "#8890a8" : ColorHex.Trim();
+                existing.ColorHex = string.IsNullOrWhiteSpace(ColorHex) ? "#7A8499" : ColorHex.Trim();
 
                 await _tagRepository.SaveTagAsync(existing);
             }
@@ -290,14 +290,14 @@ public partial class TagEditorViewModel : ObservableObject
     /// </summary>
     private static string CategoryColor(string category) => category switch
     {
-        "role" => "#ef4444",
-        "doctrine" => "#a855f7",
-        "status" => "#f59e0b",
-        "crew" => "#06b6d4",
-        "capability" => "#22c55e",
-        "preference" => "#f97316",
-        "constraint" => "#8890a8",
-        "custom" => "#64748b",
-        _ => "#8890a8"
+        "role" => "#C4706A",
+        "doctrine" => "#8B66B8",
+        "status" => "#B8913A",
+        "crew" => "#3A9CB8",
+        "capability" => "#4A9E6B",
+        "preference" => "#B87040",
+        "constraint" => "#7A8499",
+        "custom" => "#6B7A8B",
+        _ => "#7A8499"
     };
 }

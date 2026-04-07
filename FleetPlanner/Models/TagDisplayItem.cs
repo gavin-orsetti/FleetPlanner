@@ -30,6 +30,9 @@ public class TagDisplayItem
     /// <summary>Whether this tag is in the "role" category (shows weight badge).</summary>
     public bool IsRoleTag => Category == "role";
 
-    /// <summary>Resolved chip colour — falls back to the app's cyan accent if no <see cref="ColorHex"/> is set.</summary>
-    public Color ChipColor => ColorHex is not null ? Color.FromArgb(ColorHex) : Color.FromArgb("#00BCD4");
+    /// <summary>Resolved chip colour (full opacity, used for border/stroke) — falls back to custom grey if no <see cref="ColorHex"/> is set.</summary>
+    public Color ChipColor => ColorHex is not null ? Color.FromArgb(ColorHex) : Color.FromArgb("#6B7A8B");
+
+    /// <summary>Chip fill colour with 30% alpha for unselected background.</summary>
+    public Color ChipFillColor => Color.FromArgb("4D" + (ColorHex?.TrimStart('#') ?? "6B7A8B"));
 }

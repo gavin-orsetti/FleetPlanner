@@ -70,12 +70,13 @@
                                             <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="0"
                                                     StrokeShape="RoundRectangle 12"
                                                     Padding="8,4"
-                                                    BackgroundColor="{Binding ChipColor}"
-                                                    StrokeThickness="0"
+                                                    BackgroundColor="{Binding ChipFillColor}"
+                                                    Stroke="{Binding ChipColor}"
+                                                    StrokeThickness="1.5"
                                                     VerticalOptions="Center">
                                                 <Label Text="{Binding DisplayName}"
                                                        FontSize="12"
-                                                       TextColor="{StaticResource OnPrimary}" />
+                                                       TextColor="#E0E0E0" />
                                             </Border>
 
                                             <!-- Info: description + badges -->

@@ -65,7 +65,7 @@
                             Margin="0,0,8,8"
                             StrokeThickness="1.5"
                             Stroke="{Binding ChipColor}"
-                            BackgroundColor="Transparent">
+                            BackgroundColor="{Binding ChipFillColor}">
                         <Border.Triggers>
                             <DataTrigger TargetType="Border"
                                          Binding="{Binding IsSelected}"
@@ -83,7 +83,7 @@
                             <HorizontalStackLayout Spacing="6">
                                 <Label Text="{Binding DisplayName}"
                                        FontSize="13"
-                                       TextColor="{Binding ChipColor}">
+                                       TextColor="#E0E0E0">
                                     <Label.Triggers>
                                         <DataTrigger TargetType="Label"
                                                      Binding="{Binding IsSelected}"

@@ -181,7 +181,7 @@ public class TagManagerItem
     public string Description { get; set; } = string.Empty;
 
     /// <summary>Hex colour for chip display.</summary>
-    public string ColorHex { get; set; } = "#8890a8";
+    public string ColorHex { get; set; } = "#7A8499";
 
     /// <summary>Whether this is a system-defined tag.</summary>
     public bool IsSystemDefined { get; set; }
@@ -195,8 +195,11 @@ public class TagManagerItem
     /// <summary>Badge text: "System" or "Custom".</summary>
     public string BadgeText => IsSystemDefined ? "System" : "Custom";
 
-    /// <summary>Resolved chip colour.</summary>
+    /// <summary>Resolved chip colour (full opacity, used for border/stroke).</summary>
     public Color ChipColor => Color.FromArgb(ColorHex);
+
+    /// <summary>Chip fill colour with 30% alpha for background.</summary>
+    public Color ChipFillColor => Color.FromArgb("4D" + (ColorHex?.TrimStart('#') ?? "6B7A8B"));
 
     /// <summary>Truncated description for list display.</summary>
     public string ShortDescription => Description.Length > 60 ? Description[..57] + "..." : Description;

@@ -34,14 +34,14 @@
                                 Margin="0,0,8,8"
                                 StrokeThickness="1.5"
                                 Stroke="{Binding ChipColor}"
-                                BackgroundColor="{Binding ChipColor}">
+                                BackgroundColor="{Binding ChipFillColor}">
                             <HorizontalStackLayout Spacing="4">
                                 <Label Text="{Binding DisplayName}"
                                        FontSize="12"
-                                       TextColor="{StaticResource OnPrimary}" />
+                                       TextColor="#E0E0E0" />
                                 <Label Text="{Binding WeightLabel}"
                                        FontSize="10"
-                                       TextColor="{StaticResource OnPrimary}"
+                                       TextColor="#E0E0E0"
                                        IsVisible="{Binding IsRoleTag}"
                                        Opacity="0.8" />
                             </HorizontalStackLayout>
@@ -132,14 +132,14 @@
                                                     Margin="0,0,6,4"
                                                     StrokeThickness="1"
                                                     Stroke="{Binding ChipColor}"
-                                                    BackgroundColor="{Binding ChipColor}">
+                                                    BackgroundColor="{Binding ChipFillColor}">
                                                 <HorizontalStackLayout Spacing="3">
                                                     <Label Text="{Binding DisplayName}"
                                                            FontSize="11"
-                                                           TextColor="{StaticResource OnPrimary}" />
+                                                           TextColor="#E0E0E0" />
                                                     <Label Text="{Binding WeightLabel}"
                                                            FontSize="9"
-                                                           TextColor="{StaticResource OnPrimary}"
+                                                           TextColor="#E0E0E0"
                                                            IsVisible="{Binding IsRoleTag}"
                                                            Opacity="0.8" />
                                                 </HorizontalStackLayout>
