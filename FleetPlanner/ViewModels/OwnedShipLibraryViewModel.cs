@@ -97,7 +97,7 @@ public partial class OwnedShipLibraryViewModel : ObservableObject
     [RelayCommand]
     private async Task AddOwnedShipAsync()
     {
-        await Shell.Current.GoToAsync(nameof(ShipBrowserPage));
+        await Shell.Current.GoToAsync($"//{nameof(ShipBrowserPage)}");
     }
 
     /// <summary>Navigates to the editor for an owned ship.</summary>
