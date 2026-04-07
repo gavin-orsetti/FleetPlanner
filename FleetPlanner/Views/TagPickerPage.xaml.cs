@@ -24,6 +24,8 @@ public partial class TagPickerPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        // Small yield to ensure Shell has applied QueryProperty values to the ViewModel
+        await Task.Yield();
         await _viewModel.LoadTagsCommand.ExecuteAsync(null);
     }
 }

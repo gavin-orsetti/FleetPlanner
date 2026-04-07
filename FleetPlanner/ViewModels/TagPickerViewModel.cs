@@ -183,7 +183,8 @@ public partial class TagPickerViewModel : ObservableObject
                 }
             }
 
-            AllTags = new ObservableCollection<SelectableTagItem>(selectableItems);
+            MainThread.BeginInvokeOnMainThread(() =>
+                AllTags = new ObservableCollection<SelectableTagItem>(selectableItems));
             ApplyFilter();
         }
         finally
@@ -293,6 +294,14 @@ public partial class TagPickerViewModel : ObservableObject
 
     private void ApplyFilter()
     {
+        // Guard: nothing to filter if tags haven't loaded yet
+        if (AllTags is null || AllTags.Count == 0)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+                GroupedTags = new ObservableCollection<TagCategoryGroup>());
+            return;
+        }
+
         var filtered = AllTags.AsEnumerable();
 
         if (!string.IsNullOrWhiteSpace(SearchText))
@@ -307,9 +316,11 @@ public partial class TagPickerViewModel : ObservableObject
             .GroupBy(t => t.Category)
             .OrderBy(g => g.Key)
             .Select(g => new TagCategoryGroup(g.Key, g.ToList()))
+            .Where(g => g.Tags.Count > 0) // Skip empty groups
             .ToList();
 
-        GroupedTags = new ObservableCollection<TagCategoryGroup>(groups);
+        MainThread.BeginInvokeOnMainThread(() =>
+            GroupedTags = new ObservableCollection<TagCategoryGroup>(groups));
     }
 }
 
