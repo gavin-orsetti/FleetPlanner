@@ -70,7 +70,7 @@
                             <DataTrigger TargetType="Border"
                                          Binding="{Binding IsSelected}"
                                          Value="True">
-                                <Setter Property="BackgroundColor" Value="{Binding ChipColor}" />
+                                <Setter Property="StrokeThickness" Value="3" />
                             </DataTrigger>
                         </Border.Triggers>
                         <Border.GestureRecognizers>
@@ -83,15 +83,7 @@
                             <HorizontalStackLayout Spacing="6">
                                 <Label Text="{Binding DisplayName}"
                                        FontSize="13"
-                                       TextColor="#E0E0E0">
-                                    <Label.Triggers>
-                                        <DataTrigger TargetType="Label"
-                                                     Binding="{Binding IsSelected}"
-                                                     Value="True">
-                                            <Setter Property="TextColor" Value="{StaticResource OnPrimary}" />
-                                        </DataTrigger>
-                                    </Label.Triggers>
-                                </Label>
+                                       TextColor="#E0E0E0" />
 
                                 <!-- Weight badge for role tags -->
                                 <Label Text="{Binding WeightLabel}"
@@ -119,16 +111,7 @@
                                    FontSize="10"
                                    MaxLines="1"
                                    LineBreakMode="TailTruncation"
-                                   TextColor="{StaticResource Gray400}">
-                                <Label.Triggers>
-                                    <DataTrigger TargetType="Label"
-                                                 Binding="{Binding IsSelected}"
-                                                 Value="True">
-                                        <Setter Property="TextColor" Value="{StaticResource OnPrimary}" />
-                                        <Setter Property="Opacity" Value="0.7" />
-                                    </DataTrigger>
-                                </Label.Triggers>
-                            </Label>
+                                   TextColor="{StaticResource Gray400}" />
                         </VerticalStackLayout>
                     </Border>
                 </DataTemplate>
