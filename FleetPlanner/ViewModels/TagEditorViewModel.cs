@@ -102,13 +102,15 @@ public partial class TagEditorViewModel : ObservableObject
 
     /// <summary>Available category values for the picker. Populated dynamically based on context.</summary>
     public List<string> Categories { get; private set; } =
-        ["role", "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
+        ["role:economy", "role:activity", "role:domain", "role:scale", "role:posture",
+         "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
          "doctrine:autonomy", "doctrine:flexibility", "doctrine:retention", "doctrine:lifecycle",
          "status", "custom"];
 
     /// <summary>Display-friendly names shown in the category picker, parallel to <see cref="Categories"/>.</summary>
     public List<string> CategoryDisplayNames { get; private set; } =
-        ["Role", "Context", "Doctrine: Weight", "Doctrine: Frequency", "Doctrine: Purpose",
+        ["Role: Economy", "Role: Activity", "Role: Domain", "Role: Scale", "Role: Posture",
+         "Context", "Doctrine: Weight", "Doctrine: Frequency", "Doctrine: Purpose",
          "Doctrine: Autonomy", "Doctrine: Flexibility", "Doctrine: Retention", "Doctrine: Lifecycle",
          "Status", "Custom"];
 
@@ -142,12 +144,14 @@ public partial class TagEditorViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            // Hide doctrine:retention for group context (ship-only sub-dimension)
+            // Group context: show role:scope instead of role:scale, hide doctrine:retention (ship-only)
             if (IsGroupContext)
             {
-                Categories = ["role", "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
+                Categories = ["role:economy", "role:activity", "role:domain", "role:scope", "role:posture",
+                              "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
                               "doctrine:autonomy", "doctrine:flexibility", "doctrine:lifecycle", "status", "custom"];
-                CategoryDisplayNames = ["Role", "Context", "Doctrine: Weight", "Doctrine: Frequency", "Doctrine: Purpose",
+                CategoryDisplayNames = ["Role: Economy", "Role: Activity", "Role: Domain", "Role: Scope", "Role: Posture",
+                                        "Context", "Doctrine: Weight", "Doctrine: Frequency", "Doctrine: Purpose",
                                         "Doctrine: Autonomy", "Doctrine: Flexibility", "Doctrine: Lifecycle", "Status", "Custom"];
                 OnPropertyChanged(nameof(Categories));
                 OnPropertyChanged(nameof(CategoryDisplayNames));
@@ -391,7 +395,12 @@ public partial class TagEditorViewModel : ObservableObject
     /// </summary>
     private static string CategoryColor(string category) => category switch
     {
-        "role"                 => "#C4706A",
+        "role:economy"         => "#C4706A",
+        "role:activity"        => "#B87040",
+        "role:domain"          => "#4A9E6B",
+        "role:scale"           => "#7A8499",
+        "role:scope"           => "#7A8499",
+        "role:posture"         => "#3A9CB8",
         "ctx"                  => "#3A9CB8",
         "doctrine:weight"      => "#B87040",
         "doctrine:frequency"   => "#7A8499",

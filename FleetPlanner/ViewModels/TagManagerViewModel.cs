@@ -283,6 +283,12 @@ public class TagManagerCategoryGroup
 
     private static string FormatCategoryDisplay(string category) => category switch
     {
+        "role:economy"           => "Role: Economy",
+        "role:activity"          => "Role: Activity",
+        "role:domain"            => "Role: Domain",
+        "role:scale"             => "Role: Scale",
+        "role:scope"             => "Role: Scope",
+        "role:posture"           => "Role: Posture",
         "ctx"                    => "Context",
         "doctrine:weight"        => "Doctrine: Weight",
         "doctrine:frequency"     => "Doctrine: Frequency",

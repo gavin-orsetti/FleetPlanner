@@ -353,6 +353,13 @@ public partial class TagPickerViewModel : ObservableObject
             .Where(g => g.Count > 0) // Skip empty groups
             .ToList();
 
+        // Insert a role section divider before the first role:* group
+        var firstRoleIdx = groups.FindIndex(g => g.CategoryName.StartsWith("role:", StringComparison.Ordinal));
+        if (firstRoleIdx >= 0)
+        {
+            groups.Insert(firstRoleIdx, new TagCategoryGroup("__role_header__", []));
+        }
+
         // Insert a doctrine section divider before the first doctrine:* group
         var firstDoctrineIdx = groups.FindIndex(g => g.CategoryName.StartsWith("doctrine:", StringComparison.Ordinal));
         if (firstDoctrineIdx >= 0)
@@ -394,9 +401,11 @@ public partial class TagPickerViewModel : ObservableObject
 
         // --- Step 2: Pick category ---
         var categories = IsGroupContext
-            ? new[] { "role", "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
+            ? new[] { "role:economy", "role:activity", "role:domain", "role:scope", "role:posture",
+                      "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
                       "doctrine:autonomy", "doctrine:flexibility", "doctrine:lifecycle", "status", "custom" }
-            : new[] { "role", "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
+            : new[] { "role:economy", "role:activity", "role:domain", "role:scale", "role:posture",
+                      "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
                       "doctrine:autonomy", "doctrine:flexibility", "doctrine:retention", "doctrine:lifecycle", "status", "custom" };
         var chosenCategory = await page.DisplayActionSheet(
             "Choose a category", "Cancel", null, categories);
@@ -523,7 +532,12 @@ public partial class TagPickerViewModel : ObservableObject
     /// </summary>
     private static string CategoryColor(string category) => category switch
     {
-        "role"                 => "#C4706A",
+        "role:economy"         => "#C4706A",
+        "role:activity"        => "#B87040",
+        "role:domain"          => "#4A9E6B",
+        "role:scale"           => "#7A8499",
+        "role:scope"           => "#7A8499",
+        "role:posture"         => "#3A9CB8",
         "ctx"                  => "#3A9CB8",
         "doctrine:weight"      => "#B87040",
         "doctrine:frequency"   => "#7A8499",
@@ -542,16 +556,21 @@ public partial class TagPickerViewModel : ObservableObject
     /// </summary>
     private static int CategorySortOrder(string category) => category switch
     {
-        "role"                 => 0,
-        "ctx"                  => 1,
-        "doctrine:weight"      => 10,
-        "doctrine:frequency"   => 11,
-        "doctrine:purpose"     => 12,
-        "doctrine:autonomy"    => 13,
-        "doctrine:flexibility" => 14,
-        "doctrine:retention"   => 15,
-        "doctrine:lifecycle"   => 16,
-        "status"               => 20,
+        "ctx"                  => 0,
+        "status"               => 1,
+        "role:economy"         => 10,
+        "role:activity"        => 11,
+        "role:domain"          => 12,
+        "role:scale"           => 13,
+        "role:scope"           => 13,
+        "role:posture"         => 14,
+        "doctrine:weight"      => 20,
+        "doctrine:frequency"   => 21,
+        "doctrine:purpose"     => 22,
+        "doctrine:autonomy"    => 23,
+        "doctrine:flexibility" => 24,
+        "doctrine:retention"   => 25,
+        "doctrine:lifecycle"   => 26,
         _                      => 30 // custom / unknown
     };
 
@@ -560,7 +579,12 @@ public partial class TagPickerViewModel : ObservableObject
     /// </summary>
     private static string CategoryDisplayName(string category) => category switch
     {
-        "role"                 => "Role",
+        "role:economy"         => "Economy",
+        "role:activity"        => "Activity",
+        "role:domain"          => "Domain",
+        "role:scale"           => "Scale",
+        "role:scope"           => "Scope",
+        "role:posture"         => "Posture",
         "ctx"                  => "Context",
         "doctrine:weight"      => "Weight",
         "doctrine:frequency"   => "Frequency",
@@ -605,7 +629,7 @@ public partial class SelectableTagItem : ObservableObject
     private int _weight = 1;
 
     /// <summary>Whether this is a role tag (shows weight picker).</summary>
-    public bool IsRoleTag => Category == "role";
+    public bool IsRoleTag => Category.StartsWith("role:", StringComparison.Ordinal);
 
     /// <summary>Human-readable weight label.</summary>
     public string WeightLabel => Weight switch { 1 => "● Primary", 2 => "◉ Secondary", 3 => "○ Tertiary", _ => "" };
@@ -643,6 +667,13 @@ public class TagCategoryGroup : List<SelectableTagItem>
     private static string FormatCategoryDisplay(string category) => category switch
     {
         "ctx"                    => "Context",
+        "__role_header__"        => "— Role —",
+        "role:economy"           => "Economy",
+        "role:activity"          => "Activity",
+        "role:domain"            => "Domain",
+        "role:scale"             => "Scale",
+        "role:scope"             => "Scope",
+        "role:posture"           => "Posture",
         "__doctrine_header__"    => "— Doctrine —",
         "doctrine:weight"        => "Weight",
         "doctrine:frequency"     => "Frequency",
@@ -654,9 +685,12 @@ public class TagCategoryGroup : List<SelectableTagItem>
         _                        => char.ToUpperInvariant(category[0]) + category[1..]
     };
 
-    /// <summary>Whether this group is the doctrine section divider header (no items).</summary>
-    public bool IsDoctrineSectionHeader => CategoryName == "__doctrine_header__";
+    /// <summary>Whether this group is a section divider header (role or doctrine, no items).</summary>
+    public bool IsDoctrineSectionHeader => CategoryName is "__doctrine_header__" or "__role_header__";
 
     /// <summary>Whether this group is a doctrine sub-dimension group.</summary>
     public bool IsDoctrineSubDimension => CategoryName.StartsWith("doctrine:", StringComparison.Ordinal);
+
+    /// <summary>Whether this group is a role sub-dimension group.</summary>
+    public bool IsRoleSubDimension => CategoryName.StartsWith("role:", StringComparison.Ordinal);
 }

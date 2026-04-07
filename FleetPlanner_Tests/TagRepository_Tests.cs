@@ -57,9 +57,9 @@ public class TagRepository_Tests : IDisposable
         var bootstrap = new DatabaseBootstrapService(_dbPath);
         await bootstrap.InitialiseAsync();
 
-        var roleTags = await _repo.GetTagsByCategoryAsync("role");
-        roleTags.Should().HaveCount(24);
-        roleTags.Should().OnlyContain(t => t.Key.StartsWith("role:"));
+        var roleTags = await _repo.GetTagsByCategoryAsync("role:activity");
+        roleTags.Should().HaveCount(21);
+        roleTags.Should().OnlyContain(t => t.Key.StartsWith("role:activity:"));
     }
 
     [Fact]
@@ -80,13 +80,13 @@ public class TagRepository_Tests : IDisposable
         var bootstrap = new DatabaseBootstrapService(_dbPath);
         await bootstrap.InitialiseAsync();
 
-        await _repo.ArchiveTagAsync("role:escort");
+        await _repo.ArchiveTagAsync("role:activity:escort");
 
-        var activeRoles = await _repo.GetTagsByCategoryAsync("role");
-        activeRoles.Should().NotContain(t => t.Key == "role:escort");
+        var activeRoles = await _repo.GetTagsByCategoryAsync("role:activity");
+        activeRoles.Should().NotContain(t => t.Key == "role:activity:escort");
 
         var allTags = await _repo.GetAllTagsAsync(includeArchived: true);
-        allTags.Should().Contain(t => t.Key == "role:escort" && t.IsArchived);
+        allTags.Should().Contain(t => t.Key == "role:activity:escort" && t.IsArchived);
     }
 
     [Fact]

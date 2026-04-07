@@ -9,7 +9,7 @@ namespace FleetPlanner.Models;
 /// </summary>
 public class TagDisplayItem
 {
-    /// <summary>The <see cref="TagDefinition.Key"/> (e.g. "role:escort").</summary>
+    /// <summary>The <see cref="TagDefinition.Key"/> (e.g. "role:activity:escort").</summary>
     public string TagKey { get; set; } = string.Empty;
 
     /// <summary>Human-readable name shown on the chip.</summary>
@@ -27,8 +27,8 @@ public class TagDisplayItem
     /// <summary>Human-readable weight label for role tags.</summary>
     public string WeightLabel => Weight switch { 1 => "Primary", 2 => "Secondary", 3 => "Tertiary", _ => "" };
 
-    /// <summary>Whether this tag is in the "role" category (shows weight badge).</summary>
-    public bool IsRoleTag => Category == "role";
+    /// <summary>Whether this tag is in a role sub-dimension category (shows weight badge).</summary>
+    public bool IsRoleTag => Category.StartsWith("role:", StringComparison.Ordinal);
 
     /// <summary>Resolved chip colour (full opacity, used for border/stroke) — falls back to custom grey if no <see cref="ColorHex"/> is set.</summary>
     public Color ChipColor => ColorHex is not null ? Color.FromArgb(ColorHex) : Color.FromArgb("#6B7A8B");
