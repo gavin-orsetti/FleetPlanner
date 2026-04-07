@@ -168,4 +168,10 @@ public class OwnedShipDisplay
 
     /// <summary>Display badge for acquisition type.</summary>
     public string AcquisitionBadge => AcquisitionType == AcquisitionType.RealMoney ? "$USD" : "aUEC";
+
+    /// <summary>Contextual tags for this ship within a specific group (populated by GroupDetailViewModel).</summary>
+    public List<TagDisplayItem> ContextualTags { get; set; } = [];
+
+    /// <summary>Whether this ship has any contextual tags assigned in the current group context.</summary>
+    public bool HasContextualTags => ContextualTags.Count > 0;
 }

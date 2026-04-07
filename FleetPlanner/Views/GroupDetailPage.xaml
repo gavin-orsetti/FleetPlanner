@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
-             xmlns:models="clr-namespace:FleetPlanner.Models;assembly=FleetPlanner.Core"
+             xmlns:localModels="clr-namespace:FleetPlanner.Models"
              x:Class="FleetPlanner.Views.GroupDetailPage"
              x:DataType="vm:GroupDetailViewModel"
              Title="{Binding Group.Name}">
@@ -21,44 +21,103 @@
             <Label Text="{Binding Group.CrewTarget, StringFormat='Crew target: {0}'}"
                    FontSize="12" TextColor="{StaticResource Gray500}" />
 
-            <!-- Doctrine Tags -->
-            <Label Text="Doctrine Tags" FontSize="14" FontAttributes="Bold" Margin="0,8,0,0" />
-            <CollectionView ItemsSource="{Binding GroupTags}" HeightRequest="50">
-                <CollectionView.ItemsLayout>
-                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
-                </CollectionView.ItemsLayout>
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:UserFleetGroupTag">
-                        <Frame Padding="6,4" CornerRadius="4" HasShadow="False"
-                               BackgroundColor="{StaticResource Secondary}">
-                            <Label Text="{Binding TagKey}" FontSize="12"
-                                   TextColor="{StaticResource OnSecondary}" />
-                        </Frame>
+            <!-- Group Tags Section -->
+            <Label Text="Group Tags" FontSize="16" FontAttributes="Bold" Margin="0,8,0,0" />
+
+            <FlexLayout BindableLayout.ItemsSource="{Binding GroupTagDisplayItems}"
+                        Wrap="Wrap" JustifyContent="Start" Direction="Row"
+                        MinimumHeightRequest="36">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="localModels:TagDisplayItem">
+                        <Border StrokeShape="RoundRectangle 12"
+                                Padding="8,4"
+                                Margin="0,0,8,8"
+                                StrokeThickness="1.5"
+                                Stroke="{Binding ChipColor}"
+                                BackgroundColor="{Binding ChipColor}">
+                            <HorizontalStackLayout Spacing="4">
+                                <Label Text="{Binding DisplayName}"
+                                       FontSize="12"
+                                       TextColor="{StaticResource OnPrimary}" />
+                                <Label Text="{Binding WeightLabel}"
+                                       FontSize="10"
+                                       TextColor="{StaticResource OnPrimary}"
+                                       IsVisible="{Binding IsRoleTag}"
+                                       Opacity="0.8" />
+                            </HorizontalStackLayout>
+                        </Border>
                     </DataTemplate>
-                </CollectionView.ItemTemplate>
-                <CollectionView.EmptyView>
-                    <Label Text="No doctrine tags assigned" FontSize="12" TextColor="{StaticResource Gray400}" />
-                </CollectionView.EmptyView>
-            </CollectionView>
+                </BindableLayout.ItemTemplate>
+                <BindableLayout.EmptyView>
+                    <Label Text="No group tags yet — tap Edit Group Tags to set this group's doctrine and focus"
+                           FontSize="12" TextColor="{StaticResource Gray400}"
+                           Margin="0,4" />
+                </BindableLayout.EmptyView>
+            </FlexLayout>
+
+            <Button Text="Edit Group Tags" Command="{Binding EditGroupTagsCommand}"
+                    BackgroundColor="{StaticResource PrimaryContainer}"
+                    TextColor="{StaticResource Primary}"
+                    FontSize="13"
+                    Padding="16,8"
+                    HorizontalOptions="Start" />
 
             <!-- Member Ships -->
-            <Label Text="Member Ships" FontSize="14" FontAttributes="Bold" Margin="0,8,0,0" />
+            <Label Text="Member Ships" FontSize="16" FontAttributes="Bold" Margin="0,8,0,0" />
             <CollectionView ItemsSource="{Binding MemberShips}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="vm:OwnedShipDisplay">
                         <Frame Padding="10" Margin="0,4" CornerRadius="8"
                                BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}">
-                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                                <Label Grid.Row="0" Grid.Column="0"
-                                       Text="{Binding ShipName}" FontSize="14" FontAttributes="Bold" />
-                                <Label Grid.Row="0" Grid.Column="1"
-                                       Text="{Binding AcquisitionBadge}" FontSize="10"
-                                       TextColor="{StaticResource Tertiary}" />
-                                <HorizontalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="8">
-                                    <Label Text="{Binding Callsign}" FontSize="11" TextColor="{StaticResource Gray400}" />
-                                    <Label Text="{Binding Role}" FontSize="11" TextColor="{StaticResource Gray400}" />
-                                </HorizontalStackLayout>
-                            </Grid>
+                            <VerticalStackLayout Spacing="6">
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                    <Label Grid.Row="0" Grid.Column="0"
+                                           Text="{Binding ShipName}" FontSize="14" FontAttributes="Bold" />
+                                    <Label Grid.Row="0" Grid.Column="1"
+                                           Text="{Binding AcquisitionBadge}" FontSize="10"
+                                           TextColor="{StaticResource Tertiary}" />
+                                    <HorizontalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="8">
+                                        <Label Text="{Binding Callsign}" FontSize="11" TextColor="{StaticResource Gray400}" />
+                                        <Label Text="{Binding Role}" FontSize="11" TextColor="{StaticResource Gray400}" />
+                                    </HorizontalStackLayout>
+                                </Grid>
+
+                                <!-- Contextual Role Tags for this ship in this group -->
+                                <FlexLayout BindableLayout.ItemsSource="{Binding ContextualTags}"
+                                            Wrap="Wrap" JustifyContent="Start" Direction="Row">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="localModels:TagDisplayItem">
+                                            <Border StrokeShape="RoundRectangle 10"
+                                                    Padding="6,3"
+                                                    Margin="0,0,6,4"
+                                                    StrokeThickness="1"
+                                                    Stroke="{Binding ChipColor}"
+                                                    BackgroundColor="{Binding ChipColor}">
+                                                <HorizontalStackLayout Spacing="3">
+                                                    <Label Text="{Binding DisplayName}"
+                                                           FontSize="11"
+                                                           TextColor="{StaticResource OnPrimary}" />
+                                                    <Label Text="{Binding WeightLabel}"
+                                                           FontSize="9"
+                                                           TextColor="{StaticResource OnPrimary}"
+                                                           IsVisible="{Binding IsRoleTag}"
+                                                           Opacity="0.8" />
+                                                </HorizontalStackLayout>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </FlexLayout>
+
+                                <!-- Edit Role in Group button -->
+                                <Button Text="Edit Role in Group"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GroupDetailViewModel}}, Path=EditShipRoleInGroupCommand}"
+                                        CommandParameter="{Binding}"
+                                        BackgroundColor="Transparent"
+                                        TextColor="{StaticResource Primary}"
+                                        FontSize="11"
+                                        Padding="0"
+                                        HorizontalOptions="Start" />
+                            </VerticalStackLayout>
                         </Frame>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
