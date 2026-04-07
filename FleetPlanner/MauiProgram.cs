@@ -21,12 +21,15 @@ namespace FleetPlanner;
 ///     <c>IShipDataService → CachedShipDataService</c> (via factory lambda), graph + recommendation services.</item>
 ///   <item>Register ViewModels and Pages as <b>transient</b> (fresh instance per navigation).</item>
 ///   <item>Register <c>AppShell</c> as <b>singleton</b> (one shell for the app lifetime).</item>
-///   <item><c>builder.Build()</c> — creates the DI container.</item>
-///   <item>Call <c>DatabaseBootstrapService.InitialiseAsync()</c> synchronously — creates tables and
-///     seeds the tag taxonomy. Blocking is required because <c>CreateMauiApp()</c> is synchronous
-///     per the MAUI contract, and no UI thread exists yet.</item>
-///   <item>Return the configured <see cref="MauiApp"/>.</item>
+///   <item><c>builder.Build()</c> — creates the DI container and returns the configured <see cref="MauiApp"/>.</item>
 /// </list></para>
+///
+/// <para><b>Database bootstrap:</b> <c>DatabaseBootstrapService.InitialiseAsync()</c> (table creation
+/// and tag taxonomy seeding) is <b>not</b> called here. Because <c>CreateMauiApp()</c> is synchronous,
+/// awaiting async work would deadlock the UI thread before the MAUI runtime is fully initialised.
+/// Instead, bootstrap runs in <see cref="AppShell.OnAppearing"/> — the earliest point at which the
+/// MAUI runtime is ready and async work can safely execute. The method is idempotent (checks
+/// <c>schema_version</c> before seeding), so repeated <c>OnAppearing</c> calls are harmless.</para>
 ///
 /// <para><b>Why the IShipDataService factory lambda is needed:</b> Both <see cref="ShipDataService"/>
 /// and <see cref="CachedShipDataService"/> implement <see cref="IShipDataService"/>. If we registered
@@ -39,7 +42,7 @@ public static class MauiProgram
 {
     /// <summary>
     /// Creates and configures the MAUI application. See class-level documentation for the
-    /// full startup sequence.
+    /// full startup sequence. Database bootstrap is deferred to <see cref="AppShell.OnAppearing"/>.
     /// </summary>
     /// <returns>The configured <see cref="MauiApp"/>.</returns>
     public static MauiApp CreateMauiApp()
@@ -108,14 +111,9 @@ public static class MauiProgram
         // ── Shell registration ────────────────────────────────────────────
         builder.Services.AddSingleton<AppShell>();
 
-        // ── Build and bootstrap ───────────────────────────────────────────
-        var app = builder.Build();
-
-        // DatabaseBootstrapService.InitialiseAsync() creates all tables and seeds
-        // the tag taxonomy. Called after Build() but before app is returned.
-        // Blocking call is required because CreateMauiApp() is synchronous per MAUI contract.
-        app.Services.GetRequiredService<DatabaseBootstrapService>().InitialiseAsync().GetAwaiter().GetResult();
-
-        return app;
+        // ── Build ─────────────────────────────────────────────────────────
+        // Database bootstrap (table creation + tag seeding) is deferred to
+        // AppShell.OnAppearing — see class-level docs for rationale.
+        return builder.Build();
     }
 }
