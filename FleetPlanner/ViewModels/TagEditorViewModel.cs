@@ -100,9 +100,17 @@ public partial class TagEditorViewModel : ObservableObject
     [ObservableProperty]
     private int _selectedCategoryIndex = -1;
 
-    /// <summary>Available category values for the picker.</summary>
-    public List<string> Categories { get; } =
-        ["role", "ctx", "doctrine", "status", "custom"];
+    /// <summary>Available category values for the picker. Populated dynamically based on context.</summary>
+    public List<string> Categories { get; private set; } =
+        ["role", "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
+         "doctrine:autonomy", "doctrine:flexibility", "doctrine:retention", "doctrine:lifecycle",
+         "status", "custom"];
+
+    /// <summary>Display-friendly names shown in the category picker, parallel to <see cref="Categories"/>.</summary>
+    public List<string> CategoryDisplayNames { get; private set; } =
+        ["Role", "Context", "Doctrine: Weight", "Doctrine: Frequency", "Doctrine: Purpose",
+         "Doctrine: Autonomy", "Doctrine: Flexibility", "Doctrine: Retention", "Doctrine: Lifecycle",
+         "Status", "Custom"];
 
     /// <summary>
     /// Constructor — receives dependencies from the DI container.
@@ -134,6 +142,17 @@ public partial class TagEditorViewModel : ObservableObject
         IsLoading = true;
         try
         {
+            // Hide doctrine:retention for group context (ship-only sub-dimension)
+            if (IsGroupContext)
+            {
+                Categories = ["role", "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
+                              "doctrine:autonomy", "doctrine:flexibility", "doctrine:lifecycle", "status", "custom"];
+                CategoryDisplayNames = ["Role", "Context", "Doctrine: Weight", "Doctrine: Frequency", "Doctrine: Purpose",
+                                        "Doctrine: Autonomy", "Doctrine: Flexibility", "Doctrine: Lifecycle", "Status", "Custom"];
+                OnPropertyChanged(nameof(Categories));
+                OnPropertyChanged(nameof(CategoryDisplayNames));
+            }
+
             if (!string.IsNullOrEmpty(TagEditorTagKey))
             {
                 // Edit mode — load from the appropriate table
@@ -372,10 +391,16 @@ public partial class TagEditorViewModel : ObservableObject
     /// </summary>
     private static string CategoryColor(string category) => category switch
     {
-        "role"     => "#C4706A",
-        "ctx"      => "#3A9CB8",
-        "doctrine" => "#8B66B8",
-        "status"   => "#B8913A",
-        _          => "#6B7A8B"   // custom / unknown
+        "role"                 => "#C4706A",
+        "ctx"                  => "#3A9CB8",
+        "doctrine:weight"      => "#B87040",
+        "doctrine:frequency"   => "#7A8499",
+        "doctrine:purpose"     => "#8B66B8",
+        "doctrine:autonomy"    => "#3A9CB8",
+        "doctrine:flexibility" => "#4A9E6B",
+        "doctrine:retention"   => "#C4706A",
+        "doctrine:lifecycle"   => "#6B7A8B",
+        "status"               => "#B8913A",
+        _                      => "#6B7A8B"   // custom / unknown
     };
 }

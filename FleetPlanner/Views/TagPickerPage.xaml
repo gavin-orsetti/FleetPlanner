@@ -52,10 +52,29 @@
                         IsGrouped="True">
             <CollectionView.GroupHeaderTemplate>
                 <DataTemplate x:DataType="vm:TagCategoryGroup">
-                    <Label Text="{Binding DisplayCategory}"
-                           FontSize="16" FontAttributes="Bold"
-                           TextColor="{StaticResource Primary}"
-                           Padding="0,12,0,4" />
+                    <VerticalStackLayout>
+                        <!-- Doctrine section divider header -->
+                        <Label Text="{Binding DisplayCategory}"
+                               FontSize="13"
+                               FontAttributes="Italic"
+                               TextColor="{StaticResource Gray400}"
+                               HorizontalTextAlignment="Center"
+                               Padding="0,16,0,2"
+                               IsVisible="{Binding IsDoctrineSectionHeader}" />
+                        <!-- Normal category header (hidden for section divider) -->
+                        <Label Text="{Binding DisplayCategory}"
+                               FontSize="16" FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}"
+                               Padding="0,12,0,4">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label"
+                                             Binding="{Binding IsDoctrineSectionHeader}"
+                                             Value="True">
+                                    <Setter Property="IsVisible" Value="False" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                    </VerticalStackLayout>
                 </DataTemplate>
             </CollectionView.GroupHeaderTemplate>
             <CollectionView.ItemTemplate>

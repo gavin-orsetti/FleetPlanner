@@ -264,7 +264,7 @@ public class TagManagerItem
 /// </summary>
 public class TagManagerCategoryGroup
 {
-    /// <summary>The category name (e.g. "role", "doctrine").</summary>
+    /// <summary>The category name (e.g. "role", "doctrine:weight").</summary>
     public string CategoryName { get; }
 
     /// <summary>Display-friendly capitalised category name.</summary>
@@ -283,7 +283,14 @@ public class TagManagerCategoryGroup
 
     private static string FormatCategoryDisplay(string category) => category switch
     {
-        "ctx" => "Context",
-        _     => char.ToUpperInvariant(category[0]) + category[1..]
+        "ctx"                    => "Context",
+        "doctrine:weight"        => "Doctrine: Weight",
+        "doctrine:frequency"     => "Doctrine: Frequency",
+        "doctrine:purpose"       => "Doctrine: Purpose",
+        "doctrine:autonomy"      => "Doctrine: Autonomy",
+        "doctrine:flexibility"   => "Doctrine: Flexibility",
+        "doctrine:retention"     => "Doctrine: Retention",
+        "doctrine:lifecycle"     => "Doctrine: Lifecycle",
+        _                        => char.ToUpperInvariant(category[0]) + category[1..]
     };
 }

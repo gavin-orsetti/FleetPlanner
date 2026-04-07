@@ -40,7 +40,7 @@
 
             <!-- Category -->
             <Label Text="Category" FontSize="12" TextColor="{StaticResource Gray400}" />
-            <Picker ItemsSource="{Binding Categories}"
+            <Picker ItemsSource="{Binding CategoryDisplayNames}"
                     SelectedIndex="{Binding SelectedCategoryIndex}"
                     Title="Select category"
                     IsEnabled="{Binding IsEditMode, Converter={StaticResource InvertedBoolConverter}}" />

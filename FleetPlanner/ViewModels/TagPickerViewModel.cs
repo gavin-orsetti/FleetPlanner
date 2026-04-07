@@ -348,10 +348,17 @@ public partial class TagPickerViewModel : ObservableObject
 
         var groups = filtered
             .GroupBy(t => t.Category)
-            .OrderBy(g => g.Key)
+            .OrderBy(g => CategorySortOrder(g.Key))
             .Select(g => new TagCategoryGroup(g.Key, g.ToList()))
             .Where(g => g.Count > 0) // Skip empty groups
             .ToList();
+
+        // Insert a doctrine section divider before the first doctrine:* group
+        var firstDoctrineIdx = groups.FindIndex(g => g.CategoryName.StartsWith("doctrine:", StringComparison.Ordinal));
+        if (firstDoctrineIdx >= 0)
+        {
+            groups.Insert(firstDoctrineIdx, new TagCategoryGroup("__doctrine_header__", []));
+        }
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
@@ -386,7 +393,11 @@ public partial class TagPickerViewModel : ObservableObject
         displayName = editedName.Trim();
 
         // --- Step 2: Pick category ---
-        var categories = new[] { "role", "ctx", "doctrine", "status", "custom" };
+        var categories = IsGroupContext
+            ? new[] { "role", "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
+                      "doctrine:autonomy", "doctrine:flexibility", "doctrine:lifecycle", "status", "custom" }
+            : new[] { "role", "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
+                      "doctrine:autonomy", "doctrine:flexibility", "doctrine:retention", "doctrine:lifecycle", "status", "custom" };
         var chosenCategory = await page.DisplayActionSheet(
             "Choose a category", "Cancel", null, categories);
 
@@ -512,11 +523,36 @@ public partial class TagPickerViewModel : ObservableObject
     /// </summary>
     private static string CategoryColor(string category) => category switch
     {
-        "role"     => "#C4706A",
-        "ctx"      => "#3A9CB8",
-        "doctrine" => "#8B66B8",
-        "status"   => "#B8913A",
-        _          => "#6B7A8B"   // custom / unknown
+        "role"                 => "#C4706A",
+        "ctx"                  => "#3A9CB8",
+        "doctrine:weight"      => "#B87040",
+        "doctrine:frequency"   => "#7A8499",
+        "doctrine:purpose"     => "#8B66B8",
+        "doctrine:autonomy"    => "#3A9CB8",
+        "doctrine:flexibility" => "#4A9E6B",
+        "doctrine:retention"   => "#C4706A",
+        "doctrine:lifecycle"   => "#6B7A8B",
+        "status"               => "#B8913A",
+        _                      => "#6B7A8B"   // custom / unknown
+    };
+
+    /// <summary>
+    /// Returns a stable sort index so categories appear in a logical order:
+    /// role → ctx → doctrine sub-dimensions → status → custom.
+    /// </summary>
+    private static int CategorySortOrder(string category) => category switch
+    {
+        "role"                 => 0,
+        "ctx"                  => 1,
+        "doctrine:weight"      => 10,
+        "doctrine:frequency"   => 11,
+        "doctrine:purpose"     => 12,
+        "doctrine:autonomy"    => 13,
+        "doctrine:flexibility" => 14,
+        "doctrine:retention"   => 15,
+        "doctrine:lifecycle"   => 16,
+        "status"               => 20,
+        _                      => 30 // custom / unknown
     };
 
     /// <summary>
@@ -524,11 +560,17 @@ public partial class TagPickerViewModel : ObservableObject
     /// </summary>
     private static string CategoryDisplayName(string category) => category switch
     {
-        "role"     => "Role",
-        "ctx"      => "Context",
-        "doctrine" => "Doctrine",
-        "status"   => "Status",
-        _          => "Custom"
+        "role"                 => "Role",
+        "ctx"                  => "Context",
+        "doctrine:weight"      => "Weight",
+        "doctrine:frequency"   => "Frequency",
+        "doctrine:purpose"     => "Purpose",
+        "doctrine:autonomy"    => "Autonomy",
+        "doctrine:flexibility" => "Flexibility",
+        "doctrine:retention"   => "Retention",
+        "doctrine:lifecycle"   => "Lifecycle",
+        "status"               => "Status",
+        _                      => "Custom"
     };
 }
 
@@ -585,7 +627,7 @@ public partial class SelectableTagItem : ObservableObject
 /// </summary>
 public class TagCategoryGroup : List<SelectableTagItem>
 {
-    /// <summary>The category name (e.g. "role", "doctrine").</summary>
+    /// <summary>The category name (e.g. "role", "doctrine:weight").</summary>
     public string CategoryName { get; }
 
     /// <summary>Display-friendly capitalised category name.</summary>
@@ -600,7 +642,21 @@ public class TagCategoryGroup : List<SelectableTagItem>
 
     private static string FormatCategoryDisplay(string category) => category switch
     {
-        "ctx" => "Context",
-        _     => char.ToUpperInvariant(category[0]) + category[1..]
+        "ctx"                    => "Context",
+        "__doctrine_header__"    => "— Doctrine —",
+        "doctrine:weight"        => "Weight",
+        "doctrine:frequency"     => "Frequency",
+        "doctrine:purpose"       => "Purpose",
+        "doctrine:autonomy"      => "Autonomy",
+        "doctrine:flexibility"   => "Flexibility",
+        "doctrine:retention"     => "Retention",
+        "doctrine:lifecycle"     => "Lifecycle",
+        _                        => char.ToUpperInvariant(category[0]) + category[1..]
     };
+
+    /// <summary>Whether this group is the doctrine section divider header (no items).</summary>
+    public bool IsDoctrineSectionHeader => CategoryName == "__doctrine_header__";
+
+    /// <summary>Whether this group is a doctrine sub-dimension group.</summary>
+    public bool IsDoctrineSubDimension => CategoryName.StartsWith("doctrine:", StringComparison.Ordinal);
 }
