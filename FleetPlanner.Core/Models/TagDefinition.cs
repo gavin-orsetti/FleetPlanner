@@ -16,10 +16,9 @@ namespace FleetPlanner.Models;
 /// avoid auto-increment collision issues that integer IDs would introduce when
 /// merging seed data with user-created tags.</para>
 ///
-/// <para><strong>Categories (8):</strong> <c>role</c>, <c>doctrine</c>,
-/// <c>status</c>, <c>crew</c>, <c>capability</c>, <c>preference</c>,
-/// <c>constraint</c>, <c>custom</c>. The category prefix is stored separately in
-/// <see cref="Category"/> for efficient filtering.</para>
+/// <para><strong>Dimensions (4 + custom):</strong> <c>role</c>, <c>ctx</c>,
+/// <c>doctrine</c>, <c>status</c>, <c>custom</c>. The category prefix is stored
+/// separately in <see cref="Category"/> for efficient filtering.</para>
 ///
 /// <para><strong>Scoping:</strong> <see cref="AllowedScopes"/> is a
 /// comma-separated string of entity type names (e.g. <c>"OwnedShip"</c>,
@@ -56,7 +55,7 @@ public class TagDefinition
     public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Category prefix: role, doctrine, status, crew, preference, capability, constraint, custom.
+    /// Category prefix: role, ctx, doctrine, status, custom.
     /// </summary>
     public string Category { get; set; } = string.Empty;
 

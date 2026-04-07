@@ -12,27 +12,23 @@ namespace FleetPlanner.Services;
 ///
 /// <para><b>Schema versioning strategy:</b> An <see cref="AppMetadata"/> row with key
 /// <c>"schema_version"</c> gates whether seeding runs. On first launch the row does not
-/// exist, so <see cref="InitialiseAsync"/> seeds all system tags and writes version "2".
-/// On subsequent launches the row is found immediately and the method returns — this is
-/// the idempotency guard. Future schema migrations can bump the version and add migration
-/// logic between the version check and the version write.</para>
+/// exist, so <see cref="InitialiseAsync"/> seeds all system tags and writes version "3".
+/// On subsequent launches the row is found and the method checks whether a migration is
+/// needed (current version &lt; 3). Future schema migrations can bump the version and add
+/// migration logic between the version check and the version write.</para>
 ///
 /// <para><b>Idempotency:</b> Safe to call on every startup. <c>CreateTableAsync</c> is a
 /// no-op if the table already exists (SQLite <c>CREATE TABLE IF NOT EXISTS</c>). Seeding
-/// only runs when <c>schema_version</c> is absent. Even if seeding did run twice, tags use
+/// only runs when no system tags exist. Even if seeding did run twice, tags use
 /// <c>InsertOrReplaceAsync</c> keyed on the stable <see cref="TagDefinition.Key"/>, so
 /// duplicates are impossible.</para>
 ///
-/// <para><b>Seeding strategy — 8 tag categories:</b> The taxonomy seeds 40+ tags across:
+/// <para><b>Seeding strategy — 4 tag dimensions:</b> The taxonomy seeds 60 tags across:
 /// <list type="bullet">
-///   <item><b>role</b> — ship role classification (escort, mining, medical, etc.)</item>
-///   <item><b>doctrine</b> — operational philosophy (solo, combat, industrial, etc.)</item>
-///   <item><b>status</b> — ship lifecycle state (core, situational, upgrade-target, etc.)</item>
-///   <item><b>crew</b> — crewing pattern (solo, duo, small, large, NPC-viable)</item>
-///   <item><b>capability</b> — ship hardware features (medical bay, tractor beam, hangar, etc.)</item>
-///   <item><b>preference</b> — player sentiment (daily-driver, favorite, lore-pick, investment)</item>
-///   <item><b>constraint</b> — planning constraints (soloable, budget, hangar-limited)</item>
-///   <item><b>custom</b> — user-created tags (not seeded; created at runtime)</item>
+///   <item><b>role</b> — what the ship does (gameplay loop)</item>
+///   <item><b>ctx</b> — how and where the ship operates (crew, environment, legality)</item>
+///   <item><b>doctrine</b> — how the ship fits the fleet</item>
+///   <item><b>status</b> — acquisition and lifecycle state</item>
 /// </list></para>
 ///
 /// <para><b>Why stable slug keys instead of integer IDs:</b> System tags use string keys
@@ -64,11 +60,11 @@ public class DatabaseBootstrapService
 
     /// <summary>
     /// Creates all SQLite tables and seeds the system tag taxonomy if not already present.
+    /// Migrates from previous schema versions by wiping old system tags before reseeding.
     /// <para>
-    /// <b>Idempotent:</b> Safe to call on every startup. The <c>schema_version</c> guard in
-    /// <see cref="AppMetadata"/> prevents duplicate seeding — if the row exists, this method
-    /// returns immediately after ensuring tables exist. Table creation itself is idempotent
-    /// (SQLite <c>CREATE TABLE IF NOT EXISTS</c>).
+    /// <b>Idempotent:</b> Safe to call on every startup. Table creation is idempotent
+    /// (SQLite <c>CREATE TABLE IF NOT EXISTS</c>). The migration block only runs once
+    /// per version bump, and the seed guard only runs when no system tags exist.
     /// </para>
     /// <para>
     /// <b>Call site:</b> Invoked synchronously (via <c>.GetAwaiter().GetResult()</c>) from
@@ -78,6 +74,8 @@ public class DatabaseBootstrapService
     /// </summary>
     public async Task InitialiseAsync()
     {
+        const int currentSchemaVersion = 3;
+
         var db = new SQLiteAsyncConnection(_dbPath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache);
 
         // Create all tables
@@ -89,21 +87,41 @@ public class DatabaseBootstrapService
         await db.CreateTableAsync<AppMetadata>();
         await db.CreateTableAsync<ShipCacheMetadata>();
 
-        // Check schema version — seed only if not already done
+        // Check schema version for migration
         var versionRecord = await db.FindAsync<AppMetadata>("schema_version");
+        var storedVersion = 0;
         if (versionRecord is not null)
-            return;
+            int.TryParse(versionRecord.Value, out storedVersion);
 
-        // Seed system tags
-        await SeedTagsAsync(db);
-
-        // Record schema version
-        await db.InsertOrReplaceAsync(new AppMetadata
+        // Migration: wipe old system tags when upgrading to new taxonomy
+        if (storedVersion > 0 && storedVersion < currentSchemaVersion)
         {
-            Key = "schema_version",
-            Value = "2",
-            UpdatedUtc = DateTime.UtcNow
-        });
+            await db.ExecuteAsync("DELETE FROM TagDefinitions WHERE IsSystemDefined = 1");
+            await db.InsertOrReplaceAsync(new AppMetadata
+            {
+                Key = "schema_version",
+                Value = currentSchemaVersion.ToString(),
+                UpdatedUtc = DateTime.UtcNow
+            });
+        }
+
+        // Seed if no system tags exist (first launch or post-migration wipe)
+        var existingSystemTags = await db.Table<TagDefinition>().Where(t => t.IsSystemDefined).CountAsync();
+        if (existingSystemTags == 0)
+        {
+            await SeedTagsAsync(db);
+        }
+
+        // Record schema version on first launch
+        if (versionRecord is null)
+        {
+            await db.InsertOrReplaceAsync(new AppMetadata
+            {
+                Key = "schema_version",
+                Value = currentSchemaVersion.ToString(),
+                UpdatedUtc = DateTime.UtcNow
+            });
+        }
     }
 
     private static async Task SeedTagsAsync(SQLiteAsyncConnection db)
@@ -117,16 +135,12 @@ public class DatabaseBootstrapService
     /// Builds the complete list of system-defined tags that form the seeded taxonomy.
     /// <para>
     /// Each tag uses a stable <c>"category:slug"</c> key that NEVER changes once shipped.
-    /// The slug is a lowercase, hyphenated identifier (e.g. <c>"role:frontline"</c>,
-    /// <c>"doctrine:small-crew"</c>). Keys are the primary key in SQLite — renaming a slug
+    /// The slug is a lowercase, hyphenated identifier (e.g. <c>"role:fighter"</c>,
+    /// <c>"doctrine:backbone"</c>). Keys are the primary key in SQLite — renaming a slug
     /// would orphan all existing tag assignments.
     /// </para>
     /// <para>
-    /// <b>AllowedScopes:</b> Each tag's <see cref="TagDefinition.AllowedScopes"/> controls
-    /// which entity types it can be applied to. Most role/status/crew/capability/preference
-    /// tags are scoped to <c>"OwnedShip"</c> only. Doctrine and constraint tags allow both
-    /// <c>"OwnedShip,UserFleetGroup"</c> so they can describe both individual ships and
-    /// fleet groups.
+    /// <b>AllowedScopes:</b> All seeded tags use <c>"OwnedShip,UserFleetGroup"</c>.
     /// </para>
     /// <para>
     /// <b>IsSystemDefined:</b> All tags created here have <c>IsSystemDefined = true</c>.
@@ -134,192 +148,99 @@ public class DatabaseBootstrapService
     /// This protects the recommendation engine's tag key references from breaking.
     /// </para>
     /// </summary>
-    /// <returns>A list of 40+ <see cref="TagDefinition"/> records spanning 7 categories
-    /// (role, doctrine, status, crew, capability, preference, constraint).</returns>
+    /// <returns>A list of 60 <see cref="TagDefinition"/> records spanning 4 dimensions
+    /// (role, ctx, doctrine, status).</returns>
     internal static List<TagDefinition> BuildSystemTags()
     {
-        var sortOrder = 0;
         var tags = new List<TagDefinition>();
 
-        // ── Role tags ──────────────────────────────────────────────────
-        void AddRole(string slug, string displayName, string description)
+        void Add(string category, string colorHex, int sortOrder, string slug, string displayName, string description)
         {
             tags.Add(new TagDefinition
             {
-                Key = $"role:{slug}",
+                Key = $"{category}:{slug}",
                 DisplayName = displayName,
-                Category = "role",
+                Category = category,
                 Description = description,
-                ColorHex = "#C4706A",
-                SortOrder = sortOrder++,
-                IsSystemDefined = true,
-                IsUserEditable = false,
-                AllowedScopes = "OwnedShip"
-            });
-        }
-
-        AddRole("escort", "Escort", "Protecting other ships in the fleet");
-        AddRole("frontline", "Frontline Combat", "Direct combat engagement");
-        AddRole("interdiction", "Interdiction", "Preventing enemy escape or approach");
-        AddRole("bomber", "Bomber", "Heavy strike against large targets");
-        AddRole("hauling", "Hauling", "Transporting cargo");
-        AddRole("mining", "Mining", "Resource extraction");
-        AddRole("salvage", "Salvage", "Recovering derelict ships and cargo");
-        AddRole("exploration", "Exploration", "Surveying unknown space");
-        AddRole("scanning", "Scanning/Recon", "Intelligence gathering");
-        AddRole("medical", "Medical", "Combat and field medical support");
-        AddRole("repair", "Repair", "Field repair of other ships");
-        AddRole("refuel", "Refuel", "Field refuelling operations");
-        AddRole("refinery", "Refinery", "On-site resource processing");
-        AddRole("transport", "Personnel Transport", "Moving crew or passengers");
-        AddRole("command", "Command/Coordination", "Fleet coordination");
-
-        // ── Doctrine tags ──────────────────────────────────────────────
-        sortOrder = 0;
-        void AddDoctrine(string slug, string displayName, string description)
-        {
-            tags.Add(new TagDefinition
-            {
-                Key = $"doctrine:{slug}",
-                DisplayName = displayName,
-                Category = "doctrine",
-                Description = description,
-                ColorHex = "#8B66B8",
-                SortOrder = sortOrder++,
+                ColorHex = colorHex,
+                SortOrder = sortOrder,
                 IsSystemDefined = true,
                 IsUserEditable = false,
                 AllowedScopes = "OwnedShip,UserFleetGroup"
             });
         }
 
-        AddDoctrine("solo", "Solo Operation", "Single pilot, self-sufficient");
-        AddDoctrine("small-crew", "Small Crew", "2–4 players");
-        AddDoctrine("org-scale", "Org Scale", "Large coordinated operations");
-        AddDoctrine("industrial", "Industrial", "Resource gathering and processing focus");
-        AddDoctrine("combat", "Combat", "Offensive or defensive military focus");
-        AddDoctrine("exploration", "Exploration", "Discovery and surveying focus");
-        AddDoctrine("trade", "Trade", "Commerce and logistics focus");
-        AddDoctrine("support", "Support", "Enabling other ships and operations");
-        AddDoctrine("multipurpose", "Multipurpose", "No single dominant focus");
+        // ── role (24 tags) — what the ship does ────────────────────────
+        const string roleColor = "#C4706A";
+        Add("role", roleColor, 1, "fighter", "Fighter", "Dogfighting, air superiority, point defense");
+        Add("role", roleColor, 2, "bomber", "Bomber", "Heavy ordnance delivery against capital and large ships");
+        Add("role", roleColor, 3, "gunship", "Gunship", "Sustained heavy fire, multi-crew weapons platform");
+        Add("role", roleColor, 4, "interceptor", "Interceptor", "High-speed pursuit, interdiction");
+        Add("role", roleColor, 5, "dropship", "Dropship", "Troop delivery, vehicle insertion, boarding");
+        Add("role", roleColor, 6, "escort", "Escort", "Protecting other ships in transit");
+        Add("role", roleColor, 7, "cargo", "Cargo", "Moving goods between locations");
+        Add("role", roleColor, 8, "mining", "Mining", "Extracting raw materials from asteroids or surface");
+        Add("role", roleColor, 9, "salvage", "Salvage", "Recovering components and materials from wrecks");
+        Add("role", roleColor, 10, "exploration", "Exploration", "Deep-space scanning, jump point discovery");
+        Add("role", roleColor, 11, "medical", "Medical", "Battlefield medicine, emergency rescue");
+        Add("role", roleColor, 12, "refuel", "Refuel", "Providing fuel to other ships in the field");
+        Add("role", roleColor, 13, "repair", "Repair", "Repairing other ships in the field");
+        Add("role", roleColor, 14, "science", "Science", "Research, scanning, data collection");
+        Add("role", roleColor, 15, "data-running", "Data Running", "High-speed cargo of information or contraband");
+        Add("role", roleColor, 16, "passenger", "Passenger", "Transporting NPC or player passengers");
+        Add("role", roleColor, 17, "racing", "Racing", "Competitive speed circuit flying");
+        Add("role", roleColor, 18, "ground-ops", "Ground Ops", "Planetary vehicle operations, FPS insertion");
+        Add("role", roleColor, 19, "command", "Command", "Fleet coordination, capital ship operations");
+        Add("role", roleColor, 20, "stealth", "Stealth", "Low-signature operations, infiltration");
+        Add("role", roleColor, 21, "electronic-warfare", "Electronic Warfare", "Sensor disruption, jamming, electronic interdiction");
+        Add("role", roleColor, 22, "logistics", "Logistics", "Coordinating supply, assets, and support for a fleet");
+        Add("role", roleColor, 23, "snub", "Snub", "Parasite/launch-bay craft, short-range sorties");
+        Add("role", roleColor, 24, "multi-role", "Multi-Role", "Genuinely versatile across multiple loops");
 
-        // ── Status tags ────────────────────────────────────────────────
-        sortOrder = 0;
-        void AddStatus(string slug, string displayName, string description)
-        {
-            tags.Add(new TagDefinition
-            {
-                Key = $"status:{slug}",
-                DisplayName = displayName,
-                Category = "status",
-                Description = description,
-                ColorHex = "#B8913A",
-                SortOrder = sortOrder++,
-                IsSystemDefined = true,
-                IsUserEditable = true,
-                AllowedScopes = "OwnedShip"
-            });
-        }
+        // ── ctx (14 tags) — how and where the ship operates ────────────
+        const string ctxColor = "#3A9CB8";
+        Add("ctx", ctxColor, 1, "solo", "Solo", "Genuinely effective with a single pilot");
+        Add("ctx", ctxColor, 2, "duo", "Duo", "Optimized for two players");
+        Add("ctx", ctxColor, 3, "small-crew", "Small Crew", "Requires or shines with 3–6 players");
+        Add("ctx", ctxColor, 4, "large-crew", "Large Crew", "Requires or benefits from 7+ players");
+        Add("ctx", ctxColor, 5, "multicrew", "Multicrew", "Non-specific multicrew (crew count varies)");
+        Add("ctx", ctxColor, 6, "space-only", "Space Only", "Operates exclusively in space");
+        Add("ctx", ctxColor, 7, "atmospheric", "Atmospheric", "Capable of planetary atmosphere operations");
+        Add("ctx", ctxColor, 8, "planetary", "Planetary", "Designed for or primarily used on planetary surfaces");
+        Add("ctx", ctxColor, 9, "deep-space", "Deep Space", "Extended operations far from stations");
+        Add("ctx", ctxColor, 10, "lawful", "Lawful", "Intended for legal operations within UEE space");
+        Add("ctx", ctxColor, 11, "unlawful", "Unlawful", "Used for criminal, piracy, or smuggling activities");
+        Add("ctx", ctxColor, 12, "neutral", "Neutral", "Grey area: mercenary, bounty hunting, free trade");
+        Add("ctx", ctxColor, 13, "org-dependent", "Org Dependent", "Only viable with org-level crew and coordination");
+        Add("ctx", ctxColor, 14, "snub-requires-carrier", "Requires Carrier", "Must be deployed from a parent ship");
 
-        AddStatus("core", "Core Ship", "Essential to the fleet, always deployed");
-        AddStatus("situational", "Situational", "Deployed only for specific operations");
-        AddStatus("upgrade-target", "Upgrade Target", "Planned for replacement");
-        AddStatus("placeholder", "Placeholder", "Temporary fill for a role gap");
-        AddStatus("concept", "Concept/Unflown", "Not yet flyable in game");
+        // ── doctrine (14 tags) — how the ship fits the fleet ───────────
+        const string doctrineColor = "#8B66B8";
+        Add("doctrine", doctrineColor, 1, "backbone", "Backbone", "Primary fleet ship — most-used, most critical asset");
+        Add("doctrine", doctrineColor, 2, "daily-driver", "Daily Driver", "Go-to ship for routine, mixed-loop sessions");
+        Add("doctrine", doctrineColor, 3, "specialist", "Specialist", "Pulled out only for a specific loop");
+        Add("doctrine", doctrineColor, 4, "support", "Support", "Enables other fleet ships to operate more effectively");
+        Add("doctrine", doctrineColor, 5, "reserve", "Reserve", "Kept for rare scenarios; not regularly deployed");
+        Add("doctrine", doctrineColor, 6, "aspirational", "Aspirational", "Wanted or planned but not yet reflecting capability");
+        Add("doctrine", doctrineColor, 7, "identity", "Identity", "Kept for personal attachment, lore, or expression");
+        Add("doctrine", doctrineColor, 8, "bridge", "Bridge", "Transitional ship; expected to be replaced or repurposed");
+        Add("doctrine", doctrineColor, 9, "escort-wing", "Escort Wing", "Part of a defensive combat screen for other fleet assets");
+        Add("doctrine", doctrineColor, 10, "strike-element", "Strike Element", "Offensive component; deploys for attack operations");
+        Add("doctrine", doctrineColor, 11, "logistics-train", "Logistics Train", "Part of a coordinated supply or support group");
+        Add("doctrine", doctrineColor, 12, "carrier-based", "Carrier Based", "Deployed from a parent ship as part of a carrier wing");
+        Add("doctrine", doctrineColor, 13, "flagship", "Flagship", "Command and coordination anchor for the fleet");
+        Add("doctrine", doctrineColor, 14, "redundant", "Redundant", "Backup for another ship in the fleet");
 
-        // ── Crew pattern tags ──────────────────────────────────────────
-        sortOrder = 0;
-        void AddCrew(string slug, string displayName, string description)
-        {
-            tags.Add(new TagDefinition
-            {
-                Key = $"crew:{slug}",
-                DisplayName = displayName,
-                Category = "crew",
-                Description = description,
-                ColorHex = "#3A9CB8",
-                SortOrder = sortOrder++,
-                IsSystemDefined = true,
-                IsUserEditable = false,
-                AllowedScopes = "OwnedShip"
-            });
-        }
-
-        AddCrew("solo", "Solo Operated", "Designed and used by one player");
-        AddCrew("duo", "Duo Operated", "Best with two players");
-        AddCrew("small", "Small Crew", "3–5 players");
-        AddCrew("large", "Large Crew", "6+ players");
-        AddCrew("npc-viable", "NPC Viable", "Can be crewed with NPCs");
-
-        // ── Capability tags ────────────────────────────────────────────
-        sortOrder = 0;
-        void AddCapability(string slug, string displayName, string description)
-        {
-            tags.Add(new TagDefinition
-            {
-                Key = $"capability:{slug}",
-                DisplayName = displayName,
-                Category = "capability",
-                Description = description,
-                ColorHex = "#4A9E6B",
-                SortOrder = sortOrder++,
-                IsSystemDefined = true,
-                IsUserEditable = false,
-                AllowedScopes = "OwnedShip"
-            });
-        }
-
-        AddCapability("medical", "Has Medical Bay", "Ship has medical facilities");
-        AddCapability("repair", "Can Repair Ships", "Ship can perform field repairs");
-        AddCapability("refuel", "Can Refuel Ships", "Ship can refuel other ships");
-        AddCapability("tractor-beam", "Has Tractor Beam", "Ship has tractor beam equipment");
-        AddCapability("quantum-capable", "Quantum Travel Capable", "Ship can perform quantum travel");
-        AddCapability("cargo", "Has Cargo Space", "Ship has cargo hold");
-        AddCapability("hangar", "Has Ship Hangar", "Ship has internal ship hangar");
-
-        // ── Preference tags ────────────────────────────────────────────
-        sortOrder = 0;
-        void AddPreference(string slug, string displayName, string description)
-        {
-            tags.Add(new TagDefinition
-            {
-                Key = $"preference:{slug}",
-                DisplayName = displayName,
-                Category = "preference",
-                Description = description,
-                ColorHex = "#B87040",
-                SortOrder = sortOrder++,
-                IsSystemDefined = true,
-                IsUserEditable = true,
-                AllowedScopes = "OwnedShip"
-            });
-        }
-
-        AddPreference("daily-driver", "Daily Driver", "Used in most play sessions");
-        AddPreference("favorite", "Favorite", "Personal favorite");
-        AddPreference("lore-pick", "Lore Pick", "Chosen for roleplay or lore reasons");
-        AddPreference("investment", "Investment", "Kept for future value or pledging");
-
-        // ── Constraint tags ────────────────────────────────────────────
-        sortOrder = 0;
-        void AddConstraint(string slug, string displayName, string description)
-        {
-            tags.Add(new TagDefinition
-            {
-                Key = $"constraint:{slug}",
-                DisplayName = displayName,
-                Category = "constraint",
-                Description = description,
-                ColorHex = "#7A8499",
-                SortOrder = sortOrder++,
-                IsSystemDefined = true,
-                IsUserEditable = true,
-                AllowedScopes = "OwnedShip,UserFleetGroup"
-            });
-        }
-
-        AddConstraint("soloable", "Must Be Soloable", "Player needs to fly this alone");
-        AddConstraint("budget", "Budget Constraint", "aUEC cost is a factor");
-        AddConstraint("hangar-limited", "Hangar Limited", "Must fit in player's hangar");
+        // ── status (8 tags) — acquisition and lifecycle state ──────────
+        const string statusColor = "#B8913A";
+        Add("status", statusColor, 1, "owned", "Owned", "Ship is in the hangar, fully acquired");
+        Add("status", statusColor, 2, "planned", "Planned", "Being actively saved toward or prioritized");
+        Add("status", statusColor, 3, "concept", "Concept", "Long-term aspiration, not actively pursued");
+        Add("status", statusColor, 4, "loaner", "Loaner", "Temporarily available through CIG's loaner system");
+        Add("status", statusColor, 5, "pledged", "Pledged", "Pledged to CIG but not yet flight-ready in game");
+        Add("status", statusColor, 6, "on-loan", "On Loan", "Borrowed from org or friend; not permanently owned");
+        Add("status", statusColor, 7, "for-review", "For Review", "Under evaluation; undecided whether to keep");
+        Add("status", statusColor, 8, "retired", "Retired", "No longer part of the active fleet");
 
         return tags;
     }
