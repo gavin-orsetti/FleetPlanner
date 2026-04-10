@@ -4,7 +4,7 @@ using FleetPlanner.Models;
 namespace FleetPlanner.Services;
 
 /// <summary>
-/// Graph-driven recommendation engine implementing 10 analytical patterns that analyse
+/// Graph-driven recommendation engine implementing analytical patterns that analyse
 /// the user's fleet composition and produce actionable <see cref="Recommendation"/> objects.
 ///
 /// <para><b>Architecture:</b> Sits in the services layer, operating entirely on the
@@ -12,70 +12,44 @@ namespace FleetPlanner.Services;
 /// pre-built by <see cref="IGraphBuildService"/> before calling <see cref="GetRecommendations"/>.
 /// This service is stateless and safe to call from any thread.</para>
 ///
-/// <para><b>Scoring pipeline:</b> Each of the 10 patterns independently generates zero or
-/// more <see cref="Recommendation"/> objects. Each recommendation receives a
-/// <see cref="Recommendation.Score"/> in the 0.0–1.0 range (drawn from
-/// <see cref="RecommendationWeights"/> constants, sometimes scaled by a ratio). The
-/// <see cref="Recommendation.Priority"/> is derived from the score — typically ≥ 0.7 → High,
-/// 0.4–0.7 → Medium, &lt; 0.4 → Low — though some patterns use fixed priorities.
-/// Results are sorted by score descending so the most actionable items appear first.</para>
-///
-/// <para><b>The 10 analytical patterns:</b>
-/// <list type="number">
-///   <item><b>CapabilityGap</b> — group doctrine implies capabilities that no member ship provides.</item>
-///   <item><b>Redundancy</b> — multiple ships in a group share the same primary role tag.</item>
-///   <item><b>Complement</b> — an unassigned ship's roles would fill a gap in a group.</item>
-///   <item><b>UnderDescribedShip</b> — a ship has fewer than 2 meaningful tags.</item>
-///   <item><b>UnassignedShip</b> — a ship has been in the collection &gt; 7 days with no group.</item>
-///   <item><b>GroupCoherence</b> — ship role tags in a group align poorly with group doctrine.</item>
-///   <item><b>AccountRoleDistribution</b> — the entire collection is missing major role categories.</item>
-///   <item><b>DoctrineMismatch</b> — a ship's primary doctrine contradicts its group's doctrine.</item>
-///   <item><b>RemoveFromGroup</b> — a ship's tags don't align with any group doctrine role.</item>
-///   <item><b>CrewEfficiency</b> — group crew requirements significantly exceed or underutilise the target.</item>
+/// <para><b>5-pillar tag system:</b> The engine works with five tag pillars:
+/// <list type="bullet">
+///   <item><b>doctrine:</b> — fleet-scoped persistent beliefs (value, frequency, investment, identity, structural)</item>
+///   <item><b>intent:</b> — group-scoped deployment commitment (activity, economy, crew, legal, org)</item>
+///   <item><b>potency:</b> — group-scoped force multiplication (capacity, reach, resilience, footprint)</item>
+///   <item><b>status:</b> — fleet-scoped lifecycle state (lifecycle, modifier)</item>
+///   <item><b>tradeoff:</b> — group-scoped accepted downsides (suppress matching warnings)</item>
 /// </list></para>
 ///
-/// <para><b>Edge case handling:</b> All patterns guard against empty collections —
-/// <c>graph.Ships.Count == 0</c> or <c>group.MemberShips.Count == 0</c> causes the
-/// pattern to return an empty list, never throw.</para>
+/// <para><b>Tradeoff suppression:</b> When a tradeoff tag is present, the matching warning
+/// is suppressed and the ship is flagged as an opportunity target instead.</para>
 /// </summary>
 public class RecommendationService : IRecommendationService
 {
     /// <summary>
-    /// The role:economy and role:activity tag keys that define a "well-rounded" fleet for
-    /// <see cref="AnalyseAccountRoleDistribution"/>. Missing any of these triggers a gap recommendation.
+    /// The intent:economy and intent:activity tag keys that define a "well-rounded" fleet.
+    /// Missing any of these triggers a gap recommendation.
     /// </summary>
-    private static readonly string[] MajorRoleCategories =
+    private static readonly string[] MajorIntentCategories =
     [
-        "role:economy:combat", "role:economy:extraction", "role:economy:logistics",
-        "role:economy:support", "role:economy:intelligence",
-        "role:activity:fight", "role:activity:mine", "role:activity:salvage",
-        "role:activity:haul", "role:activity:heal", "role:activity:repair"
+        "intent:economy:combat-loop", "intent:economy:extraction-loop", "intent:economy:logistics-loop",
+        "intent:economy:support-loop", "intent:economy:intel-loop",
+        "intent:activity:fight", "intent:activity:mine", "intent:activity:salvage",
+        "intent:activity:haul", "intent:activity:heal", "intent:activity:support"
     ];
 
     /// <summary>
-    /// Maps doctrine tag keys to the role/capability tag keys that doctrine implies.
-    /// Used by <see cref="AnalyseCapabilityGaps"/>, <see cref="AnalyseGroupCoherence"/>,
-    /// and <see cref="AnalyseRemoveFromGroup"/> to determine what a group "needs".
-    /// Doctrine tags not in this dictionary have no specific capability requirements and
-    /// are silently skipped by those patterns.
+    /// Maps group doctrine tag keys to the intent/capability tag keys that doctrine implies.
+    /// Used by capability gap, coherence, and remove-from-group patterns.
     /// </summary>
     private static readonly Dictionary<string, string[]> DoctrineCapabilities = new()
     {
-        // Group-purpose tags that imply specific role:economy and role:activity requirements
-        ["doctrine:purpose:strike-element"] = ["role:economy:combat", "role:activity:fight", "role:activity:bomb", "role:activity:intercept"],
-        ["doctrine:purpose:shield-element"] = ["role:activity:escort", "role:activity:signal"],
-        ["doctrine:purpose:lift-element"] = ["role:activity:haul", "role:activity:board", "role:activity:ferry"],
-        ["doctrine:purpose:sustain-element"] = ["role:economy:support", "role:activity:heal", "role:activity:repair", "role:activity:refuel"],
-        ["doctrine:purpose:recon-element"] = ["role:economy:intelligence", "role:activity:scan", "role:activity:hack"],
-        ["doctrine:purpose:control-element"] = ["role:activity:signal", "role:activity:patrol"],
-        // Ship-purpose tags that imply specific role:economy and role:activity requirements
-        ["doctrine:purpose:earner"] = ["role:economy:extraction", "role:activity:mine", "role:activity:salvage", "role:activity:haul"],
-        ["doctrine:purpose:protector"] = ["role:economy:combat", "role:activity:escort", "role:activity:fight"],
-        ["doctrine:purpose:enabler"] = ["role:economy:support", "role:activity:heal", "role:activity:repair", "role:activity:refuel"],
-        ["doctrine:purpose:suppressor"] = ["role:activity:signal", "role:activity:intercept"],
-        ["doctrine:purpose:expander"] = ["role:economy:intelligence", "role:activity:scan"],
-        ["doctrine:purpose:deliverer"] = ["role:economy:logistics", "role:activity:haul", "role:activity:ferry"],
-        ["doctrine:purpose:controller"] = ["role:activity:signal", "role:activity:patrol"]
+        ["doctrine:primary-arm"] = ["intent:activity:fight", "intent:activity:patrol", "intent:economy:combat-loop"],
+        ["doctrine:support-echelon"] = ["intent:activity:support", "intent:activity:heal", "intent:economy:support-loop"],
+        ["doctrine:specialist-detachment"] = ["intent:activity:scan", "intent:activity:hack", "intent:economy:intel-loop"],
+        ["doctrine:carrier-element"] = ["intent:activity:command", "intent:activity:fight", "intent:activity:support"],
+        ["doctrine:rapid-response"] = ["intent:activity:fight", "intent:activity:respond", "intent:activity:escort"],
+        ["doctrine:reserve-force"] = ["intent:activity:fight", "intent:activity:support"]
     };
 
     /// <inheritdoc/>
@@ -83,17 +57,19 @@ public class RecommendationService : IRecommendationService
     {
         var recs = new List<Recommendation>();
 
-        // Run all 10 analytical patterns
+        // Run all analytical patterns
         recs.AddRange(AnalyseCapabilityGaps(graph));
         recs.AddRange(AnalyseRedundancy(graph));
         recs.AddRange(AnalyseComplement(graph));
         recs.AddRange(AnalyseUnderDescribedShips(graph));
         recs.AddRange(AnalyseUnassignedShips(graph));
         recs.AddRange(AnalyseGroupCoherence(graph));
-        recs.AddRange(AnalyseAccountRoleDistribution(graph));
+        recs.AddRange(AnalyseAccountIntentDistribution(graph));
         recs.AddRange(AnalyseDoctrineMismatch(graph));
         recs.AddRange(AnalyseRemoveFromGroup(graph));
         recs.AddRange(AnalyseCrewEfficiency(graph));
+        recs.AddRange(AnalyseTradeoffSuggestions(graph));
+        recs.AddRange(AnalysePotencyMismatches(graph));
 
         // Sort by score descending (highest priority first)
         return recs.OrderByDescending(r => r.Score).ToList();
@@ -101,17 +77,6 @@ public class RecommendationService : IRecommendationService
 
     /// <summary>
     /// Pattern 1: CapabilityGap — a group's doctrine implies capabilities that no member ship provides.
-    /// <para><b>Trigger:</b> For each group, for each doctrine tag on the group, look up the
-    /// expected role/capability tags in <see cref="DoctrineCapabilities"/>. If any expected tag
-    /// is absent from all member ships (checking both global and contextual tags for that group),
-    /// a CapabilityGap recommendation is generated.</para>
-    /// <para><b>Score:</b> Fixed at <see cref="RecommendationWeights.CapabilityGapWeight"/> (1.0).
-    /// Priority: always <see cref="RecommendationPriority.High"/>.</para>
-    /// <para><b>Evidence:</b> One entry per missing tag key (e.g. "Missing: Mining").</para>
-    /// <para><b>Suggested actions:</b> "Add a ship with the [missing role] tag to this group".</para>
-    /// <para><b>Edge cases:</b> Doctrine tags not in <see cref="DoctrineCapabilities"/> (e.g.
-    /// "doctrine:weight:core", "doctrine:frequency:regular") are silently skipped — they have no
-    /// specific capability requirements. Groups with no member ships generate gaps for all capabilities.</para>
     /// </summary>
     private static List<Recommendation> AnalyseCapabilityGaps(FleetGraph graph)
     {
@@ -124,7 +89,6 @@ public class RecommendationService : IRecommendationService
                 if (!DoctrineCapabilities.TryGetValue(doctrineTag.Definition.Key, out var requiredTags))
                     continue;
 
-                // Collect all tag keys from member ships (global + contextual for this group)
                 var memberTagKeys = new HashSet<string>();
                 foreach (var ship in group.MemberShips)
                 {
@@ -159,16 +123,7 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 2: Redundancy — multiple ships in a group share the same primary (weight 1) role tag.
-    /// <para><b>Trigger:</b> For each group, collect all role-category tags with weight == 1 from
-    /// each member ship (global + contextual). If two or more ships share the same primary role,
-    /// a Redundancy recommendation is generated for that role.</para>
-    /// <para><b>Score:</b> Fixed at <see cref="RecommendationWeights.RedundancyWeight"/> (0.6).
-    /// Priority: Medium if score ≥ 0.7, else Low (in practice always Low at 0.6).</para>
-    /// <para><b>Evidence:</b> One entry per ship listing its name and the shared role.</para>
-    /// <para><b>Suggested actions:</b> "Reassign one ship's primary role or move it to a different group".</para>
-    /// <para><b>Limitation:</b> Intentional redundancy (e.g. multiple escorts for safety) cannot
-    /// be distinguished from accidental duplication. The recommendation is always generated.</para>
+    /// Pattern 2: Redundancy — multiple ships in a group share the same primary (weight 1) intent:activity tag.
     /// </summary>
     private static List<Recommendation> AnalyseRedundancy(FleetGraph graph)
     {
@@ -176,24 +131,24 @@ public class RecommendationService : IRecommendationService
 
         foreach (var group in graph.Groups)
         {
-            var primaryRoles = new Dictionary<string, List<ShipNode>>();
+            var primaryIntents = new Dictionary<string, List<ShipNode>>();
 
             foreach (var ship in group.MemberShips)
             {
-                var roleTags = GetRoleTags(ship, group.Group.Id)
+                var intentTags = GetIntentTags(ship, group.Group.Id)
                     .Where(t => t.Weight == 1)
                     .ToList();
 
-                foreach (var roleTag in roleTags)
+                foreach (var tag in intentTags)
                 {
-                    var key = roleTag.Definition.Key;
-                    if (!primaryRoles.ContainsKey(key))
-                        primaryRoles[key] = new List<ShipNode>();
-                    primaryRoles[key].Add(ship);
+                    var key = tag.Definition.Key;
+                    if (!primaryIntents.ContainsKey(key))
+                        primaryIntents[key] = new List<ShipNode>();
+                    primaryIntents[key].Add(ship);
                 }
             }
 
-            foreach (var (roleKey, ships) in primaryRoles.Where(kv => kv.Value.Count > 1))
+            foreach (var (intentKey, ships) in primaryIntents.Where(kv => kv.Value.Count > 1))
             {
                 var score = RecommendationWeights.RedundancyWeight;
                 recs.Add(new Recommendation
@@ -201,13 +156,13 @@ public class RecommendationService : IRecommendationService
                     ScopeType = RecommendationScope.Group,
                     ScopeId = group.Group.Id,
                     Kind = RecommendationKind.Redundancy,
-                    TargetTagKey = roleKey,
+                    TargetTagKey = intentKey,
                     Score = score,
                     Priority = score >= 0.7 ? RecommendationPriority.Medium : RecommendationPriority.Low,
-                    Summary = $"{ships.Count} ships share primary role {FormatTagKey(roleKey)} in '{group.Group.Name}'",
-                    Explanation = $"Ships {string.Join(", ", ships.Select(s => s.CatalogueShip.Name))} all have {FormatTagKey(roleKey)} as their primary role. Consider diversifying roles.",
-                    Evidence = ships.Select(s => $"{s.CatalogueShip.Name}: primary {FormatTagKey(roleKey)}").ToList(),
-                    SuggestedActions = [$"Reassign one ship's primary role or move it to a different group"]
+                    Summary = $"{ships.Count} ships share primary intent {FormatTagKey(intentKey)} in '{group.Group.Name}'",
+                    Explanation = $"Ships {string.Join(", ", ships.Select(s => s.CatalogueShip.Name))} all have {FormatTagKey(intentKey)} as their primary intent. Consider diversifying roles.",
+                    Evidence = ships.Select(s => $"{s.CatalogueShip.Name}: primary {FormatTagKey(intentKey)}").ToList(),
+                    SuggestedActions = [$"Reassign one ship's primary intent or move it to a different group"]
                 });
             }
         }
@@ -216,17 +171,7 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 3: Complement — a ship not yet in a group has role tags that would fill a gap in that group.
-    /// <para><b>Trigger:</b> For each group, collect all role tags from member ships. Then for each
-    /// ship NOT already in the group, check if any of its global role tags are absent from the group's
-    /// role coverage. If so, generate a Complement recommendation suggesting the ship be added.</para>
-    /// <para><b>Score:</b> Fixed at <see cref="RecommendationWeights.ComplementWeight"/> (0.8).
-    /// Priority: always <see cref="RecommendationPriority.Medium"/>.</para>
-    /// <para><b>Evidence:</b> One entry per complementary role (e.g. "Missing in group: Mining").</para>
-    /// <para><b>Suggested actions:</b> "Add [ship name] to group '[group name]'".</para>
-    /// <para><b>Limitation:</b> Only checks global tags on candidate ships, not contextual tags
-    /// from other groups. A ship already in group A could still be recommended for group B
-    /// (which may be desirable — ships can belong to multiple groups via contextual tags).</para>
+    /// Pattern 3: Complement — a ship not yet in a group has intent tags that would fill a gap.
     /// </summary>
     private static List<Recommendation> AnalyseComplement(FleetGraph graph)
     {
@@ -234,23 +179,22 @@ public class RecommendationService : IRecommendationService
 
         foreach (var group in graph.Groups)
         {
-            var groupRoleKeys = new HashSet<string>();
+            var groupIntentKeys = new HashSet<string>();
             foreach (var ship in group.MemberShips)
-                foreach (var t in GetRoleTags(ship, group.Group.Id))
-                    groupRoleKeys.Add(t.Definition.Key);
+                foreach (var t in GetIntentTags(ship, group.Group.Id))
+                    groupIntentKeys.Add(t.Definition.Key);
 
-            // Find unassigned ships that could fill missing roles
             foreach (var ship in graph.Ships)
             {
                 if (group.MemberShips.Any(m => m.OwnedShipId == ship.OwnedShipId))
-                    continue; // already a member
+                    continue;
 
-                var shipRoles = ship.GlobalTags
-                    .Where(t => t.Definition.Category.StartsWith("role:", StringComparison.Ordinal))
+                var shipIntents = ship.GlobalTags
+                    .Where(t => t.Definition.Category.StartsWith("intent:", StringComparison.Ordinal))
                     .Select(t => t.Definition.Key)
                     .ToList();
 
-                var complementary = shipRoles.Where(r => !groupRoleKeys.Contains(r)).ToList();
+                var complementary = shipIntents.Where(r => !groupIntentKeys.Contains(r)).ToList();
                 if (complementary.Count > 0)
                 {
                     recs.Add(new Recommendation
@@ -275,14 +219,6 @@ public class RecommendationService : IRecommendationService
 
     /// <summary>
     /// Pattern 4: UnderDescribedShip — an owned ship has fewer than 2 meaningful global tags.
-    /// <para><b>Trigger:</b> Count global tags on the ship excluding any with category "acquisition".
-    /// If the count is 0 or 1, generate an UnderDescribedShip recommendation.</para>
-    /// <para><b>Score:</b> Fixed at <see cref="RecommendationWeights.UnderDescribedWeight"/> (0.4).
-    /// Priority: always <see cref="RecommendationPriority.Low"/>.</para>
-    /// <para><b>Evidence:</b> "Current tags: {count}".</para>
-    /// <para><b>Suggested actions:</b> "Add role tags", "Add context tags", "Add doctrine tags".</para>
-    /// <para><b>Edge case:</b> A ship with zero global tags but many contextual tags is still
-    /// flagged, because global tags are what the account-level patterns analyse.</para>
     /// </summary>
     private static List<Recommendation> AnalyseUnderDescribedShips(FleetGraph graph)
     {
@@ -290,9 +226,7 @@ public class RecommendationService : IRecommendationService
 
         foreach (var ship in graph.Ships)
         {
-            var meaningfulTags = ship.GlobalTags
-                .Where(t => t.Definition.Category != "acquisition")
-                .Count();
+            var meaningfulTags = ship.GlobalTags.Count;
 
             if (meaningfulTags < 2)
             {
@@ -304,9 +238,9 @@ public class RecommendationService : IRecommendationService
                     Score = RecommendationWeights.UnderDescribedWeight,
                     Priority = RecommendationPriority.Low,
                     Summary = $"{ship.CatalogueShip.Name} has only {meaningfulTags} tag(s)",
-                    Explanation = "Ships with fewer than 2 tags may not be matched correctly by the recommendation engine. Add role, doctrine, or context tags.",
+                    Explanation = "Ships with fewer than 2 tags may not be matched correctly by the recommendation engine. Add doctrine or status tags.",
                     Evidence = [$"Current tags: {meaningfulTags}"],
-                    SuggestedActions = ["Add role tags (e.g. role:activity:escort)", "Add context tags (e.g. ctx:solo)", "Add doctrine tags"]
+                    SuggestedActions = ["Add doctrine tags (e.g. doctrine:value:backbone)", "Add status tags (e.g. status:lifecycle:owned)"]
                 });
             }
         }
@@ -317,13 +251,6 @@ public class RecommendationService : IRecommendationService
     /// <summary>
     /// Pattern 5: UnassignedShip — an owned ship has been in the collection for over 7 days
     /// but is not a member of any fleet group.
-    /// <para><b>Trigger:</b> For each ship, check if <c>CreatedUtc</c> is more than 7 days ago
-    /// AND the ship has no contextual tags in any group (i.e. not a member of any group).
-    /// New ships (≤ 7 days old) are excluded to give the user time to organise them.</para>
-    /// <para><b>Score:</b> Fixed at <see cref="RecommendationWeights.UnassignedShipWeight"/> (0.5).
-    /// Priority: always <see cref="RecommendationPriority.Low"/>.</para>
-    /// <para><b>Evidence:</b> "Added: {yyyy-MM-dd}".</para>
-    /// <para><b>Suggested actions:</b> "Assign this ship to a fleet group with matching doctrine".</para>
     /// </summary>
     private static List<Recommendation> AnalyseUnassignedShips(FleetGraph graph)
     {
@@ -333,7 +260,7 @@ public class RecommendationService : IRecommendationService
         foreach (var ship in graph.Ships)
         {
             if (ship.OwnedShip.CreatedUtc > cutoff)
-                continue; // too new
+                continue;
 
             var isInAnyGroup = graph.Groups.Any(g => g.MemberShips.Any(m => m.OwnedShipId == ship.OwnedShipId));
             if (!isInAnyGroup)
@@ -357,20 +284,8 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 6: GroupCoherence — fewer than 50% of a group's ships have role tags
+    /// Pattern 6: GroupCoherence — fewer than 50% of a group's ships have intent tags
     /// that align with the group's doctrine.
-    /// <para><b>Trigger:</b> For each group with at least one member ship and one doctrine tag,
-    /// look up the doctrine's expected roles in <see cref="DoctrineCapabilities"/>. Count how many
-    /// member ships have at least one matching tag. If fewer than 50% align, generate a
-    /// GroupCoherence recommendation.</para>
-    /// <para><b>Score:</b> <c>(1.0 - coherenceRatio) × CapabilityGapWeight × 0.8</c>. A group
-    /// with 0% alignment scores 0.8; a group with 49% scores ~0.41. Priority: High if ≥ 0.7,
-    /// else Medium.</para>
-    /// <para><b>Evidence:</b> "{aligned}/{total} ships aligned".</para>
-    /// <para><b>Suggested actions:</b> "Add ships that match the group's doctrine",
-    /// "Reassign misaligned ships to a different group".</para>
-    /// <para><b>Edge case:</b> Doctrine tags not in <see cref="DoctrineCapabilities"/> are skipped.
-    /// Groups with 0 members or 0 doctrine tags are skipped entirely.</para>
     /// </summary>
     private static List<Recommendation> AnalyseGroupCoherence(FleetGraph graph)
     {
@@ -383,17 +298,16 @@ public class RecommendationService : IRecommendationService
 
             var doctrineKeys = group.DoctrineAndFocusTags.Select(t => t.Definition.Key).ToHashSet();
 
-            // For each doctrine, check what % of ships have aligned roles
             foreach (var doctrineKey in doctrineKeys)
             {
-                if (!DoctrineCapabilities.TryGetValue(doctrineKey, out var alignedRoles))
+                if (!DoctrineCapabilities.TryGetValue(doctrineKey, out var alignedIntents))
                     continue;
 
                 var alignedCount = 0;
                 foreach (var ship in group.MemberShips)
                 {
                     var shipTags = GetAllTagKeys(ship, group.Group.Id);
-                    if (alignedRoles.Any(r => shipTags.Contains(r)))
+                    if (alignedIntents.Any(r => shipTags.Contains(r)))
                         alignedCount++;
                 }
 
@@ -409,7 +323,7 @@ public class RecommendationService : IRecommendationService
                         Score = score,
                         Priority = score >= 0.7 ? RecommendationPriority.High : RecommendationPriority.Medium,
                         Summary = $"Low coherence in '{group.Group.Name}': {coherenceRatio:P0} of ships align with {FormatTagKey(doctrineKey)}",
-                        Explanation = $"Only {alignedCount} of {group.MemberShips.Count} ships have roles that match the group's {FormatTagKey(doctrineKey)} doctrine.",
+                        Explanation = $"Only {alignedCount} of {group.MemberShips.Count} ships have intents that match the group's {FormatTagKey(doctrineKey)} doctrine.",
                         Evidence = [$"{alignedCount}/{group.MemberShips.Count} ships aligned"],
                         SuggestedActions = ["Add ships that match the group's doctrine", "Reassign misaligned ships to a different group"]
                     });
@@ -421,47 +335,41 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 7: AccountRoleDistribution — the user's entire collection is missing one or more
-    /// of the 8 major role categories defined in <see cref="MajorRoleCategories"/>.
-    /// <para><b>Trigger:</b> Collect all global role tags across all owned ships. Compare against
-    /// the 8 major roles (escort, frontline, hauling, mining, salvage, exploration, medical, repair).
-    /// If any are missing, generate a single Account-scoped recommendation listing all gaps.</para>
-    /// <para><b>Score:</b> <c>0.5 × (missingCount / totalMajorRoles)</c>. With 8 major roles,
-    /// missing 4 = score 0.25, missing all 8 = score 0.5. Priority: High if ≥ 4 missing,
-    /// Medium if ≥ 2, Low otherwise.</para>
-    /// <para><b>Evidence:</b> One "Missing: {role}" entry per gap.</para>
-    /// <para><b>Suggested actions:</b> One "Acquire a ship for {role}" per gap.</para>
-    /// <para><b>Edge case:</b> Returns empty if the user has no ships at all (early exit guard).
-    /// Only checks global tags — contextual group-scoped role tags are not counted.</para>
+    /// Pattern 7: AccountIntentDistribution — the user's fleet is missing major intent categories.
     /// </summary>
-    private static List<Recommendation> AnalyseAccountRoleDistribution(FleetGraph graph)
+    private static List<Recommendation> AnalyseAccountIntentDistribution(FleetGraph graph)
     {
         var recs = new List<Recommendation>();
 
         if (graph.Ships.Count == 0)
             return recs;
 
-        var coveredRoles = new HashSet<string>();
+        var coveredIntents = new HashSet<string>();
         foreach (var ship in graph.Ships)
-            foreach (var t in ship.GlobalTags.Where(t => t.Definition.Category.StartsWith("role:", StringComparison.Ordinal)))
-                coveredRoles.Add(t.Definition.Key);
-
-        var missingRoles = MajorRoleCategories.Where(r => !coveredRoles.Contains(r)).ToList();
-        if (missingRoles.Count > 0)
         {
-            var score = 0.5 * ((double)missingRoles.Count / MajorRoleCategories.Length);
+            foreach (var t in ship.GlobalTags.Where(t => t.Definition.Category.StartsWith("intent:", StringComparison.Ordinal)))
+                coveredIntents.Add(t.Definition.Key);
+            foreach (var ctxTags in ship.ContextualTags.Values)
+                foreach (var t in ctxTags.Where(t => t.Definition.Category.StartsWith("intent:", StringComparison.Ordinal)))
+                    coveredIntents.Add(t.Definition.Key);
+        }
+
+        var missingIntents = MajorIntentCategories.Where(r => !coveredIntents.Contains(r)).ToList();
+        if (missingIntents.Count > 0)
+        {
+            var score = 0.5 * ((double)missingIntents.Count / MajorIntentCategories.Length);
             recs.Add(new Recommendation
             {
                 ScopeType = RecommendationScope.Account,
                 Kind = RecommendationKind.AccountRoleDistribution,
                 Score = score,
-                Priority = missingRoles.Count >= 4 ? RecommendationPriority.High
-                    : missingRoles.Count >= 2 ? RecommendationPriority.Medium
+                Priority = missingIntents.Count >= 4 ? RecommendationPriority.High
+                    : missingIntents.Count >= 2 ? RecommendationPriority.Medium
                     : RecommendationPriority.Low,
-                Summary = $"Collection missing {missingRoles.Count} major role(s): {string.Join(", ", missingRoles.Select(FormatTagKey))}",
-                Explanation = "A well-rounded fleet benefits from coverage across major role categories. Consider acquiring ships to fill these gaps.",
-                Evidence = missingRoles.Select(r => $"Missing: {FormatTagKey(r)}").ToList(),
-                SuggestedActions = missingRoles.Select(r => $"Acquire a ship for {FormatTagKey(r)}").ToList()
+                Summary = $"Collection missing {missingIntents.Count} major intent(s): {string.Join(", ", missingIntents.Select(FormatTagKey))}",
+                Explanation = "A well-rounded fleet benefits from coverage across major intent categories. Consider acquiring ships to fill these gaps.",
+                Evidence = missingIntents.Select(r => $"Missing: {FormatTagKey(r)}").ToList(),
+                SuggestedActions = missingIntents.Select(r => $"Acquire a ship for {FormatTagKey(r)}").ToList()
             });
         }
 
@@ -469,18 +377,7 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 8: DoctrineMismatch — a ship's primary (weight 1) doctrine tag is not among its
-    /// group's doctrine tags, indicating the ship may be in the wrong group.
-    /// <para><b>Trigger:</b> For each group with doctrine tags, for each member ship, find the
-    /// ship's weight-1 doctrine tags (global + contextual). If any ship doctrine tag is NOT in
-    /// the group's doctrine set, generate a DoctrineMismatch recommendation.</para>
-    /// <para><b>Score:</b> Fixed at <see cref="RecommendationWeights.DoctrineMismatchWeight"/> (0.9).
-    /// Priority: always <see cref="RecommendationPriority.High"/>.</para>
-    /// <para><b>Evidence:</b> "Ship doctrine: {name}", "Group doctrine: {names}".</para>
-    /// <para><b>Suggested actions:</b> "Move this ship to a group with matching doctrine",
-    /// "Change the ship's doctrine tag to match the group".</para>
-    /// <para><b>Edge case:</b> A ship with no doctrine tags generates no mismatch. Groups
-    /// with no doctrine tags are skipped entirely.</para>
+    /// Pattern 8: DoctrineMismatch — a ship's primary (weight 1) doctrine tag conflicts with its group's doctrine.
     /// </summary>
     private static List<Recommendation> AnalyseDoctrineMismatch(FleetGraph graph)
     {
@@ -489,7 +386,7 @@ public class RecommendationService : IRecommendationService
         foreach (var group in graph.Groups)
         {
             var groupDoctrine = group.DoctrineAndFocusTags
-                .Where(t => t.Definition.Category.StartsWith("doctrine:", StringComparison.Ordinal))
+                .Where(t => t.Definition.Category.StartsWith("doctrine", StringComparison.Ordinal))
                 .Select(t => t.Definition.Key)
                 .ToHashSet();
 
@@ -499,7 +396,7 @@ public class RecommendationService : IRecommendationService
             foreach (var ship in group.MemberShips)
             {
                 var shipDoctrine = GetAllTags(ship, group.Group.Id)
-                    .Where(t => t.Definition.Category.StartsWith("doctrine:", StringComparison.Ordinal) && t.Weight == 1)
+                    .Where(t => t.Definition.Category.StartsWith("doctrine", StringComparison.Ordinal) && t.Weight == 1)
                     .ToList();
 
                 foreach (var dt in shipDoctrine)
@@ -529,19 +426,7 @@ public class RecommendationService : IRecommendationService
 
     /// <summary>
     /// Pattern 9: RemoveFromGroup — a member ship's tags don't match any of the group's
-    /// doctrine-derived role requirements, suggesting it doesn't contribute to the group.
-    /// <para><b>Trigger:</b> For each group with doctrine tags, derive the set of desired
-    /// role tags from <see cref="DoctrineCapabilities"/>. For each member ship,
-    /// check if any of its tags (global + contextual) match the desired set. If none match,
-    /// generate a RemoveFromGroup recommendation.</para>
-    /// <para><b>Score:</b> <c>RedundancyWeight × 0.8</c> = 0.48. Priority: always
-    /// <see cref="RecommendationPriority.Low"/>.</para>
-    /// <para><b>Evidence:</b> "Ship tags: {list}", "Group needs: {list}".</para>
-    /// <para><b>Suggested actions:</b> "Remove [ship] from this group",
-    /// "Add relevant role tags to the ship".</para>
-    /// <para><b>Edge case:</b> Groups with no doctrine tags or doctrine tags not in
-    /// <see cref="DoctrineCapabilities"/> are skipped. If the derived desired set is empty
-    /// (all doctrine tags are unmapped), the group is skipped.</para>
+    /// doctrine-derived intent requirements.
     /// </summary>
     private static List<Recommendation> AnalyseRemoveFromGroup(FleetGraph graph)
     {
@@ -581,7 +466,7 @@ public class RecommendationService : IRecommendationService
                         Summary = $"{ship.CatalogueShip.Name} doesn't contribute to '{group.Group.Name}'",
                         Explanation = $"This ship's tags don't align with any of the group's doctrine capabilities. It may be better suited to a different group.",
                         Evidence = [$"Ship tags: {string.Join(", ", shipTags.Select(FormatTagKey))}", $"Group needs: {string.Join(", ", desiredTagKeys.Select(FormatTagKey))}"],
-                        SuggestedActions = [$"Remove {ship.CatalogueShip.Name} from this group", "Add relevant role tags to the ship"]
+                        SuggestedActions = [$"Remove {ship.CatalogueShip.Name} from this group", "Add relevant intent tags to the ship"]
                     });
                 }
             }
@@ -591,22 +476,7 @@ public class RecommendationService : IRecommendationService
     }
 
     /// <summary>
-    /// Pattern 10: CrewEfficiency — the total minimum crew required to operate all ships in a
-    /// group significantly exceeds or underutilises the group's <see cref="UserFleetGroup.CrewTarget"/>.
-    /// <para><b>Trigger (overcrew):</b> If <c>totalMinCrew / crewTarget &gt; 1.5</c>, the group
-    /// needs more crew than available — some ships will be unmanned. Generates a Medium priority
-    /// recommendation with score = <see cref="RecommendationWeights.CrewEfficiencyWeight"/> (0.7).</para>
-    /// <para><b>Trigger (undercrew):</b> If <c>totalMinCrew / crewTarget &lt; 0.3</c> AND
-    /// <c>crewTarget ≥ 3</c>, the group is wasting available crew. Generates a Low priority
-    /// recommendation with score = CrewEfficiencyWeight × 0.7 = 0.49. The crewTarget ≥ 3 guard
-    /// prevents false positives for solo players.</para>
-    /// <para><b>Evidence:</b> "Min crew needed: {n}", "Crew target: {n}", "Ratio: {n}x".</para>
-    /// <para><b>Suggested actions (overcrew):</b> "Remove ships with high crew requirements",
-    /// "Increase the crew target", "Replace multi-crew ships with solo-operable alternatives".</para>
-    /// <para><b>Suggested actions (undercrew):</b> "Add multi-crew ships to better utilise
-    /// available crew", "Reduce crew target if players aren't available".</para>
-    /// <para><b>Edge case:</b> Groups with 0 members or crewTarget ≤ 0 are skipped.
-    /// Ships with CrewMin = 0 (unusual) contribute nothing to the sum.</para>
+    /// Pattern 10: CrewEfficiency — group crew requirements significantly exceed or underutilise the target.
     /// </summary>
     private static List<Recommendation> AnalyseCrewEfficiency(FleetGraph graph)
     {
@@ -662,15 +532,160 @@ public class RecommendationService : IRecommendationService
         return recs;
     }
 
+    /// <summary>
+    /// Pattern 11: TradeoffSuggestions — detect crew mismatches and suggest tradeoff tags.
+    /// <para>When <c>intent:crew:solo</c> is set on a ship with <c>CrewMin &gt; 1</c>,
+    /// suggest <c>tradeoff:undercrew</c> unless already present.</para>
+    /// </summary>
+    private static List<Recommendation> AnalyseTradeoffSuggestions(FleetGraph graph)
+    {
+        var recs = new List<Recommendation>();
+
+        foreach (var group in graph.Groups)
+        {
+            foreach (var ship in group.MemberShips)
+            {
+                var allTags = GetAllTagKeys(ship, group.Group.Id);
+
+                // intent:crew:solo on multi-crew ship → suggest tradeoff:undercrew
+                if (allTags.Contains("intent:crew:solo") && ship.CatalogueShip.CrewMin > 1)
+                {
+                    if (!allTags.Contains("tradeoff:undercrew"))
+                    {
+                        recs.Add(new Recommendation
+                        {
+                            ScopeType = RecommendationScope.Ship,
+                            ScopeId = ship.OwnedShipId,
+                            Kind = RecommendationKind.UnderDescribedShip,
+                            TargetTagKey = "tradeoff:undercrew",
+                            Score = 0.5,
+                            Priority = RecommendationPriority.Low,
+                            Summary = $"{ship.CatalogueShip.Name} is solo-crewing a {ship.CatalogueShip.CrewMin}-crew ship in '{group.Group.Name}'",
+                            Explanation = $"This ship requires {ship.CatalogueShip.CrewMin} crew minimum but you intend to fly solo. Consider adding the tradeoff:undercrew tag to acknowledge this.",
+                            Evidence = [$"Crew min: {ship.CatalogueShip.CrewMin}", "Intent: solo"],
+                            SuggestedActions = ["Add tradeoff:undercrew to acknowledge the efficiency loss"]
+                        });
+                    }
+                }
+
+                // status:lifecycle:concept or status:lifecycle:pledged + doctrine:value:backbone → acquisition gap
+                if (allTags.Contains("doctrine:value:backbone"))
+                {
+                    if (allTags.Contains("status:lifecycle:concept") || allTags.Contains("status:lifecycle:pledged"))
+                    {
+                        var statusTag = allTags.Contains("status:lifecycle:concept") ? "Concept" : "Pledged";
+                        recs.Add(new Recommendation
+                        {
+                            ScopeType = RecommendationScope.Ship,
+                            ScopeId = ship.OwnedShipId,
+                            Kind = RecommendationKind.DoctrineMismatch,
+                            Score = 0.8,
+                            Priority = RecommendationPriority.High,
+                            Summary = $"{ship.CatalogueShip.Name} is a fleet backbone but only {statusTag}",
+                            Explanation = $"This ship is marked as backbone (core to your fleet) but its lifecycle status is {statusTag}. Your fleet has a critical gap until this ship is fully acquired.",
+                            Evidence = [$"Doctrine: backbone", $"Status: {statusTag}"],
+                            SuggestedActions = ["Prioritize acquisition of this ship", "Identify a temporary substitute"]
+                        });
+                    }
+                }
+            }
+        }
+
+        // Group-level: status:undermanned + doctrine:primary-arm → readiness gap
+        foreach (var group in graph.Groups)
+        {
+            var groupTags = group.DoctrineAndFocusTags.Select(t => t.Definition.Key).ToHashSet();
+            if (groupTags.Contains("doctrine:primary-arm") && groupTags.Contains("status:undermanned"))
+            {
+                recs.Add(new Recommendation
+                {
+                    ScopeType = RecommendationScope.Group,
+                    ScopeId = group.Group.Id,
+                    Kind = RecommendationKind.CapabilityGap,
+                    Score = 0.9,
+                    Priority = RecommendationPriority.High,
+                    Summary = $"Primary arm '{group.Group.Name}' is undermanned",
+                    Explanation = "This group is the fleet's primary operational arm but is marked as undermanned. This is a critical readiness gap.",
+                    Evidence = ["Doctrine: primary-arm", "Status: undermanned"],
+                    SuggestedActions = ["Recruit crew for this group", "Reassign crew from reserve groups"]
+                });
+            }
+        }
+
+        return recs;
+    }
+
+    /// <summary>
+    /// Pattern 12: PotencyMismatches — detect conflicting potency + intent combinations.
+    /// <para><c>potency:footprint:dominant</c> + <c>intent:activity:recon</c> or <c>intent:activity:hack</c> → flag mismatch.</para>
+    /// <para><c>potency:capacity:token</c> + <c>doctrine:value:backbone</c> → flag incongruence.</para>
+    /// </summary>
+    private static List<Recommendation> AnalysePotencyMismatches(FleetGraph graph)
+    {
+        var recs = new List<Recommendation>();
+
+        foreach (var group in graph.Groups)
+        {
+            foreach (var ship in group.MemberShips)
+            {
+                var allTags = GetAllTagKeys(ship, group.Group.Id);
+
+                // potency:footprint:dominant + intent:activity:recon or hack → stealth mismatch
+                if (allTags.Contains("potency:footprint:dominant"))
+                {
+                    if (allTags.Contains("intent:activity:recon") || allTags.Contains("intent:activity:hack"))
+                    {
+                        // Check if tradeoff:high-footprint suppresses this
+                        if (!allTags.Contains("tradeoff:high-footprint"))
+                        {
+                            var stealthActivity = allTags.Contains("intent:activity:recon") ? "recon" : "hack";
+                            recs.Add(new Recommendation
+                            {
+                                ScopeType = RecommendationScope.Ship,
+                                ScopeId = ship.OwnedShipId,
+                                Kind = RecommendationKind.GroupCoherence,
+                                Score = 0.6,
+                                Priority = RecommendationPriority.Medium,
+                                Summary = $"{ship.CatalogueShip.Name} has dominant footprint but assigned to {stealthActivity} in '{group.Group.Name}'",
+                                Explanation = $"A dominant footprint is a liability for {stealthActivity} operations. Consider adding tradeoff:high-footprint if this is intentional.",
+                                Evidence = ["Potency: dominant footprint", $"Intent: {stealthActivity}"],
+                                SuggestedActions = ["Add tradeoff:high-footprint to acknowledge this", "Reassign to a non-stealth role"]
+                            });
+                        }
+                    }
+                }
+
+                // potency:capacity:token + doctrine:value:backbone → incongruence
+                if (allTags.Contains("potency:capacity:token") && allTags.Contains("doctrine:value:backbone"))
+                {
+                    recs.Add(new Recommendation
+                    {
+                        ScopeType = RecommendationScope.Ship,
+                        ScopeId = ship.OwnedShipId,
+                        Kind = RecommendationKind.DoctrineMismatch,
+                        Score = 0.7,
+                        Priority = RecommendationPriority.Medium,
+                        Summary = $"{ship.CatalogueShip.Name} is backbone but only token capacity in '{group.Group.Name}'",
+                        Explanation = "This ship is marked as core to the fleet (backbone) but contributes only token capacity in this group. Review whether doctrine or potency assessment needs updating.",
+                        Evidence = ["Doctrine: backbone", "Potency: token capacity"],
+                        SuggestedActions = ["Review doctrine:value assignment", "Review potency:capacity assessment for this group"]
+                    });
+                }
+            }
+        }
+
+        return recs;
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────
 
-    /// <summary>Gets role-category tags (any role:* sub-dimension) for a ship in a specific group context.</summary>
-    private static List<TagNode> GetRoleTags(ShipNode ship, int groupId)
+    /// <summary>Gets intent-category tags (any intent:* sub-dimension) for a ship in a specific group context.</summary>
+    private static List<TagNode> GetIntentTags(ShipNode ship, int groupId)
     {
         var tags = new List<TagNode>();
-        tags.AddRange(ship.GlobalTags.Where(t => t.Definition.Category.StartsWith("role:", StringComparison.Ordinal)));
+        tags.AddRange(ship.GlobalTags.Where(t => t.Definition.Category.StartsWith("intent:", StringComparison.Ordinal)));
         if (ship.ContextualTags.TryGetValue(groupId, out var ctxTags))
-            tags.AddRange(ctxTags.Where(t => t.Definition.Category.StartsWith("role:", StringComparison.Ordinal)));
+            tags.AddRange(ctxTags.Where(t => t.Definition.Category.StartsWith("intent:", StringComparison.Ordinal)));
         return tags;
     }
 
@@ -693,12 +708,11 @@ public class RecommendationService : IRecommendationService
         return keys;
     }
 
-    /// <summary>Formats a tag key for display (e.g. "role:activity:fight" → "Fight", "doctrine:weight:anchor" → "Anchor").</summary>
+    /// <summary>Formats a tag key for display (e.g. "intent:activity:fight" → "Fight").</summary>
     private static string FormatTagKey(string key)
     {
         var parts = key.Split(':');
         if (parts.Length < 2) return key;
-        // Use the last segment as the display name
         return System.Globalization.CultureInfo.CurrentCulture.TextInfo
             .ToTitleCase(parts[^1].Replace('-', ' '));
     }
