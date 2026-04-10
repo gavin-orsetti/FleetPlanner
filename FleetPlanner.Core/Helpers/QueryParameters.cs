@@ -37,4 +37,11 @@ public static class QueryParameters
 
     /// <summary>Boolean flag ("true"/"false") passed to the tag editor to indicate group tag context vs ship tag context.</summary>
     public const string TagEditorIsGroupContext = "tagEditorIsGroupContext";
+
+    /// <summary>
+    /// Scope filter for the tag picker: "fleet" (doctrine + status only), "group"
+    /// (intent + potency + tradeoff only), or "all" (no filter). Controls which
+    /// pillars are visible based on the editing context.
+    /// </summary>
+    public const string TagPickerScope = "tagPickerScope";
 }
