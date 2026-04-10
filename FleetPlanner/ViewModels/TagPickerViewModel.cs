@@ -13,14 +13,22 @@ namespace FleetPlanner.ViewModels;
 
 /// <summary>
 /// ViewModel for the reusable tag picker page — presents all assignable tags as
-/// selectable chips grouped by category, with optional weight selection for role tags.
+/// selectable chips grouped by category, with optional weight selection for intent tags.
 ///
-/// <para><b>Navigation parameters:</b> Receives up to four query parameters via Shell navigation:
+/// <para><b>Navigation parameters:</b> Receives up to five query parameters via Shell navigation:
 /// <list type="bullet">
 ///   <item><see cref="TagPickerOwnedShipId"/> — ship to edit tags for (0 if editing group tags only)</item>
 ///   <item><see cref="TagPickerGroupId"/> — group context (0 if editing global ship tags)</item>
 ///   <item><see cref="TagPickerContextType"/> — "group" for contextual tags, empty for global</item>
 ///   <item><see cref="TagPickerContextId"/> — group Id when context type is "group"</item>
+///   <item><see cref="TagPickerScope"/> — "fleet", "group", or "all" to filter visible pillars</item>
+/// </list></para>
+///
+/// <para><b>Scope enforcement:</b>
+/// <list type="bullet">
+///   <item><b>fleet</b> — shows only <c>doctrine:*</c> and <c>status:*</c> tags (fleet-scoped pillars)</item>
+///   <item><b>group</b> — shows only <c>intent:*</c>, <c>potency:*</c>, and <c>tradeoff</c> tags (group-scoped pillars)</item>
+///   <item><b>all</b> — shows everything (for group-level tag editing)</item>
 /// </list></para>
 ///
 /// <para><b>Save behaviour:</b> Depending on scope, calls the appropriate repository method to
@@ -31,6 +39,7 @@ namespace FleetPlanner.ViewModels;
 [QueryProperty(nameof(TagPickerContextType), QueryParameters.TagPickerContextType)]
 [QueryProperty(nameof(TagPickerContextId), QueryParameters.TagPickerContextId)]
 [QueryProperty(nameof(TagPickerIsGroupContext), QueryParameters.TagPickerIsGroupContext)]
+[QueryProperty(nameof(TagPickerScope), QueryParameters.TagPickerScope)]
 public partial class TagPickerViewModel : ObservableObject
 {
     private readonly ITagRepository _tagRepository;
@@ -58,6 +67,13 @@ public partial class TagPickerViewModel : ObservableObject
     /// <summary>Whether the picker is selecting group-level tags (from GroupTagDefinition table) rather than ship tags.</summary>
     [ObservableProperty]
     private string _tagPickerIsGroupContext = "false";
+
+    /// <summary>
+    /// Scope filter: "fleet" (doctrine + status), "group" (intent + potency + tradeoff), or "all".
+    /// Empty/unset defaults to "all".
+    /// </summary>
+    [ObservableProperty]
+    private string _tagPickerScope = "all";
 
     /// <summary>Parsed boolean: true when picking group tags from the GroupTagDefinition table.</summary>
     private bool IsGroupContext => string.Equals(TagPickerIsGroupContext, "true", StringComparison.OrdinalIgnoreCase);
@@ -126,11 +142,9 @@ public partial class TagPickerViewModel : ObservableObject
             else if (isContextualShipEditing)
                 PageTitle = "Ship Role in Group";
             else
-                PageTitle = "Ship Tags";
+                PageTitle = "Doctrine & Status";
 
             // Load tags from the appropriate table based on context.
-            // When IsGroupContext is true, load from GroupTagDefinition (group-level tags).
-            // Otherwise load from TagDefinition (ship-level tags).
             List<SelectableTagItem> selectableItems;
             if (IsGroupContext)
             {
@@ -162,6 +176,25 @@ public partial class TagPickerViewModel : ObservableObject
                     })
                     .ToList();
             }
+
+            // Apply scope filter to restrict which pillars are visible
+            var scope = (TagPickerScope ?? "all").ToLowerInvariant();
+            if (scope == "fleet")
+            {
+                selectableItems = selectableItems
+                    .Where(t => t.Category.StartsWith("doctrine:", StringComparison.Ordinal)
+                             || t.Category.StartsWith("status", StringComparison.Ordinal))
+                    .ToList();
+            }
+            else if (scope == "group")
+            {
+                selectableItems = selectableItems
+                    .Where(t => t.Category.StartsWith("intent:", StringComparison.Ordinal)
+                             || t.Category.StartsWith("potency:", StringComparison.Ordinal)
+                             || t.Category == "tradeoff")
+                    .ToList();
+            }
+            // "all" keeps everything
 
             // Pre-select currently applied tags
             if (isGroupTagEditing)
@@ -206,10 +239,6 @@ public partial class TagPickerViewModel : ObservableObject
                 }
             }
 
-            // Populate AllTags synchronously on main thread, THEN apply filter.
-            // The previous code used BeginInvokeOnMainThread (fire-and-forget)
-            // followed by ApplyFilter(), so ApplyFilter ran against an empty
-            // collection before the UI thread callback executed.
             AllTags = new ObservableCollection<SelectableTagItem>(selectableItems);
             ApplyFilter();
         }
@@ -231,7 +260,7 @@ public partial class TagPickerViewModel : ObservableObject
             item.Weight = 1;
     }
 
-    /// <summary>Sets the weight on a role tag.</summary>
+    /// <summary>Sets the weight on an intent tag.</summary>
     [RelayCommand]
     private void SetWeight(SelectableTagItem item)
     {
@@ -353,18 +382,26 @@ public partial class TagPickerViewModel : ObservableObject
             .Where(g => g.Count > 0) // Skip empty groups
             .ToList();
 
-        // Insert a role section divider before the first role:* group
-        var firstRoleIdx = groups.FindIndex(g => g.CategoryName.StartsWith("role:", StringComparison.Ordinal));
-        if (firstRoleIdx >= 0)
-        {
-            groups.Insert(firstRoleIdx, new TagCategoryGroup("__role_header__", []));
-        }
-
         // Insert a doctrine section divider before the first doctrine:* group
-        var firstDoctrineIdx = groups.FindIndex(g => g.CategoryName.StartsWith("doctrine:", StringComparison.Ordinal));
+        var firstDoctrineIdx = groups.FindIndex(g => g.CategoryName.StartsWith("doctrine:", StringComparison.Ordinal)
+                                                  || g.CategoryName == "doctrine");
         if (firstDoctrineIdx >= 0)
         {
             groups.Insert(firstDoctrineIdx, new TagCategoryGroup("__doctrine_header__", []));
+        }
+
+        // Insert an intent section divider before the first intent:* group
+        var firstIntentIdx = groups.FindIndex(g => g.CategoryName.StartsWith("intent:", StringComparison.Ordinal));
+        if (firstIntentIdx >= 0)
+        {
+            groups.Insert(firstIntentIdx, new TagCategoryGroup("__intent_header__", []));
+        }
+
+        // Insert a potency section divider before the first potency:* group
+        var firstPotencyIdx = groups.FindIndex(g => g.CategoryName.StartsWith("potency:", StringComparison.Ordinal));
+        if (firstPotencyIdx >= 0)
+        {
+            groups.Insert(firstPotencyIdx, new TagCategoryGroup("__potency_header__", []));
         }
 
         MainThread.BeginInvokeOnMainThread(() =>
@@ -401,12 +438,13 @@ public partial class TagPickerViewModel : ObservableObject
 
         // --- Step 2: Pick category ---
         var categories = IsGroupContext
-            ? new[] { "role:economy", "role:activity", "role:domain", "role:scope", "role:posture",
-                      "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
-                      "doctrine:autonomy", "doctrine:flexibility", "doctrine:lifecycle", "status", "custom" }
-            : new[] { "role:economy", "role:activity", "role:domain", "role:scale", "role:posture",
-                      "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
-                      "doctrine:autonomy", "doctrine:flexibility", "doctrine:retention", "doctrine:lifecycle", "status", "custom" };
+            ? new[] { "doctrine", "intent:mission", "intent:org",
+                      "potency:capacity", "potency:reach", "potency:resilience", "potency:footprint",
+                      "status", "tradeoff", "custom" }
+            : new[] { "doctrine:value", "doctrine:frequency", "doctrine:investment", "doctrine:identity", "doctrine:structural",
+                      "intent:activity", "intent:economy", "intent:crew", "intent:legal", "intent:org",
+                      "potency:capacity", "potency:reach", "potency:resilience", "potency:footprint",
+                      "status:lifecycle", "status:modifier", "tradeoff", "custom" };
         var chosenCategory = await page.DisplayActionSheet(
             "Choose a category", "Cancel", null, categories);
 
@@ -527,51 +565,46 @@ public partial class TagPickerViewModel : ObservableObject
             @"[^a-z0-9\-]", "");
 
     /// <summary>
-    /// Returns the standard hex colour for a given tag category, matching the seeded palette.
+    /// Returns the standard hex colour for a given tag category, matching the 5-pillar palette.
     /// Falls back to gray for unknown categories.
     /// </summary>
     private static string CategoryColor(string category) => category switch
     {
-        "role:economy"         => "#C4706A",
-        "role:activity"        => "#B87040",
-        "role:domain"          => "#4A9E6B",
-        "role:scale"           => "#7A8499",
-        "role:scope"           => "#7A8499",
-        "role:posture"         => "#3A9CB8",
-        "ctx"                  => "#3A9CB8",
-        "doctrine:weight"      => "#B87040",
-        "doctrine:frequency"   => "#7A8499",
-        "doctrine:purpose"     => "#8B66B8",
-        "doctrine:autonomy"    => "#3A9CB8",
-        "doctrine:flexibility" => "#4A9E6B",
-        "doctrine:retention"   => "#C4706A",
-        "doctrine:lifecycle"   => "#6B7A8B",
-        "status"               => "#B8913A",
-        _                      => "#6B7A8B"   // custom / unknown
+        var c when c.StartsWith("doctrine") => "#8B66B8",
+        var c when c.StartsWith("intent")   => "#C4706A",
+        var c when c.StartsWith("potency")  => "#3A9CB8",
+        var c when c.StartsWith("status")   => "#B8913A",
+        "tradeoff"                          => "#7A8499",
+        _                                   => "#6B7A8B"   // custom / unknown
     };
 
     /// <summary>
-    /// Returns a stable sort index so categories appear in a logical order:
-    /// role → ctx → doctrine sub-dimensions → status → custom.
+    /// Returns a stable sort index so categories appear in pillar order:
+    /// doctrine → intent → potency → status → tradeoff → custom.
     /// </summary>
     private static int CategorySortOrder(string category) => category switch
     {
-        "ctx"                  => 0,
-        "status"               => 1,
-        "role:economy"         => 10,
-        "role:activity"        => 11,
-        "role:domain"          => 12,
-        "role:scale"           => 13,
-        "role:scope"           => 13,
-        "role:posture"         => 14,
-        "doctrine:weight"      => 20,
-        "doctrine:frequency"   => 21,
-        "doctrine:purpose"     => 22,
-        "doctrine:autonomy"    => 23,
-        "doctrine:flexibility" => 24,
-        "doctrine:retention"   => 25,
-        "doctrine:lifecycle"   => 26,
-        _                      => 30 // custom / unknown
+        "doctrine"              => 10,
+        "doctrine:value"        => 11,
+        "doctrine:frequency"    => 12,
+        "doctrine:investment"   => 13,
+        "doctrine:identity"     => 14,
+        "doctrine:structural"   => 15,
+        "intent:activity"       => 20,
+        "intent:economy"        => 21,
+        "intent:crew"           => 22,
+        "intent:legal"          => 23,
+        "intent:org"            => 24,
+        "intent:mission"        => 25,
+        "potency:capacity"      => 30,
+        "potency:reach"         => 31,
+        "potency:resilience"    => 32,
+        "potency:footprint"     => 33,
+        "status"                => 40,
+        "status:lifecycle"      => 41,
+        "status:modifier"       => 42,
+        "tradeoff"              => 50,
+        _                       => 99 // custom / unknown
     };
 
     /// <summary>
@@ -579,22 +612,27 @@ public partial class TagPickerViewModel : ObservableObject
     /// </summary>
     private static string CategoryDisplayName(string category) => category switch
     {
-        "role:economy"         => "Economy",
-        "role:activity"        => "Activity",
-        "role:domain"          => "Domain",
-        "role:scale"           => "Scale",
-        "role:scope"           => "Scope",
-        "role:posture"         => "Posture",
-        "ctx"                  => "Context",
-        "doctrine:weight"      => "Weight",
-        "doctrine:frequency"   => "Frequency",
-        "doctrine:purpose"     => "Purpose",
-        "doctrine:autonomy"    => "Autonomy",
-        "doctrine:flexibility" => "Flexibility",
-        "doctrine:retention"   => "Retention",
-        "doctrine:lifecycle"   => "Lifecycle",
-        "status"               => "Status",
-        _                      => "Custom"
+        "doctrine:value"        => "Fleet Value",
+        "doctrine:frequency"    => "Frequency",
+        "doctrine:investment"   => "Investment",
+        "doctrine:identity"     => "Identity",
+        "doctrine:structural"   => "Structural Role",
+        "doctrine"              => "Doctrine",
+        "intent:activity"       => "Activity",
+        "intent:economy"        => "Economy",
+        "intent:crew"           => "Crew Commitment",
+        "intent:legal"          => "Legal Stance",
+        "intent:org"            => "Org Context",
+        "intent:mission"        => "Mission",
+        "potency:capacity"      => "Capacity",
+        "potency:reach"         => "Reach",
+        "potency:resilience"    => "Resilience",
+        "potency:footprint"     => "Footprint",
+        "status:lifecycle"      => "Lifecycle",
+        "status:modifier"       => "Modifier",
+        "status"                => "Status",
+        "tradeoff"              => "Tradeoff",
+        _                       => "Custom"
     };
 }
 
@@ -611,7 +649,7 @@ public partial class SelectableTagItem : ObservableObject
     /// <summary>Human-readable display name.</summary>
     public string DisplayName { get; set; } = string.Empty;
 
-    /// <summary>Tag category (role, doctrine, etc.).</summary>
+    /// <summary>Tag category (doctrine:value, intent:activity, etc.).</summary>
     public string Category { get; set; } = string.Empty;
 
     /// <summary>Description subtitle.</summary>
@@ -628,8 +666,8 @@ public partial class SelectableTagItem : ObservableObject
     [ObservableProperty]
     private int _weight = 1;
 
-    /// <summary>Whether this is a role tag (shows weight picker).</summary>
-    public bool IsRoleTag => Category.StartsWith("role:", StringComparison.Ordinal);
+    /// <summary>Whether this is an intent tag (shows weight picker when selected).</summary>
+    public bool IsIntentTag => Category.StartsWith("intent:", StringComparison.Ordinal);
 
     /// <summary>Human-readable weight label.</summary>
     public string WeightLabel => Weight switch { 1 => "● Primary", 2 => "◉ Secondary", 3 => "○ Tertiary", _ => "" };
@@ -651,7 +689,7 @@ public partial class SelectableTagItem : ObservableObject
 /// </summary>
 public class TagCategoryGroup : List<SelectableTagItem>
 {
-    /// <summary>The category name (e.g. "role", "doctrine:weight").</summary>
+    /// <summary>The category name (e.g. "doctrine:value", "intent:activity").</summary>
     public string CategoryName { get; }
 
     /// <summary>Display-friendly capitalised category name.</summary>
@@ -666,31 +704,42 @@ public class TagCategoryGroup : List<SelectableTagItem>
 
     private static string FormatCategoryDisplay(string category) => category switch
     {
-        "ctx"                    => "Context",
-        "__role_header__"        => "— Role —",
-        "role:economy"           => "Economy",
-        "role:activity"          => "Activity",
-        "role:domain"            => "Domain",
-        "role:scale"             => "Scale",
-        "role:scope"             => "Scope",
-        "role:posture"           => "Posture",
         "__doctrine_header__"    => "— Doctrine —",
-        "doctrine:weight"        => "Weight",
+        "__intent_header__"      => "— Intent —",
+        "__potency_header__"     => "— Potency —",
+        "doctrine"               => "Doctrine",
+        "doctrine:value"         => "Fleet Value",
         "doctrine:frequency"     => "Frequency",
-        "doctrine:purpose"       => "Purpose",
-        "doctrine:autonomy"      => "Autonomy",
-        "doctrine:flexibility"   => "Flexibility",
-        "doctrine:retention"     => "Retention",
-        "doctrine:lifecycle"     => "Lifecycle",
+        "doctrine:investment"    => "Investment",
+        "doctrine:identity"      => "Identity",
+        "doctrine:structural"    => "Structural Role",
+        "intent:activity"        => "Activity",
+        "intent:economy"         => "Economy",
+        "intent:crew"            => "Crew Commitment",
+        "intent:legal"           => "Legal Stance",
+        "intent:org"             => "Org Context",
+        "intent:mission"         => "Mission",
+        "potency:capacity"       => "Capacity",
+        "potency:reach"          => "Reach",
+        "potency:resilience"     => "Resilience",
+        "potency:footprint"      => "Footprint",
+        "status"                 => "Status",
+        "status:lifecycle"       => "Lifecycle",
+        "status:modifier"        => "Modifier",
+        "tradeoff"               => "Tradeoff",
         _                        => char.ToUpperInvariant(category[0]) + category[1..]
     };
 
-    /// <summary>Whether this group is a section divider header (role or doctrine, no items).</summary>
-    public bool IsDoctrineSectionHeader => CategoryName is "__doctrine_header__" or "__role_header__";
+    /// <summary>Whether this group is a section divider header (doctrine, intent, or potency — no items).</summary>
+    public bool IsSectionHeader => CategoryName is "__doctrine_header__" or "__intent_header__" or "__potency_header__";
 
     /// <summary>Whether this group is a doctrine sub-dimension group.</summary>
-    public bool IsDoctrineSubDimension => CategoryName.StartsWith("doctrine:", StringComparison.Ordinal);
+    public bool IsDoctrineSubDimension => CategoryName.StartsWith("doctrine:", StringComparison.Ordinal)
+                                       || CategoryName == "doctrine";
 
-    /// <summary>Whether this group is a role sub-dimension group.</summary>
-    public bool IsRoleSubDimension => CategoryName.StartsWith("role:", StringComparison.Ordinal);
+    /// <summary>Whether this group is an intent sub-dimension group.</summary>
+    public bool IsIntentSubDimension => CategoryName.StartsWith("intent:", StringComparison.Ordinal);
+
+    /// <summary>Whether this group is a potency sub-dimension group.</summary>
+    public bool IsPotencySubDimension => CategoryName.StartsWith("potency:", StringComparison.Ordinal);
 }

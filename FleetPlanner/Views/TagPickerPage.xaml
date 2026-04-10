@@ -60,7 +60,7 @@
                                TextColor="{StaticResource Gray400}"
                                HorizontalTextAlignment="Center"
                                Padding="0,16,0,2"
-                               IsVisible="{Binding IsDoctrineSectionHeader}" />
+                               IsVisible="{Binding IsSectionHeader}" />
                         <!-- Normal category header (hidden for section divider) -->
                         <Label Text="{Binding DisplayCategory}"
                                FontSize="16" FontAttributes="Bold"
@@ -68,7 +68,7 @@
                                Padding="0,12,0,4">
                             <Label.Triggers>
                                 <DataTrigger TargetType="Label"
-                                             Binding="{Binding IsDoctrineSectionHeader}"
+                                             Binding="{Binding IsSectionHeader}"
                                              Value="True">
                                     <Setter Property="IsVisible" Value="False" />
                                 </DataTrigger>
@@ -112,7 +112,7 @@
                                     <Label.Triggers>
                                         <MultiTrigger TargetType="Label">
                                             <MultiTrigger.Conditions>
-                                                <BindingCondition Binding="{Binding IsRoleTag}" Value="True" />
+                                                <BindingCondition Binding="{Binding IsIntentTag}" Value="True" />
                                                 <BindingCondition Binding="{Binding IsSelected}" Value="True" />
                                             </MultiTrigger.Conditions>
                                             <Setter Property="IsVisible" Value="True" />
