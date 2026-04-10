@@ -90,12 +90,12 @@ public class GraphBuildService_Tests : IDisposable
         // Contextual tags that establish membership in both groups
         await _shipTagRepo.ApplyTagAsync(new OwnedShipTag
         {
-            OwnedShipId = ship.Id, TagKey = "role:activity:escort",
+            OwnedShipId = ship.Id, TagKey = "intent:activity:escort",
             ContextType = "group", ContextId = group1.Id
         });
         await _shipTagRepo.ApplyTagAsync(new OwnedShipTag
         {
-            OwnedShipId = ship.Id, TagKey = "role:activity:haul",
+            OwnedShipId = ship.Id, TagKey = "intent:activity:haul",
             ContextType = "group", ContextId = group2.Id
         });
 
@@ -124,12 +124,12 @@ public class GraphBuildService_Tests : IDisposable
 
         await _shipTagRepo.ApplyTagAsync(new OwnedShipTag
         {
-            OwnedShipId = ship.Id, TagKey = "role:activity:escort",
+            OwnedShipId = ship.Id, TagKey = "intent:activity:escort",
             ContextType = "group", ContextId = group1.Id
         });
         await _shipTagRepo.ApplyTagAsync(new OwnedShipTag
         {
-            OwnedShipId = ship.Id, TagKey = "role:activity:haul",
+            OwnedShipId = ship.Id, TagKey = "intent:activity:haul",
             ContextType = "group", ContextId = group2.Id
         });
 
@@ -138,8 +138,8 @@ public class GraphBuildService_Tests : IDisposable
         var shipNode = graph.Ships.Single();
         shipNode.ContextualTags.Should().ContainKey(group1.Id);
         shipNode.ContextualTags.Should().ContainKey(group2.Id);
-        shipNode.ContextualTags[group1.Id].Should().Contain(t => t.Definition.Key == "role:activity:escort");
-        shipNode.ContextualTags[group2.Id].Should().Contain(t => t.Definition.Key == "role:activity:haul");
+        shipNode.ContextualTags[group1.Id].Should().Contain(t => t.Definition.Key == "intent:activity:escort");
+        shipNode.ContextualTags[group2.Id].Should().Contain(t => t.Definition.Key == "intent:activity:haul");
     }
 
     [Fact]

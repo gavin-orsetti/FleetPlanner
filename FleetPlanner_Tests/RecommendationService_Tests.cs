@@ -61,15 +61,15 @@ public class RecommendationService_Tests
     // ── Pattern 1: CapabilityGap ──────────────────────────────────────
 
     [Fact]
-    public void CapabilityGap_EarnerGroup_NoSalvageShips_Detected()
+    public void CapabilityGap_PrimaryArmGroup_NoFightShips_Detected()
     {
-        var group = MakeGroupNode(1, "Industrial Ops");
-        group.DoctrineAndFocusTags.Add(MakeTagNode("doctrine:purpose:earner", "doctrine:purpose"));
+        var group = MakeGroupNode(1, "Combat Ops");
+        group.DoctrineAndFocusTags.Add(MakeTagNode("doctrine:primary-arm", "doctrine"));
 
-        // Ship with mining but no salvage/cargo
+        // Ship with mining but no fight/patrol/combat-loop
         var miner = MakeShipNode(1, "MISC Prospector");
-        miner.GlobalTags.Add(MakeTagNode("role:activity:mine", "role:activity"));
-        miner.ContextualTags[1] = new List<TagNode> { MakeTagNode("role:activity:mine", "role:activity") };
+        miner.GlobalTags.Add(MakeTagNode("intent:activity:mine", "intent:activity"));
+        miner.ContextualTags[1] = new List<TagNode> { MakeTagNode("intent:activity:mine", "intent:activity") };
         group.MemberShips.Add(miner);
 
         var graph = new FleetGraph { Ships = [miner], Groups = [group] };
@@ -83,16 +83,16 @@ public class RecommendationService_Tests
     // ── Pattern 2: Redundancy ─────────────────────────────────────────
 
     [Fact]
-    public void Redundancy_TwoShipsSamePrimaryRole_Detected()
+    public void Redundancy_TwoShipsSamePrimaryIntent_Detected()
     {
         var group = MakeGroupNode(1, "Combat Wing");
 
         var ship1 = MakeShipNode(1, "Arrow");
-        ship1.GlobalTags.Add(MakeTagNode("role:activity:escort", "role:activity", 1));
+        ship1.GlobalTags.Add(MakeTagNode("intent:activity:escort", "intent:activity", 1));
         ship1.ContextualTags[1] = new List<TagNode>();
 
         var ship2 = MakeShipNode(2, "Gladius");
-        ship2.GlobalTags.Add(MakeTagNode("role:activity:escort", "role:activity", 1));
+        ship2.GlobalTags.Add(MakeTagNode("intent:activity:escort", "intent:activity", 1));
         ship2.ContextualTags[1] = new List<TagNode>();
 
         group.MemberShips.AddRange([ship1, ship2]);
@@ -102,7 +102,7 @@ public class RecommendationService_Tests
 
         recs.Should().Contain(r =>
             r.Kind == RecommendationKind.Redundancy
-            && r.TargetTagKey == "role:activity:escort");
+            && r.TargetTagKey == "intent:activity:escort");
     }
 
     // ── Pattern 4: UnderDescribedShip ─────────────────────────────────
@@ -125,8 +125,8 @@ public class RecommendationService_Tests
     public void UnderDescribedShip_TwoMeaningfulTags_NotDetected()
     {
         var ship = MakeShipNode(1, "Well-Tagged Ship");
-        ship.GlobalTags.Add(MakeTagNode("role:activity:escort", "role:activity"));
-        ship.GlobalTags.Add(MakeTagNode("ctx:solo", "ctx"));
+        ship.GlobalTags.Add(MakeTagNode("doctrine:value:backbone", "doctrine:value"));
+        ship.GlobalTags.Add(MakeTagNode("status:lifecycle:owned", "status:lifecycle"));
 
         var graph = new FleetGraph { Ships = [ship], Groups = [] };
         var recs = _service.GetRecommendations(graph);
@@ -163,13 +163,13 @@ public class RecommendationService_Tests
     // ── Pattern 8: DoctrineMismatch ───────────────────────────────────
 
     [Fact]
-    public void DoctrineMismatch_ShipProtector_GroupEarner_Detected()
+    public void DoctrineMismatch_ShipReserve_GroupPrimaryArm_Detected()
     {
-        var group = MakeGroupNode(1, "Mining Group");
-        group.DoctrineAndFocusTags.Add(MakeTagNode("doctrine:purpose:earner", "doctrine:purpose"));
+        var group = MakeGroupNode(1, "Combat Group");
+        group.DoctrineAndFocusTags.Add(MakeTagNode("doctrine:primary-arm", "doctrine"));
 
         var ship = MakeShipNode(1, "F7C Hornet");
-        ship.GlobalTags.Add(MakeTagNode("doctrine:purpose:protector", "doctrine:purpose", 1));
+        ship.GlobalTags.Add(MakeTagNode("doctrine:reserve-force", "doctrine", 1));
         ship.ContextualTags[1] = new List<TagNode>();
         group.MemberShips.Add(ship);
 
