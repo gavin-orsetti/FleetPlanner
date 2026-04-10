@@ -199,7 +199,7 @@ public partial class GroupDetailViewModel : ObservableObject
         }
     }
 
-    /// <summary>Navigates to the tag picker for group-level doctrine/focus tag editing.</summary>
+    /// <summary>Navigates to the tag picker for group-level tag editing (all pillars).</summary>
     [RelayCommand]
     private async Task EditGroupTagsAsync()
     {
@@ -210,11 +210,12 @@ public partial class GroupDetailViewModel : ObservableObject
             { QueryParameters.TagPickerGroupId, GroupId },
             { QueryParameters.TagPickerContextType, string.Empty },
             { QueryParameters.TagPickerContextId, 0 },
-            { QueryParameters.TagPickerIsGroupContext, "true" }
+            { QueryParameters.TagPickerIsGroupContext, "true" },
+            { QueryParameters.TagPickerScope, "all" }
         });
     }
 
-    /// <summary>Navigates to the tag picker for a specific ship's role within this group.</summary>
+    /// <summary>Navigates to the tag picker for a specific ship's role within this group (group-scoped pillars only).</summary>
     [RelayCommand]
     private async Task EditShipRoleInGroupAsync(OwnedShipDisplay ship)
     {
@@ -224,7 +225,8 @@ public partial class GroupDetailViewModel : ObservableObject
             { QueryParameters.TagPickerOwnedShipId, ship.OwnedShipId },
             { QueryParameters.TagPickerGroupId, GroupId },
             { QueryParameters.TagPickerContextType, "group" },
-            { QueryParameters.TagPickerContextId, GroupId }
+            { QueryParameters.TagPickerContextId, GroupId },
+            { QueryParameters.TagPickerScope, "group" }
         });
     }
 

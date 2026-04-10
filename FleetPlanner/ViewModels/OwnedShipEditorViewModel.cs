@@ -189,7 +189,7 @@ public partial class OwnedShipEditorViewModel : ObservableObject
         GroupMemberships = new ObservableCollection<GroupMembershipItem>(items);
     }
 
-    /// <summary>Navigates to the tag picker for global ship tag editing.</summary>
+    /// <summary>Navigates to the tag picker for global ship tag editing (fleet-scoped: doctrine + status only).</summary>
     [RelayCommand]
     private async Task EditTagsAsync()
     {
@@ -199,7 +199,8 @@ public partial class OwnedShipEditorViewModel : ObservableObject
             { QueryParameters.TagPickerOwnedShipId, OwnedShipId },
             { QueryParameters.TagPickerGroupId, 0 },
             { QueryParameters.TagPickerContextType, string.Empty },
-            { QueryParameters.TagPickerContextId, 0 }
+            { QueryParameters.TagPickerContextId, 0 },
+            { QueryParameters.TagPickerScope, "fleet" }
         });
     }
 

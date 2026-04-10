@@ -42,7 +42,7 @@
                                 <Label Text="{Binding WeightLabel}"
                                        FontSize="10"
                                        TextColor="#E0E0E0"
-                                       IsVisible="{Binding IsRoleTag}"
+                                       IsVisible="{Binding IsIntentTag}"
                                        Opacity="0.8" />
                             </HorizontalStackLayout>
                         </Border>
@@ -140,7 +140,7 @@
                                                     <Label Text="{Binding WeightLabel}"
                                                            FontSize="9"
                                                            TextColor="#E0E0E0"
-                                                           IsVisible="{Binding IsRoleTag}"
+                                                           IsVisible="{Binding IsIntentTag}"
                                                            Opacity="0.8" />
                                                 </HorizontalStackLayout>
                                             </Border>

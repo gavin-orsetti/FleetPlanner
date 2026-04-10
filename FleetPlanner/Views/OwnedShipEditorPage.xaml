@@ -24,8 +24,8 @@
             <Label Text="Notes" FontSize="12" TextColor="{StaticResource Gray400}" />
             <Editor Text="{Binding Notes}" Placeholder="Add notes..." HeightRequest="100" />
 
-            <!-- Tags Section -->
-            <Label Text="Tags" FontSize="16" FontAttributes="Bold" Margin="0,8,0,0" />
+            <!-- Doctrine & Status Section -->
+            <Label Text="Doctrine &amp; Status" FontSize="16" FontAttributes="Bold" Margin="0,8,0,0" />
 
             <!-- Tag Chips -->
             <FlexLayout BindableLayout.ItemsSource="{Binding GlobalTags}"
@@ -46,25 +46,29 @@
                                 <Label Text="{Binding WeightLabel}"
                                        FontSize="10"
                                        TextColor="#E0E0E0"
-                                       IsVisible="{Binding IsRoleTag}"
+                                       IsVisible="{Binding IsIntentTag}"
                                        Opacity="0.8" />
                             </HorizontalStackLayout>
                         </Border>
                     </DataTemplate>
                 </BindableLayout.ItemTemplate>
                 <BindableLayout.EmptyView>
-                    <Label Text="No tags yet — tap Edit Tags to describe this ship"
+                    <Label Text="No doctrine or status tags yet — tap Edit Doctrine &amp; Status"
                            FontSize="12" TextColor="{StaticResource Gray400}"
                            Margin="0,4" />
                 </BindableLayout.EmptyView>
             </FlexLayout>
 
-            <Button Text="Edit Tags" Command="{Binding EditTagsCommand}"
+            <Button Text="Edit Doctrine &amp; Status" Command="{Binding EditTagsCommand}"
                     BackgroundColor="{StaticResource PrimaryContainer}"
                     TextColor="{StaticResource Primary}"
                     FontSize="13"
                     Padding="16,8"
                     HorizontalOptions="Start" />
+
+            <Label Text="Intent, Potency, and Tradeoff tags are set per-group — edit them from the group detail page."
+                   FontSize="11" TextColor="{StaticResource Gray400}"
+                   Margin="0,2,0,0" />
 
             <!-- Groups Section -->
             <Label Text="Groups" FontSize="16" FontAttributes="Bold" Margin="0,8,0,0" />

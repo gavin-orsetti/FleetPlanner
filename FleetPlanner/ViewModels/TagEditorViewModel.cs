@@ -102,17 +102,17 @@ public partial class TagEditorViewModel : ObservableObject
 
     /// <summary>Available category values for the picker. Populated dynamically based on context.</summary>
     public List<string> Categories { get; private set; } =
-        ["role:economy", "role:activity", "role:domain", "role:scale", "role:posture",
-         "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
-         "doctrine:autonomy", "doctrine:flexibility", "doctrine:retention", "doctrine:lifecycle",
-         "status", "custom"];
+        ["doctrine:value", "doctrine:frequency", "doctrine:investment", "doctrine:identity", "doctrine:structural",
+         "intent:activity", "intent:economy", "intent:crew", "intent:legal", "intent:org",
+         "potency:capacity", "potency:reach", "potency:resilience", "potency:footprint",
+         "status:lifecycle", "status:modifier", "tradeoff", "custom"];
 
     /// <summary>Display-friendly names shown in the category picker, parallel to <see cref="Categories"/>.</summary>
     public List<string> CategoryDisplayNames { get; private set; } =
-        ["Role: Economy", "Role: Activity", "Role: Domain", "Role: Scale", "Role: Posture",
-         "Context", "Doctrine: Weight", "Doctrine: Frequency", "Doctrine: Purpose",
-         "Doctrine: Autonomy", "Doctrine: Flexibility", "Doctrine: Retention", "Doctrine: Lifecycle",
-         "Status", "Custom"];
+        ["Fleet Value", "Frequency", "Investment", "Identity", "Structural Role",
+         "Activity", "Economy", "Crew Commitment", "Legal Stance", "Org Context",
+         "Capacity", "Reach", "Resilience", "Footprint",
+         "Lifecycle", "Modifier", "Tradeoff", "Custom"];
 
     /// <summary>
     /// Constructor — receives dependencies from the DI container.
@@ -144,15 +144,15 @@ public partial class TagEditorViewModel : ObservableObject
         IsLoading = true;
         try
         {
-            // Group context: show role:scope instead of role:scale, hide doctrine:retention (ship-only)
+            // Group context: flat doctrine, intent:mission/org, potency sub-dims, flat status, tradeoff
             if (IsGroupContext)
             {
-                Categories = ["role:economy", "role:activity", "role:domain", "role:scope", "role:posture",
-                              "ctx", "doctrine:weight", "doctrine:frequency", "doctrine:purpose",
-                              "doctrine:autonomy", "doctrine:flexibility", "doctrine:lifecycle", "status", "custom"];
-                CategoryDisplayNames = ["Role: Economy", "Role: Activity", "Role: Domain", "Role: Scope", "Role: Posture",
-                                        "Context", "Doctrine: Weight", "Doctrine: Frequency", "Doctrine: Purpose",
-                                        "Doctrine: Autonomy", "Doctrine: Flexibility", "Doctrine: Lifecycle", "Status", "Custom"];
+                Categories = ["doctrine", "intent:mission", "intent:org",
+                              "potency:capacity", "potency:reach", "potency:resilience", "potency:footprint",
+                              "status", "tradeoff", "custom"];
+                CategoryDisplayNames = ["Doctrine", "Mission", "Org Context",
+                                        "Capacity", "Reach", "Resilience", "Footprint",
+                                        "Status", "Tradeoff", "Custom"];
                 OnPropertyChanged(nameof(Categories));
                 OnPropertyChanged(nameof(CategoryDisplayNames));
             }
@@ -395,21 +395,11 @@ public partial class TagEditorViewModel : ObservableObject
     /// </summary>
     private static string CategoryColor(string category) => category switch
     {
-        "role:economy"         => "#C4706A",
-        "role:activity"        => "#B87040",
-        "role:domain"          => "#4A9E6B",
-        "role:scale"           => "#7A8499",
-        "role:scope"           => "#7A8499",
-        "role:posture"         => "#3A9CB8",
-        "ctx"                  => "#3A9CB8",
-        "doctrine:weight"      => "#B87040",
-        "doctrine:frequency"   => "#7A8499",
-        "doctrine:purpose"     => "#8B66B8",
-        "doctrine:autonomy"    => "#3A9CB8",
-        "doctrine:flexibility" => "#4A9E6B",
-        "doctrine:retention"   => "#C4706A",
-        "doctrine:lifecycle"   => "#6B7A8B",
-        "status"               => "#B8913A",
-        _                      => "#6B7A8B"   // custom / unknown
+        var c when c.StartsWith("doctrine") => "#8B66B8",
+        var c when c.StartsWith("intent")   => "#C4706A",
+        var c when c.StartsWith("potency")  => "#3A9CB8",
+        var c when c.StartsWith("status")   => "#B8913A",
+        "tradeoff"                          => "#7A8499",
+        _                                   => "#6B7A8B"   // custom / unknown
     };
 }
