@@ -5,7 +5,7 @@ namespace FleetPlanner.Repositories;
 /// <summary>
 /// Data access interface for <see cref="UserFleetGroupTag"/> junction records.
 /// This is the many-to-many junction table linking <see cref="UserFleetGroup"/>
-/// rows to <see cref="TagDefinition"/> keys. Unlike the ship-tag junction,
+/// rows to <see cref="GroupTagDefinition"/> keys. Unlike the ship-tag junction,
 /// group tags have no context dimension -- every assignment is global to the
 /// group. All removal operations are hard-deletes; junction rows carry no
 /// archive flag.

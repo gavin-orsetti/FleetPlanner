@@ -40,8 +40,8 @@ public class OwnedShipTag
     /// <summary>
     /// Tag priority within its category in this context.
     /// 1 = primary, 2 = secondary, 3 = tertiary, etc.
-    /// Used for role hierarchy: a ship can have role:escort (weight 1) and
-    /// role:hauling (weight 2) — primary role takes precedence in recommendations.
+    /// Used for intent hierarchy: a ship can have intent:activity:fight (weight 1) and
+    /// intent:activity:escort (weight 2) — primary intent takes precedence in recommendations.
     /// Conflicting tags at the same weight lower recommendation confidence.
     /// </summary>
     public int Weight { get; set; } = 1;

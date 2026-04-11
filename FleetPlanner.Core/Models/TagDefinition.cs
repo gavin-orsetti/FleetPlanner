@@ -9,20 +9,23 @@ namespace FleetPlanner.Models;
 /// with a flexible, extensible labelling system.
 ///
 /// <para><strong>Key format:</strong> <see cref="Key"/> uses the pattern
-/// <c>"category:slug"</c> (e.g. <c>"role:escort"</c>,
-/// <c>"doctrine:weight:anchor"</c>). Keys are the primary key and
+/// <c>"category:slug"</c> (e.g. <c>"doctrine:value:backbone"</c>,
+/// <c>"intent:activity:fight"</c>). Keys are the primary key and
 /// <strong>must never change once shipped</strong> -- they serve as stable
 /// identifiers across schema migrations, are human-readable in diagnostics, and
 /// avoid auto-increment collision issues that integer IDs would introduce when
 /// merging seed data with user-created tags.</para>
 ///
-/// <para><strong>Dimensions (15 + custom):</strong> <c>role:economy</c>,
-/// <c>role:activity</c>, <c>role:domain</c>, <c>role:scale</c>,
-/// <c>role:posture</c>, <c>ctx</c>, <c>doctrine:weight</c>,
-/// <c>doctrine:frequency</c>, <c>doctrine:purpose</c>, <c>doctrine:autonomy</c>,
-/// <c>doctrine:flexibility</c>, <c>doctrine:retention</c>,
-/// <c>doctrine:lifecycle</c>, <c>status</c>, <c>custom</c>. The category is stored
-/// separately in <see cref="Category"/> for efficient filtering.</para>
+/// <para><strong>5-pillar taxonomy (86 ship tags across 18 sub-dimensions + custom):</strong>
+/// <c>doctrine:value</c>, <c>doctrine:frequency</c>, <c>doctrine:investment</c>,
+/// <c>doctrine:identity</c>, <c>doctrine:structural</c>,
+/// <c>intent:activity</c>, <c>intent:economy</c>, <c>intent:crew</c>,
+/// <c>intent:legal</c>, <c>intent:org</c>,
+/// <c>potency:capacity</c>, <c>potency:reach</c>, <c>potency:resilience</c>,
+/// <c>potency:footprint</c>,
+/// <c>status:lifecycle</c>, <c>status:modifier</c>,
+/// <c>tradeoff</c>, <c>custom</c>. The category is stored separately in
+/// <see cref="Category"/> for efficient filtering.</para>
 ///
 /// <para><strong>Scoping:</strong> <see cref="AllowedScopes"/> is a
 /// comma-separated string of entity type names (e.g. <c>"OwnedShip"</c>,
@@ -50,7 +53,7 @@ public class TagDefinition
 {
     /// <summary>
     /// Stable unique key. NEVER changes once shipped.
-    /// Format: "category:slug" e.g. "role:escort", "doctrine:weight:anchor".
+    /// Format: "category:slug" e.g. "doctrine:value:backbone", "intent:activity:fight".
     /// </summary>
     [PrimaryKey]
     public string Key { get; set; } = string.Empty;
@@ -59,9 +62,10 @@ public class TagDefinition
     public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Category: role:economy, role:activity, role:domain, role:scale, role:posture,
-    /// ctx, doctrine:weight, doctrine:frequency, doctrine:purpose, doctrine:autonomy,
-    /// doctrine:flexibility, doctrine:retention, doctrine:lifecycle, status, custom.
+    /// Category: doctrine:value, doctrine:frequency, doctrine:investment, doctrine:identity,
+    /// doctrine:structural, intent:activity, intent:economy, intent:crew, intent:legal,
+    /// intent:org, potency:capacity, potency:reach, potency:resilience, potency:footprint,
+    /// status:lifecycle, status:modifier, tradeoff, custom.
     /// </summary>
     public string Category { get; set; } = string.Empty;
 

@@ -10,13 +10,14 @@ namespace FleetPlanner.Models;
 /// <see cref="OwnedShipTag"/> with <c>ContextType = "group"</c> and
 /// <c>ContextId</c> equal to this group's <see cref="Id"/> represents the
 /// association. This tag-centric approach lets the same ship appear in multiple
-/// groups with different contextual tags (e.g. "role:escort" in one group,
-/// "role:scout" in another).
+/// groups with different contextual tags (e.g. "intent:activity:escort" in one group,
+/// "intent:activity:recon" in another).
 ///
-/// Groups themselves carry doctrine tags via <see cref="UserFleetGroupTag"/>
-/// records that describe the group's intended operational focus (e.g.
-/// "doctrine:purpose:earner", "doctrine:weight:primary-arm"). The recommendation engine reads
-/// these tags alongside <see cref="IntendedFocus"/> to suggest fleet composition.
+/// Groups themselves carry tags via <see cref="UserFleetGroupTag"/>
+/// records (referencing <see cref="GroupTagDefinition"/> keys) that describe the group's
+/// intended operational focus (e.g. "doctrine:primary-arm", "intent:mission:fight").
+/// The recommendation engine reads these tags alongside <see cref="IntendedFocus"/>
+/// to suggest fleet composition.
 ///
 /// <para><strong>Crew model:</strong> <see cref="CrewTarget"/> represents the
 /// number of real players available to crew ships in this group, which the

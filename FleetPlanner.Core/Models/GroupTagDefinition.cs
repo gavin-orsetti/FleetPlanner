@@ -8,17 +8,18 @@ namespace FleetPlanner.Models;
 /// tags describe formations and task groups rather than individual ships.
 ///
 /// <para><strong>Key format:</strong> <see cref="Key"/> uses the pattern
-/// <c>"category:slug"</c> (e.g. <c>"role:strike"</c>, <c>"doctrine:weight:primary-arm"</c>).
+/// <c>"category:slug"</c> (e.g. <c>"doctrine:primary-arm"</c>, <c>"intent:mission:fight"</c>).
 /// Keys are the primary key and <strong>must never change once shipped</strong> — they
 /// serve as stable identifiers across schema migrations, are human-readable in
 /// diagnostics, and avoid auto-increment collision issues.</para>
 ///
-/// <para><strong>Dimensions (14 + custom):</strong> <c>role:economy</c>,
-/// <c>role:activity</c>, <c>role:domain</c>, <c>role:scope</c>,
-/// <c>role:posture</c>, <c>ctx</c>, <c>doctrine:weight</c>,
-/// <c>doctrine:frequency</c>, <c>doctrine:purpose</c>, <c>doctrine:autonomy</c>,
-/// <c>doctrine:flexibility</c>, <c>doctrine:lifecycle</c>, <c>status</c>,
-/// <c>custom</c>. The category is stored separately in
+/// <para><strong>5-pillar taxonomy (51 group tags across 9 sub-dimensions + custom):</strong>
+/// <c>doctrine</c> (flat),
+/// <c>intent:mission</c>, <c>intent:org</c>,
+/// <c>potency:capacity</c>, <c>potency:reach</c>, <c>potency:resilience</c>,
+/// <c>potency:footprint</c>,
+/// <c>status</c> (flat), <c>tradeoff</c> (flat), <c>custom</c>.
+/// The category is stored separately in
 /// <see cref="Category"/> for efficient filtering.</para>
 ///
 /// <para><strong>Scoping:</strong> <see cref="AllowedScopes"/> is always
@@ -34,7 +35,7 @@ public class GroupTagDefinition
 {
     /// <summary>
     /// Stable unique key. NEVER changes once shipped.
-    /// Format: "category:slug" e.g. "role:strike", "doctrine:weight:primary-arm".
+    /// Format: "category:slug" e.g. "doctrine:primary-arm", "intent:mission:fight".
     /// </summary>
     [PrimaryKey]
     public string Key { get; set; } = string.Empty;
@@ -43,9 +44,9 @@ public class GroupTagDefinition
     public string DisplayName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Category: role:economy, role:activity, role:domain, role:scope, role:posture,
-    /// ctx, doctrine:weight, doctrine:frequency, doctrine:purpose, doctrine:autonomy,
-    /// doctrine:flexibility, doctrine:lifecycle, status, custom.
+    /// Category: doctrine, intent:mission, intent:org,
+    /// potency:capacity, potency:reach, potency:resilience, potency:footprint,
+    /// status, tradeoff, custom.
     /// </summary>
     public string Category { get; set; } = string.Empty;
 

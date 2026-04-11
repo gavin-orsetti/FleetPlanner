@@ -18,8 +18,10 @@ public enum RecommendationScope
 
 /// <summary>
 /// The kind of analysis that produced a recommendation. Each value maps to one of the
-/// 10 analytical patterns in <see cref="FleetPlanner.Services.RecommendationService"/>.
+/// 12 analytical patterns in <see cref="FleetPlanner.Services.RecommendationService"/>.
 /// See the pattern method documentation for trigger conditions, scoring, and edge cases.
+/// Patterns 11 (TradeoffSuggestions) and 12 (PotencyMismatches) reuse existing kinds
+/// to emit recommendations for tradeoff and potency-related findings.
 /// </summary>
 public enum RecommendationKind
 {
