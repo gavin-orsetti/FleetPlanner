@@ -46,7 +46,7 @@ public partial class TagEditorViewModel : ObservableObject
     [ObservableProperty]
     private string _displayName = string.Empty;
 
-    /// <summary>Tag category (role, ctx, doctrine, status, custom).</summary>
+    /// <summary>Tag category (doctrine:*, intent:*, potency:*, status:*, tradeoff, custom).</summary>
     [ObservableProperty]
     private string _category = string.Empty;
 

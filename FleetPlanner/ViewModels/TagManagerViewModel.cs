@@ -222,7 +222,7 @@ public partial class TagManagerViewModel : ObservableObject
 /// </summary>
 public class TagManagerItem
 {
-    /// <summary>Tag definition key (e.g. "role:escort").</summary>
+    /// <summary>Tag definition key (e.g. "intent:activity:escort").</summary>
     public string TagKey { get; set; } = string.Empty;
 
     /// <summary>Human-readable display name.</summary>
@@ -264,7 +264,7 @@ public class TagManagerItem
 /// </summary>
 public class TagManagerCategoryGroup
 {
-    /// <summary>The category name (e.g. "role", "doctrine:weight").</summary>
+    /// <summary>The category name (e.g. "doctrine:value", "intent:activity").</summary>
     public string CategoryName { get; }
 
     /// <summary>Display-friendly capitalised category name.</summary>

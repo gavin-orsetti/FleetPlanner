@@ -52,6 +52,7 @@ public partial class AppShell : Shell
     /// so repeated <c>OnAppearing</c> calls are harmless.
     /// </para>
     /// </summary>
+
     /// <summary>
     /// Guards against re-entrant bootstrap calls when <c>OnAppearing</c> fires
     /// multiple times (e.g. on tab switches).

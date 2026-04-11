@@ -9,7 +9,7 @@ using FleetPlanner.Services;
 namespace FleetPlanner.ViewModels;
 
 /// <summary>
-/// ViewModel for the Recommendations page — builds the fleet graph, runs the 10-pattern
+/// ViewModel for the Recommendations page — builds the fleet graph, runs the 12-pattern
 /// recommendation engine, and displays results sorted by score descending.
 ///
 /// <para><b>Page lifecycle:</b> <see cref="LoadRecommendationsCommand"/> runs on every

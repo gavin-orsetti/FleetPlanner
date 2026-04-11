@@ -9,13 +9,13 @@ namespace FleetPlanner.Models;
 /// </summary>
 public class TagDisplayItem
 {
-    /// <summary>The <see cref="TagDefinition.Key"/> (e.g. "role:activity:escort").</summary>
+    /// <summary>The <see cref="TagDefinition.Key"/> (e.g. "intent:activity:escort").</summary>
     public string TagKey { get; set; } = string.Empty;
 
     /// <summary>Human-readable name shown on the chip.</summary>
     public string DisplayName { get; set; } = string.Empty;
 
-    /// <summary>Tag category (role, doctrine, status, etc.).</summary>
+    /// <summary>Tag category (doctrine:*, intent:*, potency:*, status:*, tradeoff, custom).</summary>
     public string Category { get; set; } = string.Empty;
 
     /// <summary>Hex colour from the <see cref="TagDefinition.ColorHex"/>.</summary>
