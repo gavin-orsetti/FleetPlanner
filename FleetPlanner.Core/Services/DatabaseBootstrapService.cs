@@ -6,9 +6,9 @@ namespace FleetPlanner.Services;
 
 /// <summary>
 /// Creates all SQLite tables and seeds the system-defined tag taxonomy on first launch.
-/// This is the app's schema-and-seed bootstrapper — called once at startup from
-/// <see cref="MauiProgram.CreateMauiApp"/> after <c>builder.Build()</c> but before the
-/// <see cref="MauiApp"/> is returned.
+/// This is the app's schema-and-seed bootstrapper — called from
+/// <c>AppShell.OnAppearing</c> (the earliest point at which the MAUI runtime is ready
+/// and async work can safely execute).
 ///
 /// <para><b>Schema versioning strategy:</b> An <see cref="AppMetadata"/> row with key
 /// <c>"schema_version"</c> gates whether seeding runs. On first launch the row does not
