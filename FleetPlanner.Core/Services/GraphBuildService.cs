@@ -108,6 +108,18 @@ public class GraphBuildService : IGraphBuildService
             foreach (var st in shipTags)
             {
                 tagLookup.TryGetValue(st.TagKey, out var tagDef);
+
+                // Contextual tags establish group membership even when their
+                // definition is missing (e.g. the "status:placeholder" sentinel
+                // used to mark group membership before real tags are assigned).
+                // Ensure the ContextualTags dictionary is populated so the ship
+                // counts as a group member regardless.
+                if (st.ContextType == "group" && st.ContextId.HasValue)
+                {
+                    if (!shipNode.ContextualTags.ContainsKey(st.ContextId.Value))
+                        shipNode.ContextualTags[st.ContextId.Value] = new List<TagNode>();
+                }
+
                 if (tagDef is null) continue;
 
                 var tagNode = new TagNode
@@ -127,9 +139,7 @@ public class GraphBuildService : IGraphBuildService
                 }
                 else if (st.ContextType == "group" && st.ContextId.HasValue)
                 {
-                    // Contextual tag scoped to a group
-                    if (!shipNode.ContextualTags.ContainsKey(st.ContextId.Value))
-                        shipNode.ContextualTags[st.ContextId.Value] = new List<TagNode>();
+                    // Contextual tag scoped to a group — entry was created above
                     shipNode.ContextualTags[st.ContextId.Value].Add(tagNode);
                 }
             }
