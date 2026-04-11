@@ -59,6 +59,13 @@ public class DatabaseBootstrapService
     }
 
     /// <summary>
+    /// Cached connection — avoids creating a new <see cref="SQLiteAsyncConnection"/> on
+    /// every call. <see cref="InitialiseAsync"/> is idempotent but may be invoked more
+    /// than once if <c>AppShell.OnAppearing</c> fires again on certain platforms.
+    /// </summary>
+    private SQLiteAsyncConnection? _db;
+
+    /// <summary>
     /// Creates all SQLite tables and seeds the system tag taxonomy if not already present.
     /// Migrates from previous schema versions by wiping old system tags before reseeding.
     /// <para>
@@ -67,16 +74,16 @@ public class DatabaseBootstrapService
     /// per version bump, and the seed guard only runs when no system tags exist.
     /// </para>
     /// <para>
-    /// <b>Call site:</b> Invoked synchronously (via <c>.GetAwaiter().GetResult()</c>) from
-    /// <see cref="MauiProgram.CreateMauiApp"/> because the MAUI startup contract requires a
-    /// synchronous return. The blocking call is safe here because no UI thread exists yet.
+    /// <b>Call site:</b> Awaited from <see cref="AppShell.OnAppearing"/> — the earliest
+    /// point at which the MAUI runtime is ready and async work can safely execute.
     /// </para>
     /// </summary>
     public async Task InitialiseAsync()
     {
         const int currentSchemaVersion = 7;
 
-        var db = new SQLiteAsyncConnection(_dbPath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache);
+        _db ??= new SQLiteAsyncConnection(_dbPath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache);
+        var db = _db;
 
         // Create all tables
         await db.CreateTableAsync<OwnedShip>();

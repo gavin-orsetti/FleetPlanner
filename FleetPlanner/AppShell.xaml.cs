@@ -52,9 +52,29 @@ public partial class AppShell : Shell
     /// so repeated <c>OnAppearing</c> calls are harmless.
     /// </para>
     /// </summary>
+    /// <summary>
+    /// Guards against re-entrant bootstrap calls when <c>OnAppearing</c> fires
+    /// multiple times (e.g. on tab switches).
+    /// </summary>
+    private bool _bootstrapStarted;
+
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        await _bootstrap.InitialiseAsync();
+
+        if (_bootstrapStarted) return;
+        _bootstrapStarted = true;
+
+        try
+        {
+            await _bootstrap.InitialiseAsync();
+        }
+        catch (Exception ex)
+        {
+            // Log or surface the error — an unhandled exception in async void
+            // crashes the entire process. InitialiseAsync can fail due to SQLite
+            // corruption, missing file-system permissions, or disk-full conditions.
+            System.Diagnostics.Debug.WriteLine($"Database bootstrap failed: {ex}");
+        }
     }
 }
