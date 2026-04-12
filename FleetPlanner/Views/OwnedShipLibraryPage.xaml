@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             x:Class="FleetPlanner.Views.OwnedShipLibraryPage"
+             x:DataType="vm:OwnedShipLibraryViewModel"
+             Title="My Ships">
+
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="8">
+
+        <!-- Add Ship button -->
+        <Button Grid.Row="0" Text="+ Add Ship" Command="{Binding AddOwnedShipCommand}"
+                HorizontalOptions="End" />
+
+        <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+
+        <!-- Empty state -->
+        <VerticalStackLayout Grid.Row="1" IsVisible="{Binding IsEmpty}"
+                             VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
+            <Label Text="No ships yet" FontSize="20" HorizontalTextAlignment="Center" />
+            <Label Text="Browse the ship catalogue to add ships to your collection."
+                   FontSize="14" HorizontalTextAlignment="Center" TextColor="{StaticResource Gray400}" />
+        </VerticalStackLayout>
+
+        <!-- Ship list -->
+        <CollectionView Grid.Row="1" ItemsSource="{Binding OwnedShips}"
+                         IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:OwnedShipDisplay">
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem Text="Archive"
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OwnedShipLibraryViewModel}}, Path=ArchiveShipCommand}"
+                                           CommandParameter="{Binding .}"
+                                           BackgroundColor="{StaticResource Warning}" />
+                                <SwipeItem Text="Delete"
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OwnedShipLibraryViewModel}}, Path=DeleteShipCommand}"
+                                           CommandParameter="{Binding .}"
+                                           BackgroundColor="{StaticResource Error}" IsDestructive="True" />
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+                        <Frame Padding="12" Margin="0,4" CornerRadius="8"
+                               BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:OwnedShipLibraryViewModel}}, Path=EditOwnedShipCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Text="{Binding ShipName}" FontSize="16" FontAttributes="Bold" />
+                                <Frame Grid.Row="0" Grid.Column="1" Padding="4,2" CornerRadius="4"
+                                       HasShadow="False" BackgroundColor="{StaticResource Tertiary}">
+                                    <Label Text="{Binding AcquisitionBadge}" FontSize="10"
+                                           TextColor="{StaticResource OnTertiary}" />
+                                </Frame>
+                                <HorizontalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="12">
+                                    <Label Text="{Binding Callsign, StringFormat='Callsign: {0}'}"
+                                           FontSize="12" TextColor="{StaticResource Gray400}" />
+                                    <Label Text="{Binding Role}" FontSize="12" TextColor="{StaticResource Gray400}" />
+                                    <Label Text="{Binding Manufacturer}" FontSize="12" TextColor="{StaticResource Gray400}" />
+                                </HorizontalStackLayout>
+                            </Grid>
+                        </Frame>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

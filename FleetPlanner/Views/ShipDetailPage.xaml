@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    ShipDetailPage.xaml — Read-only detail view for a single ship's specifications.
+
+    LAYOUT STRUCTURE:
+    - ActivityIndicator (loading spinner)
+    - Ship name + manufacturer header
+    - Stats Grid (Role, Size, Crew, Cargo, Price USD)
+    - In-game price frame (aUEC)
+    - Description frame
+
+    KEY XAML PATTERNS:
+    - Title="{Binding Ship.Name}" — path navigation through the Ship object. The title updates
+      when the Ship property is set after loading completes.
+    - Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,..." — a two-column table layout
+      for displaying key-value pairs (label on left, value on right).
+    - StringFormat in bindings: '{0:N0}' formats numbers with thousand separators,
+      '${0:N0}' adds a dollar sign prefix for USD prices.
+
+    See: https://learn.microsoft.com/en-us/dotnet/maui/user-interface/layouts/grid
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             x:Class="FleetPlanner.Views.ShipDetailPage"
+             x:DataType="vm:ShipDetailViewModel"
+             Title="{Binding Ship.Name}">
+
+    <Grid RowDefinitions="Auto,*" Padding="16">
+
+        <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center" />
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="12">
+
+                <!-- Ship name + manufacturer -->
+                <Label Text="{Binding Ship.Name}" FontSize="28" FontAttributes="Bold" />
+                <Label Text="{Binding Ship.Manufacturer}" FontSize="16" TextColor="{StaticResource Gray400}" />
+
+                <!-- Stats grid -->
+                <Frame Padding="16" CornerRadius="8">
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+                        <Label Grid.Row="0" Grid.Column="0" Text="Role" FontAttributes="Bold" />
+                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding Ship.Role}" />
+
+                        <Label Grid.Row="1" Grid.Column="0" Text="Size" FontAttributes="Bold" />
+                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding Ship.Size}" />
+
+                        <Label Grid.Row="2" Grid.Column="0" Text="Crew" FontAttributes="Bold" />
+                        <Label Grid.Row="2" Grid.Column="1" Text="{Binding Ship.CrewMin, StringFormat='{0}'}" />
+
+                        <Label Grid.Row="3" Grid.Column="0" Text="Cargo (SCU)" FontAttributes="Bold" />
+                        <Label Grid.Row="3" Grid.Column="1" Text="{Binding Ship.CargoCapacity}" />
+
+                        <Label Grid.Row="4" Grid.Column="0" Text="Price (USD)" FontAttributes="Bold" />
+                        <Label Grid.Row="4" Grid.Column="1" Text="{Binding Ship.PriceUsd, StringFormat='${0:N0}'}"
+                               TextColor="{StaticResource Tertiary}" />
+                    </Grid>
+                </Frame>
+
+                <!-- Price in aUEC -->
+                <Frame Padding="16" CornerRadius="8">
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="In-game Price:" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Label Text="{Binding Ship.PriceAuec, StringFormat='{0:N0} aUEC'}"
+                               VerticalOptions="Center" TextColor="{StaticResource Tertiary}" />
+                    </HorizontalStackLayout>
+                </Frame>
+
+                <!-- Description -->
+                <Frame Padding="16" CornerRadius="8">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Description" FontAttributes="Bold" FontSize="14" />
+                        <Label Text="{Binding Ship.Description}" FontSize="13" />
+                    </VerticalStackLayout>
+                </Frame>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

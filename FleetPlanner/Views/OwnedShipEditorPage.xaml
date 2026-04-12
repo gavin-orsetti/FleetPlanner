@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             xmlns:localModels="clr-namespace:FleetPlanner.Models"
+             x:Class="FleetPlanner.Views.OwnedShipEditorPage"
+             x:DataType="vm:OwnedShipEditorViewModel"
+             Title="{Binding ShipName, StringFormat='Edit: {0}'}">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="12">
+
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                               HorizontalOptions="Center" />
+
+            <!-- Ship Name (read-only) -->
+            <Label Text="{Binding ShipName}" FontSize="22" FontAttributes="Bold" />
+
+            <!-- Callsign -->
+            <Label Text="Callsign" FontSize="12" TextColor="{StaticResource Gray400}" />
+            <Entry Text="{Binding Callsign}" Placeholder="Enter callsign..." />
+
+            <!-- Notes -->
+            <Label Text="Notes" FontSize="12" TextColor="{StaticResource Gray400}" />
+            <Editor Text="{Binding Notes}" Placeholder="Add notes..." HeightRequest="100" />
+
+            <!-- Doctrine & Status Section -->
+            <Label Text="Doctrine &amp; Status" FontSize="16" FontAttributes="Bold" Margin="0,8,0,0" />
+
+            <!-- Tag Chips -->
+            <FlexLayout BindableLayout.ItemsSource="{Binding GlobalTags}"
+                        Wrap="Wrap" JustifyContent="Start" Direction="Row"
+                        MinimumHeightRequest="36">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="localModels:TagDisplayItem">
+                        <Border StrokeShape="RoundRectangle 12"
+                                Padding="8,4"
+                                Margin="0,0,8,8"
+                                StrokeThickness="1.5"
+                                Stroke="{Binding ChipColor}"
+                                BackgroundColor="{Binding ChipFillColor}">
+                            <HorizontalStackLayout Spacing="4">
+                                <Label Text="{Binding DisplayName}"
+                                       FontSize="12"
+                                       TextColor="#E0E0E0" />
+                                <Label Text="{Binding WeightLabel}"
+                                       FontSize="10"
+                                       TextColor="#E0E0E0"
+                                       IsVisible="{Binding IsIntentTag}"
+                                       Opacity="0.8" />
+                            </HorizontalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+                <BindableLayout.EmptyView>
+                    <Label Text="No doctrine or status tags yet — tap Edit Doctrine &amp; Status"
+                           FontSize="12" TextColor="{StaticResource Gray400}"
+                           Margin="0,4" />
+                </BindableLayout.EmptyView>
+            </FlexLayout>
+
+            <Button Text="Edit Doctrine &amp; Status" Command="{Binding EditTagsCommand}"
+                    BackgroundColor="{StaticResource PrimaryContainer}"
+                    TextColor="{StaticResource Primary}"
+                    FontSize="13"
+                    Padding="16,8"
+                    HorizontalOptions="Start" />
+
+            <Label Text="Intent, Potency, and Tradeoff tags are set per-group — edit them from the group detail page."
+                   FontSize="11" TextColor="{StaticResource Gray400}"
+                   Margin="0,2,0,0" />
+
+            <!-- Groups Section -->
+            <Label Text="Groups" FontSize="16" FontAttributes="Bold" Margin="0,8,0,0" />
+
+            <Label Text="No groups created yet — create one in the Groups tab"
+                   FontSize="12" TextColor="{StaticResource Gray400}"
+                   IsVisible="{Binding HasNoGroups}"
+                   Margin="0,4" />
+
+            <CollectionView ItemsSource="{Binding GroupMemberships}"
+                            IsVisible="{Binding HasNoGroups, Converter={StaticResource InvertedBoolConverter}}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="localModels:GroupMembershipItem">
+                        <Grid ColumnDefinitions="*,Auto" Padding="4,6" ColumnSpacing="8">
+                            <Label Grid.Column="0"
+                                   Text="{Binding GroupName}"
+                                   FontSize="14"
+                                   VerticalTextAlignment="Center" />
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding IsMember}"
+                                    Toggled="OnGroupMembershipToggled" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Action Buttons -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,16,0,0">
+                <Button Grid.Column="0" Text="Save" Command="{Binding SaveCommand}" />
+                <Button Grid.Column="1" Text="Cancel" Command="{Binding CancelCommand}"
+                        BackgroundColor="{StaticResource Gray500}" />
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

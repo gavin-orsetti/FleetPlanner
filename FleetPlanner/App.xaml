@@ -1,18 +1,38 @@
-﻿<?xml version = "1.0" encoding = "UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    App.xaml — The root Application XAML that defines app-level resources.
+
+    This file merges two ResourceDictionary files into the app's global resources:
+
+    1. Colors.xaml — defines colour constants (Primary, Secondary, Surface, Error, etc.)
+       with both Light and Dark theme variants.
+    2. Styles.xaml — defines implicit and explicit styles for MAUI controls (Label, Button,
+       Entry, Frame, etc.) that reference the colours from Colors.xaml.
+
+    RESOURCE DICTIONARIES: In MAUI, resources defined at the Application level are available
+    to every page, control, and template in the app. This is the standard place to put
+    global themes, colours, and styles.
+
+    MergedDictionaries: Allows splitting resources across multiple files for maintainability.
+    The order matters — Colors.xaml must be loaded before Styles.xaml because styles reference
+    colour resources via {StaticResource}.
+
+    The code-behind (App.xaml.cs) calls InitializeComponent() to load these resources.
+
+    See: https://learn.microsoft.com/en-us/dotnet/maui/fundamentals/resource-dictionaries
+    See: https://learn.microsoft.com/en-us/dotnet/maui/user-interface/styles/xaml
+-->
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
-             xmlns:local="clr-namespace:FleetPlanner"
              x:Class="FleetPlanner.App">
     <Application.Resources>
         <ResourceDictionary>
+            <!-- MergedDictionaries: Load colour and style definitions from separate files.
+                 Colors.xaml must come first because Styles.xaml references its colour resources. -->
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary x:Name="appColors" Source="Resources/Styles/Colors.xaml" />
-                <ResourceDictionary x:Name="appStyles" Source="Resources/Styles/Styles.xaml" />
-
-                <material:StyleResource ColorsOverride="{x:Reference appColors}"  BasedOn="{x:Reference appStyles}" />
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            
         </ResourceDictionary>
     </Application.Resources>
 </Application>

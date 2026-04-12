@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             xmlns:localModels="clr-namespace:FleetPlanner.Models"
+             x:Class="FleetPlanner.Views.GroupDetailPage"
+             x:DataType="vm:GroupDetailViewModel"
+             Title="{Binding Group.Name}">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="12">
+
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                               HorizontalOptions="Center" />
+
+            <!-- Group Info -->
+            <Label Text="{Binding Group.Name}" FontSize="22" FontAttributes="Bold" />
+            <Label Text="{Binding Group.Description}" FontSize="14" TextColor="{StaticResource Gray400}" />
+            <Label Text="{Binding Group.IntendedFocus, StringFormat='Focus: {0}'}"
+                   FontSize="12" TextColor="{StaticResource Gray500}" />
+            <Label Text="{Binding Group.CrewTarget, StringFormat='Crew target: {0}'}"
+                   FontSize="12" TextColor="{StaticResource Gray500}" />
+
+            <!-- Group Tags Section -->
+            <Label Text="Group Tags" FontSize="16" FontAttributes="Bold" Margin="0,8,0,0" />
+
+            <FlexLayout BindableLayout.ItemsSource="{Binding GroupTagDisplayItems}"
+                        Wrap="Wrap" JustifyContent="Start" Direction="Row"
+                        MinimumHeightRequest="36">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="localModels:TagDisplayItem">
+                        <Border StrokeShape="RoundRectangle 12"
+                                Padding="8,4"
+                                Margin="0,0,8,8"
+                                StrokeThickness="1.5"
+                                Stroke="{Binding ChipColor}"
+                                BackgroundColor="{Binding ChipFillColor}">
+                            <HorizontalStackLayout Spacing="4">
+                                <Label Text="{Binding DisplayName}"
+                                       FontSize="12"
+                                       TextColor="#E0E0E0" />
+                                <Label Text="{Binding WeightLabel}"
+                                       FontSize="10"
+                                       TextColor="#E0E0E0"
+                                       IsVisible="{Binding IsIntentTag}"
+                                       Opacity="0.8" />
+                            </HorizontalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+                <BindableLayout.EmptyView>
+                    <Label Text="No group tags yet — tap Edit Group Tags to set this group's doctrine and focus"
+                           FontSize="12" TextColor="{StaticResource Gray400}"
+                           Margin="0,4" />
+                </BindableLayout.EmptyView>
+            </FlexLayout>
+
+            <Button Text="Edit Group Tags" Command="{Binding EditGroupTagsCommand}"
+                    BackgroundColor="{StaticResource PrimaryContainer}"
+                    TextColor="{StaticResource Primary}"
+                    FontSize="13"
+                    Padding="16,8"
+                    HorizontalOptions="Start" />
+
+            <!-- Add / Remove Ships -->
+            <Button Command="{Binding ToggleManageShipsCommand}"
+                    BackgroundColor="{StaticResource PrimaryContainer}"
+                    TextColor="{StaticResource Primary}"
+                    FontSize="13"
+                    Padding="16,8"
+                    HorizontalOptions="Start"
+                    Margin="0,4,0,0">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsManagingShips}" Value="False">
+                        <Setter Property="Text" Value="Add / Remove Ships" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsManagingShips}" Value="True">
+                        <Setter Property="Text" Value="Hide Ship List" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
+
+            <CollectionView ItemsSource="{Binding ShipCandidates}"
+                            IsVisible="{Binding IsManagingShips}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="localModels:GroupShipCandidateItem">
+                        <Grid ColumnDefinitions="*,Auto" Padding="4,6" ColumnSpacing="8">
+                            <VerticalStackLayout Grid.Column="0" VerticalOptions="Center" Spacing="2">
+                                <Label Text="{Binding ShipName}" FontSize="14" FontAttributes="Bold" />
+                                <Label Text="{Binding Callsign}" FontSize="11"
+                                       TextColor="{StaticResource Gray400}" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding IsMember}"
+                                    Toggled="OnShipMembershipToggled" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                <CollectionView.EmptyView>
+                    <Label Text="No owned ships yet — add ships from the Ship Browser first."
+                           FontSize="12" TextColor="{StaticResource Gray400}" Margin="0,4" />
+                </CollectionView.EmptyView>
+            </CollectionView>
+
+            <!-- Member Ships -->
+            <Label Text="Member Ships" FontSize="16" FontAttributes="Bold" Margin="0,8,0,0" />
+            <CollectionView ItemsSource="{Binding MemberShips}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:OwnedShipDisplay">
+                        <Frame Padding="10" Margin="0,4" CornerRadius="8"
+                               BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}">
+                            <VerticalStackLayout Spacing="6">
+                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                    <Label Grid.Row="0" Grid.Column="0"
+                                           Text="{Binding ShipName}" FontSize="14" FontAttributes="Bold" />
+                                    <Label Grid.Row="0" Grid.Column="1"
+                                           Text="{Binding AcquisitionBadge}" FontSize="10"
+                                           TextColor="{StaticResource Tertiary}" />
+                                    <HorizontalStackLayout Grid.Row="1" Grid.ColumnSpan="2" Spacing="8">
+                                        <Label Text="{Binding Callsign}" FontSize="11" TextColor="{StaticResource Gray400}" />
+                                        <Label Text="{Binding Role}" FontSize="11" TextColor="{StaticResource Gray400}" />
+                                    </HorizontalStackLayout>
+                                </Grid>
+
+                                <!-- Contextual Role Tags for this ship in this group -->
+                                <FlexLayout BindableLayout.ItemsSource="{Binding ContextualTags}"
+                                            Wrap="Wrap" JustifyContent="Start" Direction="Row">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="localModels:TagDisplayItem">
+                                            <Border StrokeShape="RoundRectangle 10"
+                                                    Padding="6,3"
+                                                    Margin="0,0,6,4"
+                                                    StrokeThickness="1"
+                                                    Stroke="{Binding ChipColor}"
+                                                    BackgroundColor="{Binding ChipFillColor}">
+                                                <HorizontalStackLayout Spacing="3">
+                                                    <Label Text="{Binding DisplayName}"
+                                                           FontSize="11"
+                                                           TextColor="#E0E0E0" />
+                                                    <Label Text="{Binding WeightLabel}"
+                                                           FontSize="9"
+                                                           TextColor="#E0E0E0"
+                                                           IsVisible="{Binding IsIntentTag}"
+                                                           Opacity="0.8" />
+                                                </HorizontalStackLayout>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </FlexLayout>
+
+                                <!-- Edit Role in Group button -->
+                                <Button Text="Edit Role in Group"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GroupDetailViewModel}}, Path=EditShipRoleInGroupCommand}"
+                                        CommandParameter="{Binding}"
+                                        BackgroundColor="Transparent"
+                                        TextColor="{StaticResource Primary}"
+                                        FontSize="11"
+                                        Padding="0"
+                                        HorizontalOptions="Start" />
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                <CollectionView.EmptyView>
+                    <Label Text="No ships assigned to this group yet."
+                           FontSize="12" TextColor="{StaticResource Gray400}" Margin="0,8" />
+                </CollectionView.EmptyView>
+            </CollectionView>
+
+            <Button Text="Back" Command="{Binding GoBackCommand}" Margin="0,16,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

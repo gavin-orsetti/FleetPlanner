@@ -1,83 +1,81 @@
-﻿namespace FleetPlanner;
+using FleetPlanner.Services;
+using FleetPlanner.Views;
 
+namespace FleetPlanner;
+
+/// <summary>
+/// Code-behind for <c>AppShell.xaml</c> — the app's navigation shell.
+/// Registers explicit routes for detail/sub-pages that are pushed onto the nav stack
+/// and runs <see cref="DatabaseBootstrapService.InitialiseAsync"/> on first appearance.
+/// </summary>
 public partial class AppShell : Shell
 {
-    public AppShell()
+    private readonly DatabaseBootstrapService _bootstrap;
+
+    /// <summary>
+    /// Constructor — receives <see cref="DatabaseBootstrapService"/> via DI, loads the XAML,
+    /// and registers detail-page routes for Shell navigation.
+    /// </summary>
+    public AppShell(DatabaseBootstrapService bootstrap)
     {
+        _bootstrap = bootstrap;
         InitializeComponent();
 
-        #region Routes
-        // Home Page
-        Routing.RegisterRoute( Routes.Main_Page_PageName, Routes.Main_Page_PageType );
-
-        #region Fleet
-
-        // Create New Fleet
-        Routing.RegisterRoute( Routes.MyFleets_NewFleetPage_PageName, Routes.MyFleets_NewFleetPage_PageType );
-
-        // Fleet Page
-        Routing.RegisterRoute( Routes.Fleet_Page_PageName, Routes.Fleet_Page_PageType );
-
-        // Edit Fleet Page
-        Routing.RegisterRoute( Routes.Fleet_EditPage_PageName, Routes.Fleet_EditPage_PageType );
-        #endregion Fleet
-
-        #region Task Group
-        // New Page
-        Routing.RegisterRoute( Routes.TaskGroup_AddNewPage_PageName, Routes.TaskGroup_AddNewPage_PageType );
-
-        // Task Group Page
-        Routing.RegisterRoute( Routes.TaskGroup_Page_PageName, Routes.TaskGroup_Page_PageType );
-
-        // Edit Page
-        Routing.RegisterRoute( Routes.TaskGroup_EditPage_PageName, Routes.TaskGroup_EditPage_PageType );
-        #endregion Task Group
-
-        // Edit Add Ships Page
-        Routing.RegisterRoute( Routes.TaskGroup_Edit_AddShipsPage_PageName, Routes.TaskGroup_Edit_AddShipsPage_PageType );
-
-        #region ShipDetail
-        // Ship Detail Page
-        Routing.RegisterRoute( Routes.ShipDetail_Page_PageName, Routes.ShipDetail_Page_PageType );
-
-        // Edit Page
-        Routing.RegisterRoute( Routes.ShipDetail_EditPage_PageName, Routes.ShipDetail_EditPage_PageType );
-        #endregion ShipDetail
-
-        #region Re-Task Ship
-        // Re-Task Ship Page
-        Routing.RegisterRoute( Routes.ReTaskShip_Page_PageName, Routes.RetaskShip_Page_PageType );
-        #endregion Re-Task Ship
-
-        #region Shopping List
-        // Main Shopping List Page
-        Routing.RegisterRoute( Routes.ShoppingList_Page_PageName, Routes.ShoppingList_Page_PageType );
-
-        // Fleet Selected Page
-        Routing.RegisterRoute( Routes.ShoppingList_FleetSelectedPage_PageName, Routes.ShoppingList_FleetSelectedPage_PageType );
-        #endregion Shopping List
-        #endregion Routes
-
-        #region Theme Settings
-        // Gets the user's system theme and sets the app theme to match
-        App.Current.UserAppTheme = Application.Current.RequestedTheme;
-
-        // Sets the Light/Dark theme switch to match the selected theme
-        themeSwitch.IsToggled = App.Current.RequestedTheme == AppTheme.Dark;
-        App.Current.RequestedThemeChanged += ( s, e ) =>
-        {
-            themeSwitch.IsToggled = App.Current.RequestedTheme == AppTheme.Dark;
-        };
-        #endregion ThemeSettings
-
+        // Detail/sub-pages navigated to programmatically
+        Routing.RegisterRoute(nameof(ShipDetailPage), typeof(ShipDetailPage));
+        Routing.RegisterRoute(nameof(OwnedShipEditorPage), typeof(OwnedShipEditorPage));
+        Routing.RegisterRoute(nameof(GroupDetailPage), typeof(GroupDetailPage));
+        Routing.RegisterRoute(nameof(TagPickerPage), typeof(TagPickerPage));
+        Routing.RegisterRoute(nameof(TagManagerPage), typeof(TagManagerPage));
+        Routing.RegisterRoute(nameof(TagEditorPage), typeof(TagEditorPage));
     }
+
     /// <summary>
-    /// Swaps the theme when the switch is flipped.
+    /// Runs database bootstrap (table creation + tag taxonomy seeding) on first appearance.
+    /// <para>
+    /// <b>Why here and not in <c>MauiProgram.CreateMauiApp()</c>?</b>
+    /// <c>CreateMauiApp()</c> is synchronous — calling <c>.GetAwaiter().GetResult()</c> on async
+    /// work there deadlocks the UI thread before the MAUI runtime is fully initialised, causing
+    /// the app to hang on the splash screen. <c>OnAppearing</c> fires after the MAUI runtime is
+    /// ready, so async work executes safely.
+    /// </para>
+    /// <para>
+    /// <b>Why constructor injection?</b> <c>AppShell</c> is registered as a singleton in
+    /// <see cref="MauiProgram"/>, so the DI container resolves it and can inject
+    /// <see cref="DatabaseBootstrapService"/> directly. The previous approach resolved the
+    /// service via <c>Handler?.MauiContext?.Services</c>, which silently returned
+    /// <see langword="null"/> on Android because the platform handler is not yet attached
+    /// when <c>OnAppearing</c> fires — causing bootstrap to be skipped entirely.
+    /// </para>
+    /// <para>
+    /// <c>InitialiseAsync()</c> is idempotent (it checks <c>schema_version</c> before seeding),
+    /// so repeated <c>OnAppearing</c> calls are harmless.
+    /// </para>
     /// </summary>
-    /// <param name="sender"></param>
-    /// <param name="e">The boolean value that represents the switch state (true == dark mode, false == light mode) </param>
-    private void ThemeToggled( object sender, ToggledEventArgs e )
+
+    /// <summary>
+    /// Guards against re-entrant bootstrap calls when <c>OnAppearing</c> fires
+    /// multiple times (e.g. on tab switches).
+    /// </summary>
+    private bool _bootstrapStarted;
+
+    protected override async void OnAppearing()
     {
-        App.Current.UserAppTheme = e.Value ? AppTheme.Dark : AppTheme.Light;
+        base.OnAppearing();
+
+        if (_bootstrapStarted) return;
+        _bootstrapStarted = true;
+
+        try
+        {
+            await _bootstrap.InitialiseAsync();
+        }
+        catch (Exception ex)
+        {
+            // Log or surface the error — an unhandled exception in async void
+            // crashes the entire process. InitialiseAsync can fail due to SQLite
+            // corruption, missing file-system permissions, or disk-full conditions.
+            System.Diagnostics.Debug.WriteLine($"Database bootstrap failed: {ex}");
+        }
     }
 }

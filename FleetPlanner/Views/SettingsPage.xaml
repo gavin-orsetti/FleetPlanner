@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    SettingsPage.xaml — App settings: dark mode toggle, cache management, and about section.
+
+    LAYOUT STRUCTURE:
+    - Appearance frame: Dark Mode switch
+    - Ship Data Cache frame: last-updated timestamp, refresh button, loading indicator
+    - About frame: app name, description, community logo, legal disclaimer
+
+    KEY XAML PATTERNS:
+    - Switch IsToggled="{Binding IsDarkMode}" — two-way binding. When toggled, the ViewModel's
+      OnIsDarkModeChanged partial method fires and updates Application.Current.UserAppTheme,
+      which triggers an immediate theme change across the entire app.
+    - ActivityIndicator IsRunning + IsVisible both bound to IsRefreshing — shows a spinner
+      while the cache refresh HTTP request is in progress.
+    - Image Source="made_by_the_community_white.png" — references an image from the
+      Resources/Images folder. MAUI automatically resolves platform-specific image assets.
+
+    See: https://learn.microsoft.com/en-us/dotnet/maui/user-interface/controls/switch
+    See: https://learn.microsoft.com/en-us/dotnet/maui/user-interface/theming
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             x:Class="FleetPlanner.Views.SettingsPage"
+             x:DataType="vm:SettingsViewModel"
+             Title="Settings">
+
+    <ScrollView Padding="16">
+        <VerticalStackLayout Spacing="16">
+
+            <!-- Theme -->
+            <Frame Padding="16" CornerRadius="8">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Appearance" FontSize="18" FontAttributes="Bold" />
+                    <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                        <Label Text="Dark Mode" VerticalOptions="Center" />
+                        <Switch IsToggled="{Binding IsDarkMode}" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Tag Management -->
+            <Frame Padding="16" CornerRadius="8">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Tags" FontSize="18" FontAttributes="Bold" />
+                    <Label Text="Browse, create, and manage tag definitions used to describe ships and groups."
+                           FontSize="12" TextColor="{StaticResource Gray400}" />
+                    <Button Text="Manage Tags"
+                            Command="{Binding ManageTagsCommand}"
+                            BackgroundColor="{StaticResource PrimaryContainer}"
+                            TextColor="{StaticResource Primary}"
+                            CornerRadius="8" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Cache Management -->
+            <Frame Padding="16" CornerRadius="8">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Ship Data Cache" FontSize="18" FontAttributes="Bold" />
+                    <Label Text="{Binding LastUpdated, StringFormat='Last updated: {0}'}"
+                           TextColor="{StaticResource Gray400}" />
+                    <Button Text="Refresh Ship Data"
+                            Command="{Binding RefreshCacheCommand}"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="{StaticResource OnPrimary}"
+                            CornerRadius="8" />
+                    <ActivityIndicator IsRunning="{Binding IsRefreshing}" IsVisible="{Binding IsRefreshing}"
+                                       HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- About -->
+            <Frame Padding="16" CornerRadius="8">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="About" FontSize="18" FontAttributes="Bold" />
+                    <Label Text="Fleet Planner V2" FontSize="14" />
+                    <Label Text="A Star Citizen fleet management app." FontSize="12" TextColor="{StaticResource Gray400}" />
+                    <Image Source="made_by_the_community_white.png"
+                           MaximumWidthRequest="150" MaximumHeightRequest="150" />
+                    <Label Text="This is an unofficial Star Citizen fan project, not affiliated with the Cloud Imperium group of companies."
+                           FontSize="10" TextColor="{StaticResource Gray400}" HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

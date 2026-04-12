@@ -1,0 +1,101 @@
+using FleetPlanner.Models;
+
+using SQLite;
+
+namespace FleetPlanner.Repositories;
+
+/// <summary>
+/// SQLite-backed implementation of <see cref="IUserFleetGroupTagRepository"/>.
+/// Uses the sqlite-net-pcl async API with lazy connection initialisation: the
+/// <see cref="SQLiteAsyncConnection"/> is created on first use and the
+/// <c>UserFleetGroupTag</c> table is auto-created via <c>CreateTableAsync</c>.
+/// All data lives in the shared <c>FleetPlanner.db3</c> file. On MAUI
+/// platforms (Android, iOS, Mac Catalyst, Windows) the database path resolves
+/// to <c>FileSystem.AppDataDirectory</c>; on other targets (unit-test hosts)
+/// it falls back to <c>Path.GetTempPath()</c>. A second constructor accepting
+/// a <c>dbPath</c> string enables test isolation by pointing each test run at
+/// a unique temporary database. All removal operations are hard-deletes;
+/// junction rows carry no archive flag.
+/// </summary>
+public class UserFleetGroupTagRepository : IUserFleetGroupTagRepository
+{
+    private SQLiteAsyncConnection? _db;
+    private string? _dbPath;
+
+    private string DbPath => _dbPath ??=
+#if ANDROID || IOS || MACCATALYST || WINDOWS
+        Path.Combine(FileSystem.AppDataDirectory, "FleetPlanner.db3");
+#else
+        Path.Combine(Path.GetTempPath(), "FleetPlanner.db3");
+#endif
+
+    /// <summary>Parameterless constructor for DI registration.</summary>
+    public UserFleetGroupTagRepository() { }
+
+    /// <summary>Constructor for testing with a custom database path.</summary>
+    public UserFleetGroupTagRepository(string dbPath) { _dbPath = dbPath; }
+
+    private async Task<SQLiteAsyncConnection> GetConnectionAsync()
+    {
+        if (_db is not null) return _db;
+        _db = new SQLiteAsyncConnection(DbPath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache);
+        await _db.CreateTableAsync<UserFleetGroupTag>();
+        return _db;
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<UserFleetGroupTag>> GetTagsForGroupAsync(int groupId)
+    {
+        var db = await GetConnectionAsync();
+        return await db.Table<UserFleetGroupTag>().Where(t => t.UserFleetGroupId == groupId).ToListAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<int> ApplyTagAsync(UserFleetGroupTag tag)
+    {
+        var db = await GetConnectionAsync();
+        return await db.InsertAsync(tag);
+    }
+
+    /// <inheritdoc/>
+    public async Task RemoveTagAsync(int groupId, string tagKey)
+    {
+        var db = await GetConnectionAsync();
+        var matches = await db.Table<UserFleetGroupTag>()
+            .Where(t => t.UserFleetGroupId == groupId && t.TagKey == tagKey)
+            .ToListAsync();
+        foreach (var tag in matches)
+            await db.DeleteAsync(tag);
+    }
+
+    /// <inheritdoc/>
+    public async Task ReplaceTagsAsync(int groupId, IEnumerable<UserFleetGroupTag> tags)
+    {
+        var db = await GetConnectionAsync();
+
+        // Delete existing tags for this group
+        var existing = await db.Table<UserFleetGroupTag>()
+            .Where(t => t.UserFleetGroupId == groupId)
+            .ToListAsync();
+        foreach (var tag in existing)
+            await db.DeleteAsync(tag);
+
+        // Insert new tags
+        foreach (var tag in tags)
+        {
+            tag.UserFleetGroupId = groupId;
+            await db.InsertAsync(tag);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task DeleteAllTagsForGroupAsync(int groupId)
+    {
+        var db = await GetConnectionAsync();
+        var existing = await db.Table<UserFleetGroupTag>()
+            .Where(t => t.UserFleetGroupId == groupId)
+            .ToListAsync();
+        foreach (var tag in existing)
+            await db.DeleteAsync(tag);
+    }
+}

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.Maui;assembly=LiveChartsCore.SkiaSharpView.Maui"
+             x:Class="FleetPlanner.Views.DashboardPage"
+             x:DataType="vm:DashboardViewModel"
+             Title="Dashboard">
+
+    <Shell.TitleView>
+        <Label Text="Dashboard" Style="{StaticResource Title1}"
+               VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource OnPrimary}, Dark={StaticResource OnPrimaryDark}}" />
+    </Shell.TitleView>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+
+            <!-- Loading indicator -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                               HorizontalOptions="Center" Color="{StaticResource Primary}" />
+
+            <!-- KPI cards row 1 -->
+            <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8"
+                  IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                <Frame Grid.Column="0" Padding="12" BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}" CornerRadius="8">
+                    <VerticalStackLayout HorizontalOptions="Center">
+                        <Label Text="{Binding TotalShips}" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                        <Label Text="Ships" FontSize="11" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Frame>
+                <Frame Grid.Column="1" Padding="12" BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}" CornerRadius="8">
+                    <VerticalStackLayout HorizontalOptions="Center">
+                        <Label Text="{Binding TotalPledgeValueUsd, StringFormat='${0:N0}'}" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                        <Label Text="Pledge Value" FontSize="11" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Frame>
+                <Frame Grid.Column="2" Padding="12" BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}" CornerRadius="8">
+                    <VerticalStackLayout HorizontalOptions="Center">
+                        <Label Text="{Binding RolesCovered}" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                        <Label Text="Roles" FontSize="11" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Frame>
+                <Frame Grid.Column="3" Padding="12" BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}" CornerRadius="8">
+                    <VerticalStackLayout HorizontalOptions="Center">
+                        <Label Text="{Binding TotalGroups}" FontSize="22" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+                        <Label Text="Groups" FontSize="11" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </Frame>
+            </Grid>
+
+            <!-- Acquisition breakdown -->
+            <Frame Padding="12" CornerRadius="8" IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                <HorizontalStackLayout Spacing="16" HorizontalOptions="Center">
+                    <Label Text="{Binding PledgedShipCount, StringFormat='{0} pledged'}" FontSize="13" />
+                    <Label Text="{Binding InGameShipCount, StringFormat='{0} in-game'}" FontSize="13" />
+                    <Label Text="{Binding TotalPledgeValueUsd, StringFormat='Pledge: ${0:N0}'}" FontSize="13" FontAttributes="Bold" />
+                </HorizontalStackLayout>
+            </Frame>
+
+            <Label Text="{Binding LastUpdated, StringFormat='Ship data last updated: {0}'}"
+                   FontSize="10" HorizontalTextAlignment="Center" TextColor="{StaticResource Gray400}" />
+
+            <!-- Fleet Composition Pie Chart -->
+            <Frame Padding="8" CornerRadius="8" IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                <VerticalStackLayout>
+                    <Label Text="Collection by Role" FontAttributes="Bold" FontSize="14" Margin="0,0,0,4" />
+                    <lvc:PieChart Series="{Binding FleetCompositionSeries}" HeightRequest="250"
+                                  LegendPosition="Right" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Value Distribution Bar Chart -->
+            <Frame Padding="8" CornerRadius="8" IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+                <VerticalStackLayout>
+                    <Label Text="Value Distribution (Top 10)" FontAttributes="Bold" FontSize="14" Margin="0,0,0,4" />
+                    <lvc:CartesianChart Series="{Binding ValueDistributionSeries}"
+                                        XAxes="{Binding ValueDistributionXAxes}"
+                                        YAxes="{Binding ValueDistributionYAxes}"
+                                        HeightRequest="300" />
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

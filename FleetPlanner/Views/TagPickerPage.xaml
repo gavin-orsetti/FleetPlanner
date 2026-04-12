@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             x:Class="FleetPlanner.Views.TagPickerPage"
+             x:Name="TagPickerPageRoot"
+             x:DataType="vm:TagPickerViewModel"
+             Title="{Binding PageTitle}">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Padding="16" RowSpacing="8">
+
+        <!-- Loading -->
+        <ActivityIndicator Grid.Row="0" IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center" />
+
+        <!-- Search Bar -->
+        <SearchBar Grid.Row="1"
+                   Text="{Binding SearchText}"
+                   Placeholder="Search tags..."
+                   BackgroundColor="{StaticResource SurfaceVariant}"
+                   TextColor="{StaticResource OnSurface}"
+                   PlaceholderColor="{StaticResource Gray400}"
+                   CancelButtonColor="{StaticResource Primary}" />
+
+        <!-- Create Tag Affordance -->
+        <Border Grid.Row="2"
+                StrokeShape="RoundRectangle 12"
+                Padding="12,8"
+                Margin="0,4"
+                StrokeThickness="1.5"
+                Stroke="{StaticResource Primary}"
+                BackgroundColor="Transparent"
+                IsVisible="{Binding ShowCreateTag}"
+                HeightRequest="40"
+                VerticalOptions="Start">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding CreateTagCommand}" />
+            </Border.GestureRecognizers>
+            <Label TextColor="{StaticResource Primary}" FontSize="14" VerticalTextAlignment="Center">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="＋ Create tag: " FontAttributes="Bold" />
+                        <Span Text="{Binding SearchText}" FontAttributes="Italic" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+        </Border>
+
+        <!-- Tag Groups (native CollectionView grouping) -->
+        <CollectionView Grid.Row="3"
+                        ItemsSource="{Binding GroupedTags}"
+                        IsGrouped="True">
+            <CollectionView.GroupHeaderTemplate>
+                <DataTemplate x:DataType="vm:TagCategoryGroup">
+                    <VerticalStackLayout>
+                        <!-- Doctrine section divider header -->
+                        <Label Text="{Binding DisplayCategory}"
+                               FontSize="13"
+                               FontAttributes="Italic"
+                               TextColor="{StaticResource Gray400}"
+                               HorizontalTextAlignment="Center"
+                               Padding="0,16,0,2"
+                               IsVisible="{Binding IsSectionHeader}" />
+                        <!-- Normal category header (hidden for section divider) -->
+                        <Label Text="{Binding DisplayCategory}"
+                               FontSize="16" FontAttributes="Bold"
+                               TextColor="{StaticResource Primary}"
+                               Padding="0,12,0,4">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label"
+                                             Binding="{Binding IsSectionHeader}"
+                                             Value="True">
+                                    <Setter Property="IsVisible" Value="False" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.GroupHeaderTemplate>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:SelectableTagItem">
+                    <Border StrokeShape="RoundRectangle 12"
+                            Padding="10,6"
+                            Margin="0,0,8,8"
+                            StrokeThickness="1.5"
+                            Stroke="{Binding ChipColor}"
+                            BackgroundColor="{Binding ChipFillColor}">
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border"
+                                         Binding="{Binding IsSelected}"
+                                         Value="True">
+                                <Setter Property="StrokeThickness" Value="3" />
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding Source={x:Reference TagPickerPageRoot}, Path=BindingContext.ToggleTagCommand}"
+                                CommandParameter="{Binding}" />
+                        </Border.GestureRecognizers>
+
+                        <VerticalStackLayout Spacing="2">
+                            <HorizontalStackLayout Spacing="6">
+                                <Label Text="{Binding DisplayName}"
+                                       FontSize="13"
+                                       TextColor="#E0E0E0" />
+
+                                <!-- Weight badge for role tags -->
+                                <Label Text="{Binding WeightLabel}"
+                                       FontSize="10"
+                                       IsVisible="False"
+                                       TextColor="{StaticResource OnPrimary}">
+                                    <Label.Triggers>
+                                        <MultiTrigger TargetType="Label">
+                                            <MultiTrigger.Conditions>
+                                                <BindingCondition Binding="{Binding IsIntentTag}" Value="True" />
+                                                <BindingCondition Binding="{Binding IsSelected}" Value="True" />
+                                            </MultiTrigger.Conditions>
+                                            <Setter Property="IsVisible" Value="True" />
+                                        </MultiTrigger>
+                                    </Label.Triggers>
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={x:Reference TagPickerPageRoot}, Path=BindingContext.SetWeightCommand}"
+                                            CommandParameter="{Binding}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </HorizontalStackLayout>
+
+                            <Label Text="{Binding Description}"
+                                   FontSize="10"
+                                   MaxLines="1"
+                                   LineBreakMode="TailTruncation"
+                                   TextColor="{StaticResource Gray400}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+
+            <CollectionView.EmptyView>
+                <Label Text="No tags available"
+                       FontSize="14" TextColor="{StaticResource Gray400}"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <!-- Action Buttons -->
+        <Grid Grid.Row="4" ColumnDefinitions="*,*" ColumnSpacing="8" Margin="0,8,0,0">
+            <Button Grid.Column="0" Text="Save" Command="{Binding SaveCommand}" />
+            <Button Grid.Column="1" Text="Cancel" Command="{Binding CancelCommand}"
+                    BackgroundColor="{StaticResource Gray500}" />
+        </Grid>
+
+    </Grid>
+</ContentPage>

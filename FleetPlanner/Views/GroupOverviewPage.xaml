@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:FleetPlanner.ViewModels"
+             xmlns:models="clr-namespace:FleetPlanner.Models;assembly=FleetPlanner.Core"
+             x:Class="FleetPlanner.Views.GroupOverviewPage"
+             x:DataType="vm:GroupOverviewViewModel"
+             Title="Groups">
+
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="8">
+
+        <!-- Create Group button -->
+        <Button Grid.Row="0" Text="+ New Group" Command="{Binding CreateGroupCommand}"
+                HorizontalOptions="End" />
+
+        <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                           HorizontalOptions="Center" VerticalOptions="Center" />
+
+        <!-- Empty state -->
+        <VerticalStackLayout Grid.Row="1" IsVisible="{Binding IsEmpty}"
+                             VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
+            <Label Text="No groups yet" FontSize="20" HorizontalTextAlignment="Center" />
+            <Label Text="Create a group to organise your ships by mission or doctrine."
+                   FontSize="14" HorizontalTextAlignment="Center" TextColor="{StaticResource Gray400}" />
+        </VerticalStackLayout>
+
+        <!-- Group list -->
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Groups}"
+                         IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:UserFleetGroup">
+                    <SwipeView>
+                        <SwipeView.RightItems>
+                            <SwipeItems>
+                                <SwipeItem Text="Delete"
+                                           Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GroupOverviewViewModel}}, Path=DeleteGroupCommand}"
+                                           CommandParameter="{Binding .}"
+                                           BackgroundColor="{StaticResource Error}" IsDestructive="True" />
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+                        <Frame Padding="12" Margin="0,4" CornerRadius="8"
+                               BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:GroupOverviewViewModel}}, Path=NavigateToGroupCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" />
+                                <Label Text="{Binding Description}" FontSize="12"
+                                       TextColor="{StaticResource Gray400}" LineBreakMode="TailTruncation" />
+                                <Label Text="{Binding CrewTarget, StringFormat='Crew target: {0}'}"
+                                       FontSize="11" TextColor="{StaticResource Gray500}" />
+                            </VerticalStackLayout>
+                        </Frame>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>
