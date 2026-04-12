@@ -76,10 +76,6 @@ public partial class OwnedShipEditorViewModel : ObservableObject
     [ObservableProperty]
     private string _shipName = string.Empty;
 
-    /// <summary>Tags currently applied to this ship (raw model — kept for backwards compatibility).</summary>
-    [ObservableProperty]
-    private ObservableCollection<OwnedShipTag> _appliedTags = [];
-
     /// <summary>Global tags displayed as styled chips.</summary>
     [ObservableProperty]
     private ObservableCollection<TagDisplayItem> _globalTags = [];
@@ -140,7 +136,6 @@ public partial class OwnedShipEditorViewModel : ObservableObject
 
             // Load tags and build display items
             var tags = await _ownedShipTagRepository.GetTagsForOwnedShipAsync(OwnedShipId);
-            AppliedTags = new ObservableCollection<OwnedShipTag>(tags);
 
             var globalRawTags = tags.Where(t => t.ContextType is null).ToList();
             var displayItems = new List<TagDisplayItem>();
@@ -161,6 +156,10 @@ public partial class OwnedShipEditorViewModel : ObservableObject
 
             // Load group memberships
             await LoadGroupMembershipsAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading ship: {ex}");
         }
         finally
         {

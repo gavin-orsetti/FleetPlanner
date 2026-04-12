@@ -19,6 +19,7 @@ public class GraphBuildService_Tests : IDisposable
     private readonly OwnedShipRepository _ownedShipRepo;
     private readonly OwnedShipTagRepository _shipTagRepo;
     private readonly TagRepository _tagRepo;
+    private readonly GroupTagRepository _groupTagDefRepo;
     private readonly UserFleetGroupRepository _groupRepo;
     private readonly UserFleetGroupTagRepository _groupTagRepo;
     private readonly IShipDataService _shipDataService;
@@ -31,13 +32,14 @@ public class GraphBuildService_Tests : IDisposable
         _ownedShipRepo = new OwnedShipRepository(_dbPath);
         _shipTagRepo = new OwnedShipTagRepository(_dbPath);
         _tagRepo = new TagRepository(_dbPath);
+        _groupTagDefRepo = new GroupTagRepository(_dbPath);
         _groupRepo = new UserFleetGroupRepository(_dbPath);
         _groupTagRepo = new UserFleetGroupTagRepository(_dbPath);
         _shipDataService = Substitute.For<IShipDataService>();
 
         _service = new GraphBuildService(
             _ownedShipRepo, _shipTagRepo, _tagRepo,
-            _groupRepo, _groupTagRepo, _shipDataService);
+            _groupTagDefRepo, _groupRepo, _groupTagRepo, _shipDataService);
     }
 
     public void Dispose()
@@ -158,6 +160,43 @@ public class GraphBuildService_Tests : IDisposable
 
         graph.Groups.Should().HaveCount(1);
         graph.Groups[0].Group.Name.Should().Be("Active");
+    }
+
+    [Fact]
+    public async Task GroupSpecificTags_ResolveFromGroupTagDefinition()
+    {
+        await SeedTags();
+        SetupCatalogue(new Ship { Id = 42, Name = "Javelin", CrewMin = 80 });
+
+        var ship = new OwnedShip { ShipId = 42 };
+        await _ownedShipRepo.SaveOwnedShipAsync(ship);
+
+        var group = new UserFleetGroup { Name = "Main Fleet" };
+        await _groupRepo.SaveGroupAsync(group);
+
+        // Add ship to group via sentinel tag
+        await _shipTagRepo.ApplyTagAsync(new OwnedShipTag
+        {
+            OwnedShipId = ship.Id,
+            TagKey = "status:placeholder",
+            ContextType = "group",
+            ContextId = group.Id,
+            AppliedBySystem = true
+        });
+
+        // Assign a group-specific doctrine tag (exists only in GroupTagDefinition)
+        await _groupTagRepo.ApplyTagAsync(new UserFleetGroupTag
+        {
+            UserFleetGroupId = group.Id,
+            TagKey = "doctrine:primary-arm",
+            Weight = 1
+        });
+
+        var graph = await _service.BuildGraphAsync();
+
+        graph.Groups.Should().HaveCount(1);
+        var groupNode = graph.Groups[0];
+        groupNode.DoctrineAndFocusTags.Should().Contain(t => t.Definition.Key == "doctrine:primary-arm");
     }
 
     [Fact]

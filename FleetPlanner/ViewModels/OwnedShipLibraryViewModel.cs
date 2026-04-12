@@ -87,6 +87,10 @@ public partial class OwnedShipLibraryViewModel : ObservableObject
             OwnedShips = new ObservableCollection<OwnedShipDisplay>(displays);
             IsEmpty = displays.Count == 0;
         }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading owned ships: {ex}");
+        }
         finally
         {
             IsLoading = false;

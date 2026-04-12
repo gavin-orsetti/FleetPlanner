@@ -193,6 +193,10 @@ public partial class GroupDetailViewModel : ObservableObject
 
             MemberShips = new ObservableCollection<OwnedShipDisplay>(memberDisplays);
         }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading group detail: {ex}");
+        }
         finally
         {
             IsLoading = false;

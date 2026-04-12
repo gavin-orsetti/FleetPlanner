@@ -52,4 +52,10 @@ public interface IOwnedShipTagRepository
     /// affected by this operation.
     /// </summary>
     Task ReplaceTagsAsync(int ownedShipId, IEnumerable<OwnedShipTag> tags);
+
+    /// <summary>
+    /// Deletes all contextual tag assignments scoped to a specific group.
+    /// Used to clean up orphaned tags when a group is deleted.
+    /// </summary>
+    Task DeleteContextualTagsForGroupAsync(int groupId);
 }

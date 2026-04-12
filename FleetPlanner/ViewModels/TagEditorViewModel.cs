@@ -220,6 +220,11 @@ public partial class TagEditorViewModel : ObservableObject
                 SelectedCategoryIndex = Categories.IndexOf("custom");
             }
         }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading tag editor: {ex}");
+            ErrorMessage = $"Error loading: {ex.Message}";
+        }
         finally
         {
             IsLoading = false;

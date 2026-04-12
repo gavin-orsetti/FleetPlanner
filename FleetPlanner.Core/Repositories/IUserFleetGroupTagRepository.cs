@@ -36,4 +36,10 @@ public interface IUserFleetGroupTagRepository
     /// This is an atomic swap of the full tag set.
     /// </summary>
     Task ReplaceTagsAsync(int groupId, IEnumerable<UserFleetGroupTag> tags);
+
+    /// <summary>
+    /// Hard-deletes all tag assignments for the specified group.
+    /// Used to clean up when a group is deleted.
+    /// </summary>
+    Task DeleteAllTagsForGroupAsync(int groupId);
 }

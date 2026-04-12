@@ -43,6 +43,7 @@ public class GraphBuildService : IGraphBuildService
     private readonly IOwnedShipRepository _ownedShipRepo;
     private readonly IOwnedShipTagRepository _ownedShipTagRepo;
     private readonly ITagRepository _tagRepo;
+    private readonly IGroupTagRepository _groupTagDefRepo;
     private readonly IUserFleetGroupRepository _groupRepo;
     private readonly IUserFleetGroupTagRepository _groupTagRepo;
     private readonly IShipDataService _shipDataService;
@@ -56,6 +57,7 @@ public class GraphBuildService : IGraphBuildService
         IOwnedShipRepository ownedShipRepo,
         IOwnedShipTagRepository ownedShipTagRepo,
         ITagRepository tagRepo,
+        IGroupTagRepository groupTagDefRepo,
         IUserFleetGroupRepository groupRepo,
         IUserFleetGroupTagRepository groupTagRepo,
         IShipDataService shipDataService)
@@ -63,6 +65,7 @@ public class GraphBuildService : IGraphBuildService
         _ownedShipRepo = ownedShipRepo;
         _ownedShipTagRepo = ownedShipTagRepo;
         _tagRepo = tagRepo;
+        _groupTagDefRepo = groupTagDefRepo;
         _groupRepo = groupRepo;
         _groupTagRepo = groupTagRepo;
         _shipDataService = shipDataService;
@@ -78,9 +81,12 @@ public class GraphBuildService : IGraphBuildService
         var catalogueShips = await _shipDataService.GetAllShipsAsync();
         var catalogueLookup = catalogueShips.ToDictionary(s => s.Id);
 
-        // 3. Load all tags for lookup
+        // 3. Load all tags for lookup (ship tags + group-specific tags)
         var allTagDefs = await _tagRepo.GetAllTagsAsync(includeArchived: true);
         var tagLookup = allTagDefs.ToDictionary(t => t.Key);
+
+        var allGroupTagDefs = await _groupTagDefRepo.GetAllTagsAsync(includeArchived: true);
+        var groupTagLookup = allGroupTagDefs.ToDictionary(t => t.Key);
 
         // 4. Load all non-archived groups and their tags
         var groups = await _groupRepo.GetAllGroupsAsync();
@@ -153,11 +159,34 @@ public class GraphBuildService : IGraphBuildService
         {
             var groupNode = new GroupNode { Group = group };
 
-            // Load group doctrine sub-dimension and focus tags
+            // Load group doctrine sub-dimension and focus tags.
+            // Group tags may exist only in GroupTagDefinition (e.g. doctrine:primary-arm),
+            // so we fall back to groupTagLookup when the ship-tag tagLookup misses.
             var groupTags = await _groupTagRepo.GetTagsForGroupAsync(group.Id);
             foreach (var gt in groupTags)
             {
-                tagLookup.TryGetValue(gt.TagKey, out var tagDef);
+                TagDefinition? tagDef;
+                if (!tagLookup.TryGetValue(gt.TagKey, out tagDef))
+                {
+                    // Fall back to group-specific tag definitions
+                    if (groupTagLookup.TryGetValue(gt.TagKey, out var groupTagDef))
+                    {
+                        tagDef = new TagDefinition
+                        {
+                            Key = groupTagDef.Key,
+                            DisplayName = groupTagDef.DisplayName,
+                            Category = groupTagDef.Category,
+                            Description = groupTagDef.Description,
+                            ColorHex = groupTagDef.ColorHex,
+                            SortOrder = groupTagDef.SortOrder,
+                            AllowedScopes = groupTagDef.AllowedScopes,
+                            IsSystemDefined = groupTagDef.IsSystemDefined,
+                            IsUserEditable = groupTagDef.IsUserEditable,
+                            IsArchived = groupTagDef.IsArchived
+                        };
+                    }
+                }
+
                 if (tagDef is null) continue;
 
                 var tagNode = new TagNode

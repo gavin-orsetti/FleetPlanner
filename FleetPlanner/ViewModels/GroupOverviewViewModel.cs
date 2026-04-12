@@ -29,6 +29,8 @@ namespace FleetPlanner.ViewModels;
 public partial class GroupOverviewViewModel : ObservableObject
 {
     private readonly IUserFleetGroupRepository _groupRepository;
+    private readonly IOwnedShipTagRepository _ownedShipTagRepository;
+    private readonly IUserFleetGroupTagRepository _groupTagRepository;
     private readonly IGraphBuildService _graphBuildService;
 
     /// <summary>The list of groups currently displayed.</summary>
@@ -46,9 +48,15 @@ public partial class GroupOverviewViewModel : ObservableObject
     /// <summary>
     /// Constructor — receives dependencies from the DI container.
     /// </summary>
-    public GroupOverviewViewModel(IUserFleetGroupRepository groupRepository, IGraphBuildService graphBuildService)
+    public GroupOverviewViewModel(
+        IUserFleetGroupRepository groupRepository,
+        IOwnedShipTagRepository ownedShipTagRepository,
+        IUserFleetGroupTagRepository groupTagRepository,
+        IGraphBuildService graphBuildService)
     {
         _groupRepository = groupRepository;
+        _ownedShipTagRepository = ownedShipTagRepository;
+        _groupTagRepository = groupTagRepository;
         _graphBuildService = graphBuildService;
     }
 
@@ -62,6 +70,10 @@ public partial class GroupOverviewViewModel : ObservableObject
             var groups = await _groupRepository.GetAllGroupsAsync();
             Groups = new ObservableCollection<UserFleetGroup>(groups);
             IsEmpty = groups.Count == 0;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading groups: {ex}");
         }
         finally
         {
@@ -109,6 +121,8 @@ public partial class GroupOverviewViewModel : ObservableObject
             $"Permanently delete '{group.Name}'?", "Delete", "Cancel");
         if (!confirm) return;
         await _groupRepository.DeleteGroupAsync(group.Id);
+        await _ownedShipTagRepository.DeleteContextualTagsForGroupAsync(group.Id);
+        await _groupTagRepository.DeleteAllTagsForGroupAsync(group.Id);
         _graphBuildService.InvalidateCache();
         await LoadGroupsAsync();
     }

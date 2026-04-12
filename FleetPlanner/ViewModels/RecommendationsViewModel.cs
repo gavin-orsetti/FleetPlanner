@@ -3,8 +3,10 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
+using FleetPlanner.Helpers;
 using FleetPlanner.Models;
 using FleetPlanner.Services;
+using FleetPlanner.Views;
 
 namespace FleetPlanner.ViewModels;
 
@@ -59,6 +61,28 @@ public partial class RecommendationsViewModel : ObservableObject
     {
         _graphBuildService = graphBuildService;
         _recommendationService = recommendationService;
+    }
+
+    /// <summary>Navigates to the entity referenced by a recommendation (ship editor or group detail).</summary>
+    [RelayCommand]
+    private async Task NavigateToEntityAsync(Recommendation rec)
+    {
+        if (rec?.ScopeId is null) return;
+
+        if (rec.ScopeType == RecommendationScope.Ship)
+        {
+            await Shell.Current.GoToAsync(nameof(OwnedShipEditorPage), new Dictionary<string, object>
+            {
+                { QueryParameters.OwnedShipId, rec.ScopeId.Value }
+            });
+        }
+        else if (rec.ScopeType == RecommendationScope.Group)
+        {
+            await Shell.Current.GoToAsync(nameof(GroupDetailPage), new Dictionary<string, object>
+            {
+                { QueryParameters.GroupId, rec.ScopeId.Value }
+            });
+        }
     }
 
     /// <summary>Builds the graph and runs the recommendation engine.</summary>

@@ -30,6 +30,9 @@ public partial class SettingsViewModel : ObservableObject
     /// <summary>For checking cache age and triggering a force-refresh of ship data.</summary>
     private readonly IShipDataService _shipDataService;
 
+    /// <summary>For invalidating the graph cache after ship data refresh.</summary>
+    private readonly IGraphBuildService _graphBuildService;
+
     /// <summary>Human-readable timestamp of the last cache refresh (e.g., "3/15/2026 2:30 PM").</summary>
     [ObservableProperty]
     private string _lastUpdated = "Never";
@@ -54,9 +57,10 @@ public partial class SettingsViewModel : ObservableObject
     /// </para>
     /// </summary>
     /// <param name="shipDataService">For cache management operations.</param>
-    public SettingsViewModel(IShipDataService shipDataService)
+    public SettingsViewModel(IShipDataService shipDataService, IGraphBuildService graphBuildService)
     {
         _shipDataService = shipDataService;
+        _graphBuildService = graphBuildService;
         // FIX: Defer Application.Current access. During DI construction the
         // Application instance may not exist yet, causing a NullReferenceException.
         // The value is set in LoadSettingsAsync which runs after the UI is ready.
@@ -96,6 +100,7 @@ public partial class SettingsViewModel : ObservableObject
         {
             // forceRefresh: true skips the 24-hour cache window and hits the API immediately.
             await _shipDataService.GetAllShipsAsync(forceRefresh: true);
+            _graphBuildService.InvalidateCache();
             var lastUpdated = await _shipDataService.GetLastUpdatedAsync();
             LastUpdated = lastUpdated?.ToString("g") ?? "Never";
         }

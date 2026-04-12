@@ -242,6 +242,10 @@ public partial class TagPickerViewModel : ObservableObject
             AllTags = new ObservableCollection<SelectableTagItem>(selectableItems);
             ApplyFilter();
         }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading tags: {ex}");
+        }
         finally
         {
             IsLoading = false;
@@ -607,33 +611,6 @@ public partial class TagPickerViewModel : ObservableObject
         _                       => 99 // custom / unknown
     };
 
-    /// <summary>
-    /// Returns a display-friendly name for a tag category.
-    /// </summary>
-    private static string CategoryDisplayName(string category) => category switch
-    {
-        "doctrine:value"        => "Fleet Value",
-        "doctrine:frequency"    => "Frequency",
-        "doctrine:investment"   => "Investment",
-        "doctrine:identity"     => "Identity",
-        "doctrine:structural"   => "Structural Role",
-        "doctrine"              => "Doctrine",
-        "intent:activity"       => "Activity",
-        "intent:economy"        => "Economy",
-        "intent:crew"           => "Crew Commitment",
-        "intent:legal"          => "Legal Stance",
-        "intent:org"            => "Org Context",
-        "intent:mission"        => "Mission",
-        "potency:capacity"      => "Capacity",
-        "potency:reach"         => "Reach",
-        "potency:resilience"    => "Resilience",
-        "potency:footprint"     => "Footprint",
-        "status:lifecycle"      => "Lifecycle",
-        "status:modifier"       => "Modifier",
-        "status"                => "Status",
-        "tradeoff"              => "Tradeoff",
-        _                       => "Custom"
-    };
 }
 
 /// <summary>

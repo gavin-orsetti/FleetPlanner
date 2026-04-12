@@ -53,7 +53,16 @@ public enum RecommendationKind
     RemoveFromGroup,
 
     /// <summary>Group's required crew total vs. group.CrewTarget mismatch.</summary>
-    CrewEfficiency
+    CrewEfficiency,
+
+    /// <summary>Ship has tradeoff tags but no intent tags in the same group context — incomplete tagging.</summary>
+    OrphanedTradeoff,
+
+    /// <summary>Ship with doctrine:daily-driver across multiple groups with different intents — versatility highlight.</summary>
+    VersatilityHighlight,
+
+    /// <summary>Tradeoff suppressed a warning — ship is a priority upgrade candidate when conditions change.</summary>
+    OpportunityTarget
 }
 
 /// <summary>

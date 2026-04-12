@@ -85,6 +85,8 @@
     <Color x:Key="OnErrorContainer">#ef4444</Color>
     <Color x:Key="OnErrorContainerDark">#ef4444</Color>
 
+    <!-- Background uses #0d0f14 (deep space blue-black) instead of the generic #121212 dark theme standard.
+         This was an intentional design choice to reinforce the space aesthetic. -->
     <Color x:Key="Background">#0d0f14</Color>
     <Color x:Key="BackgroundDark">#0d0f14</Color>
 

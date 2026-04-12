@@ -35,6 +35,11 @@
                 <DataTemplate x:DataType="m:Recommendation">
                     <Border Stroke="{StaticResource Gray200}" StrokeThickness="1"
                             StrokeShape="RoundRectangle 8" Padding="12" Margin="0,4">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer
+                                Command="{Binding Source={RelativeSource AncestorType={x:Type vm:RecommendationsViewModel}}, Path=NavigateToEntityCommand}"
+                                CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="4">
                             <Grid ColumnDefinitions="*,Auto">
                                 <Label Grid.Column="0" Text="{Binding Summary}" FontSize="15" FontAttributes="Bold"

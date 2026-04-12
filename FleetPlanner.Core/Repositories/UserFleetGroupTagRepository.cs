@@ -87,4 +87,15 @@ public class UserFleetGroupTagRepository : IUserFleetGroupTagRepository
             await db.InsertAsync(tag);
         }
     }
+
+    /// <inheritdoc/>
+    public async Task DeleteAllTagsForGroupAsync(int groupId)
+    {
+        var db = await GetConnectionAsync();
+        var existing = await db.Table<UserFleetGroupTag>()
+            .Where(t => t.UserFleetGroupId == groupId)
+            .ToListAsync();
+        foreach (var tag in existing)
+            await db.DeleteAsync(tag);
+    }
 }

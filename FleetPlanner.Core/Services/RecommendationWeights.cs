@@ -72,12 +72,7 @@ internal static class RecommendationWeights
     /// </summary>
     public const double CrewEfficiencyWeight = 0.7;
 
-    /// <summary>
-    /// Penalty subtracted from a recommendation's score when a ship has conflicting tags
-    /// at the same weight within the same category (e.g. two weight-1 role tags). This
-    /// lowers confidence because the engine can't determine the ship's primary purpose.
-    /// <para><b>Note:</b> Currently declared but not yet applied in the scoring pipeline.
-    /// Planned for Phase 2 when tag conflict detection is added to the graph builder.</para>
-    /// </summary>
-    public const double ConflictingTagPenalty = 0.2;
+    // TODO: Phase 2 — add ConflictingTagPenalty (0.2) when tag conflict detection
+    // is added to the graph builder. This penalty would reduce a recommendation's
+    // score when a ship has conflicting tags at the same weight within the same category.
 }

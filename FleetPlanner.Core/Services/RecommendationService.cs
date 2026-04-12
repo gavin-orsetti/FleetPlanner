@@ -70,6 +70,8 @@ public class RecommendationService : IRecommendationService
         recs.AddRange(AnalyseCrewEfficiency(graph));
         recs.AddRange(AnalyseTradeoffSuggestions(graph));
         recs.AddRange(AnalysePotencyMismatches(graph));
+        recs.AddRange(AnalyseOrphanedTradeoffs(graph));
+        recs.AddRange(AnalyseVersatilityHighlights(graph));
 
         // Sort by score descending (highest priority first)
         return recs.OrderByDescending(r => r.Score).ToList();
@@ -550,7 +552,24 @@ public class RecommendationService : IRecommendationService
                 // intent:crew:solo on multi-crew ship → suggest tradeoff:undercrew
                 if (allTags.Contains("intent:crew:solo") && ship.CatalogueShip.CrewMin > 1)
                 {
-                    if (!allTags.Contains("tradeoff:undercrew"))
+                    if (allTags.Contains("tradeoff:undercrew"))
+                    {
+                        // Tradeoff suppresses the warning — log as opportunity target
+                        recs.Add(new Recommendation
+                        {
+                            ScopeType = RecommendationScope.Ship,
+                            ScopeId = ship.OwnedShipId,
+                            Kind = RecommendationKind.OpportunityTarget,
+                            TargetTagKey = "tradeoff:undercrew",
+                            Score = 0.2,
+                            Priority = RecommendationPriority.Low,
+                            Summary = $"{ship.CatalogueShip.Name} in '{group.Group.Name}' is accepted as undercrewed",
+                            Explanation = $"This ship requires {ship.CatalogueShip.CrewMin} crew but is flown solo. When crew becomes available, this ship would benefit from full staffing.",
+                            Evidence = [$"Crew min: {ship.CatalogueShip.CrewMin}", "Intent: solo", "Tradeoff: undercrew accepted"],
+                            SuggestedActions = ["When crew becomes available, consider full-staffing this ship"]
+                        });
+                    }
+                    else
                     {
                         recs.Add(new Recommendation
                         {
@@ -635,10 +654,27 @@ public class RecommendationService : IRecommendationService
                 {
                     if (allTags.Contains("intent:activity:recon") || allTags.Contains("intent:activity:hack"))
                     {
-                        // Check if tradeoff:high-footprint suppresses this
-                        if (!allTags.Contains("tradeoff:high-footprint"))
+                        var stealthActivity = allTags.Contains("intent:activity:recon") ? "recon" : "hack";
+
+                        if (allTags.Contains("tradeoff:high-footprint"))
                         {
-                            var stealthActivity = allTags.Contains("intent:activity:recon") ? "recon" : "hack";
+                            // Tradeoff suppresses the warning — log as opportunity target
+                            recs.Add(new Recommendation
+                            {
+                                ScopeType = RecommendationScope.Ship,
+                                ScopeId = ship.OwnedShipId,
+                                Kind = RecommendationKind.OpportunityTarget,
+                                TargetTagKey = "tradeoff:high-footprint",
+                                Score = 0.2,
+                                Priority = RecommendationPriority.Low,
+                                Summary = $"{ship.CatalogueShip.Name} in '{group.Group.Name}' has accepted high-footprint for {stealthActivity}",
+                                Explanation = $"This ship's dominant footprint is a known liability for {stealthActivity} operations. If a lower-footprint alternative becomes available, consider swapping.",
+                                Evidence = ["Potency: dominant footprint", $"Intent: {stealthActivity}", "Tradeoff: high-footprint accepted"],
+                                SuggestedActions = [$"Consider a lower-footprint ship for {stealthActivity} when available"]
+                            });
+                        }
+                        else
+                        {
                             recs.Add(new Recommendation
                             {
                                 ScopeType = RecommendationScope.Ship,
@@ -671,6 +707,106 @@ public class RecommendationService : IRecommendationService
                         SuggestedActions = ["Review doctrine:value assignment", "Review potency:capacity assessment for this group"]
                     });
                 }
+            }
+        }
+
+        return recs;
+    }
+
+    /// <summary>
+    /// Pattern 13: OrphanedTradeoffs — a ship has tradeoff:* tags in a group context
+    /// but no intent:* tags in the same context, indicating incomplete tagging.
+    /// </summary>
+    private static List<Recommendation> AnalyseOrphanedTradeoffs(FleetGraph graph)
+    {
+        var recs = new List<Recommendation>();
+
+        foreach (var group in graph.Groups)
+        {
+            foreach (var ship in group.MemberShips)
+            {
+                var tags = GetAllTags(ship, group.Group.Id);
+
+                var hasTradeoff = tags.Any(t => t.Definition.Category == "tradeoff");
+                var hasIntent = tags.Any(t => t.Definition.Category.StartsWith("intent:", StringComparison.Ordinal));
+
+                if (hasTradeoff && !hasIntent)
+                {
+                    var tradeoffNames = tags
+                        .Where(t => t.Definition.Category == "tradeoff")
+                        .Select(t => t.Definition.DisplayName)
+                        .ToList();
+
+                    recs.Add(new Recommendation
+                    {
+                        ScopeType = RecommendationScope.Ship,
+                        ScopeId = ship.OwnedShipId,
+                        Kind = RecommendationKind.OrphanedTradeoff,
+                        Score = 0.5,
+                        Priority = RecommendationPriority.Medium,
+                        Summary = $"{ship.CatalogueShip.Name} has tradeoff tags but no intent in '{group.Group.Name}'",
+                        Explanation = $"This ship has tradeoff tags ({string.Join(", ", tradeoffNames)}) but no intent tags in this group. Tradeoffs need intent context to be meaningful.",
+                        Evidence = [$"Tradeoffs: {string.Join(", ", tradeoffNames)}", "Intent: none"],
+                        SuggestedActions = ["Add intent tags to provide context for the accepted tradeoffs"]
+                    });
+                }
+            }
+        }
+
+        return recs;
+    }
+
+    /// <summary>
+    /// Pattern 14: VersatilityHighlight — a ship with doctrine:frequency:daily-driver appears
+    /// in multiple groups with different intent:activity:* tags, indicating versatile deployment.
+    /// </summary>
+    private static List<Recommendation> AnalyseVersatilityHighlights(FleetGraph graph)
+    {
+        var recs = new List<Recommendation>();
+
+        foreach (var ship in graph.Ships)
+        {
+            var isDailyDriver = ship.GlobalTags.Any(t => t.Definition.Key == "doctrine:frequency:daily-driver");
+            if (!isDailyDriver) continue;
+
+            var groupActivities = new Dictionary<int, HashSet<string>>();
+
+            foreach (var group in graph.Groups)
+            {
+                if (!group.MemberShips.Any(m => m.OwnedShipId == ship.OwnedShipId))
+                    continue;
+
+                var activities = GetIntentTags(ship, group.Group.Id)
+                    .Where(t => t.Definition.Category == "intent:activity")
+                    .Select(t => t.Definition.Key)
+                    .ToHashSet();
+
+                if (activities.Count > 0)
+                    groupActivities[group.Group.Id] = activities;
+            }
+
+            if (groupActivities.Count < 2) continue;
+
+            var allActivities = groupActivities.Values.SelectMany(a => a).Distinct().ToList();
+            if (allActivities.Count >= 2)
+            {
+                var groupNames = graph.Groups
+                    .Where(g => groupActivities.ContainsKey(g.Group.Id))
+                    .Select(g => g.Group.Name)
+                    .ToList();
+
+                recs.Add(new Recommendation
+                {
+                    ScopeType = RecommendationScope.Ship,
+                    ScopeId = ship.OwnedShipId,
+                    Kind = RecommendationKind.VersatilityHighlight,
+                    Score = 0.3,
+                    Priority = RecommendationPriority.Low,
+                    Summary = $"{ship.CatalogueShip.Name} is a versatile daily-driver across {groupActivities.Count} groups",
+                    Explanation = $"This ship serves {allActivities.Count} different roles across groups {string.Join(", ", groupNames.Select(n => $"'{n}'"))}. It's a key versatile asset in the fleet.",
+                    Evidence = allActivities.Select(a => $"Activity: {FormatTagKey(a)}").ToList(),
+                    SuggestedActions = ["This ship is well-utilized — consider protecting it from fleet changes"]
+                });
             }
         }
 

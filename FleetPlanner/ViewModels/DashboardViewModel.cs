@@ -155,6 +155,10 @@ public partial class DashboardViewModel : ObservableObject
             BuildFleetCompositionChart(resolved);
             BuildValueDistributionChart(resolved);
         }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading dashboard: {ex}");
+        }
         finally
         {
             IsLoading = false;

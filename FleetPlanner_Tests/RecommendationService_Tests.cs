@@ -221,4 +221,306 @@ public class RecommendationService_Tests
         recs.Should().HaveCountGreaterOrEqualTo(2);
         recs.Should().BeInDescendingOrder(r => r.Score);
     }
+
+    // ── Pattern 3: Complement ────────────────────────────────────────
+
+    [Fact]
+    public void Complement_UnassignedShipFillsGroupGap_Detected()
+    {
+        var group = MakeGroupNode(1, "Combat Wing");
+
+        var member = MakeShipNode(1, "Arrow");
+        member.GlobalTags.Add(MakeTagNode("intent:activity:fight", "intent:activity"));
+        member.ContextualTags[1] = new List<TagNode> { MakeTagNode("intent:activity:fight", "intent:activity") };
+        group.MemberShips.Add(member);
+
+        // Unassigned ship has escort intent (missing from the group)
+        var candidate = MakeShipNode(2, "Vanguard");
+        candidate.GlobalTags.Add(MakeTagNode("intent:activity:escort", "intent:activity"));
+
+        var graph = new FleetGraph { Ships = [member, candidate], Groups = [group] };
+        var recs = _service.GetRecommendations(graph);
+
+        recs.Should().Contain(r =>
+            r.Kind == RecommendationKind.Complement
+            && r.TargetShipId == 2);
+    }
+
+    // ── Pattern 6: GroupCoherence ────────────────────────────────────
+
+    [Fact]
+    public void GroupCoherence_LessThanHalfAligned_Detected()
+    {
+        var group = MakeGroupNode(1, "Combat Group");
+        group.DoctrineAndFocusTags.Add(MakeTagNode("doctrine:primary-arm", "doctrine"));
+
+        // 3 ships: only 1 has a combat intent → 33% coherence < 50%
+        var fighter = MakeShipNode(1, "Gladius");
+        fighter.ContextualTags[1] = new List<TagNode> { MakeTagNode("intent:activity:fight", "intent:activity") };
+        group.MemberShips.Add(fighter);
+
+        var miner = MakeShipNode(2, "Prospector");
+        miner.ContextualTags[1] = new List<TagNode> { MakeTagNode("intent:activity:mine", "intent:activity") };
+        group.MemberShips.Add(miner);
+
+        var hauler = MakeShipNode(3, "Hull A");
+        hauler.ContextualTags[1] = new List<TagNode> { MakeTagNode("intent:activity:haul", "intent:activity") };
+        group.MemberShips.Add(hauler);
+
+        var graph = new FleetGraph { Ships = [fighter, miner, hauler], Groups = [group] };
+        var recs = _service.GetRecommendations(graph);
+
+        recs.Should().Contain(r =>
+            r.Kind == RecommendationKind.GroupCoherence
+            && r.ScopeId == 1);
+    }
+
+    // ── Pattern 7: AccountIntentDistribution ─────────────────────────
+
+    [Fact]
+    public void AccountIntentDistribution_MissingMajorIntents_Detected()
+    {
+        // Only a fighter — missing mine, salvage, haul, heal, support, and economy intents
+        var ship = MakeShipNode(1, "Gladius", daysOld: 1);
+        ship.GlobalTags.Add(MakeTagNode("intent:activity:fight", "intent:activity"));
+        ship.GlobalTags.Add(MakeTagNode("intent:economy:combat-loop", "intent:economy"));
+        ship.GlobalTags.Add(MakeTagNode("doctrine:value:backbone", "doctrine:value"));
+        ship.GlobalTags.Add(MakeTagNode("status:lifecycle:owned", "status:lifecycle"));
+
+        var graph = new FleetGraph { Ships = [ship], Groups = [] };
+        var recs = _service.GetRecommendations(graph);
+
+        recs.Should().Contain(r =>
+            r.Kind == RecommendationKind.AccountRoleDistribution);
+    }
+
+    // ── Pattern 9: RemoveFromGroup ───────────────────────────────────
+
+    [Fact]
+    public void RemoveFromGroup_ShipDoesNotContribute_Detected()
+    {
+        var group = MakeGroupNode(1, "Combat Group");
+        group.DoctrineAndFocusTags.Add(MakeTagNode("doctrine:primary-arm", "doctrine"));
+
+        // Ship with only mining intent — doesn't match combat doctrine capabilities
+        var miner = MakeShipNode(1, "Prospector");
+        miner.ContextualTags[1] = new List<TagNode> { MakeTagNode("intent:activity:mine", "intent:activity") };
+        group.MemberShips.Add(miner);
+
+        var graph = new FleetGraph { Ships = [miner], Groups = [group] };
+        var recs = _service.GetRecommendations(graph);
+
+        recs.Should().Contain(r =>
+            r.Kind == RecommendationKind.RemoveFromGroup
+            && r.ScopeId == 1);
+    }
+
+    // ── Pattern 11: TradeoffSuggestions ───────────────────────────────
+
+    [Fact]
+    public void TradeoffSuggestion_SoloOnMulticrew_SuggestsUndercrew()
+    {
+        var group = MakeGroupNode(1, "Solo Ops");
+
+        var ship = MakeShipNode(1, "MOLE", crewMin: 4);
+        ship.ContextualTags[1] = new List<TagNode>
+        {
+            MakeTagNode("intent:crew:solo", "intent:crew")
+        };
+        group.MemberShips.Add(ship);
+
+        var graph = new FleetGraph { Ships = [ship], Groups = [group] };
+        var recs = _service.GetRecommendations(graph);
+
+        recs.Should().Contain(r =>
+            r.TargetTagKey == "tradeoff:undercrew"
+            && r.ScopeId == 1);
+    }
+
+    [Fact]
+    public void TradeoffSuggestion_BackboneConceptOrPledged_FleetGap()
+    {
+        var group = MakeGroupNode(1, "Main Fleet");
+
+        var ship = MakeShipNode(1, "Polaris", crewMin: 14);
+        ship.GlobalTags.Add(MakeTagNode("doctrine:value:backbone", "doctrine:value"));
+        ship.GlobalTags.Add(MakeTagNode("status:lifecycle:concept", "status:lifecycle"));
+        ship.ContextualTags[1] = new List<TagNode>();
+        group.MemberShips.Add(ship);
+
+        var graph = new FleetGraph { Ships = [ship], Groups = [group] };
+        var recs = _service.GetRecommendations(graph);
+
+        recs.Should().Contain(r =>
+            r.Kind == RecommendationKind.DoctrineMismatch
+            && r.Summary.Contains("backbone") && r.Summary.Contains("Concept"));
+    }
+
+    [Fact]
+    public void TradeoffSuggestion_UndermmannedPrimaryArm_ReadinessGap()
+    {
+        var group = MakeGroupNode(1, "Alpha Squad");
+        group.DoctrineAndFocusTags.Add(MakeTagNode("doctrine:primary-arm", "doctrine"));
+        group.DoctrineAndFocusTags.Add(MakeTagNode("status:undermanned", "status"));
+
+        var graph = new FleetGraph { Ships = [], Groups = [group] };
+        var recs = _service.GetRecommendations(graph);
+
+        recs.Should().Contain(r =>
+            r.Kind == RecommendationKind.CapabilityGap
+            && r.Score >= 0.9
+            && r.ScopeId == 1);
+    }
+
+    [Fact]
+    public void TradeoffSuppression_UndercrewPresent_EmitsOpportunityTarget()
+    {
+        var group = MakeGroupNode(1, "Solo Mining");
+
+        var ship = MakeShipNode(1, "MOLE", crewMin: 4);
+        ship.ContextualTags[1] = new List<TagNode>
+        {
+            MakeTagNode("intent:crew:solo", "intent:crew"),
+            MakeTagNode("tradeoff:undercrew", "tradeoff")
+        };
+        group.MemberShips.Add(ship);
+
+        var graph = new FleetGraph { Ships = [ship], Groups = [group] };
+        var recs = _service.GetRecommendations(graph);
+
+        recs.Should().Contain(r =>
+            r.Kind == RecommendationKind.OpportunityTarget
+            && r.TargetTagKey == "tradeoff:undercrew"
+            && r.ScopeId == 1);
+
+        // Should NOT have the warning suggestion (suppressed)
+        recs.Should().NotContain(r =>
+            r.Kind == RecommendationKind.UnderDescribedShip
+            && r.TargetTagKey == "tradeoff:undercrew");
+    }
+
+    // ── Pattern 12: PotencyMismatches ────────────────────────────────
+
+    [Fact]
+    public void PotencyMismatch_DominantFootprintRecon_Detected()
+    {
+        var group = MakeGroupNode(1, "Recon Wing");
+
+        var ship = MakeShipNode(1, "Javelin");
+        ship.ContextualTags[1] = new List<TagNode>
+        {
+            MakeTagNode("potency:footprint:dominant", "potency:footprint"),
+            MakeTagNode("intent:activity:recon", "intent:activity")
+        };
+        group.MemberShips.Add(ship);
+
+        var graph = new FleetGraph { Ships = [ship], Groups = [group] };
+        var recs = _service.GetRecommendations(graph);
+
+        recs.Should().Contain(r =>
+            r.Kind == RecommendationKind.GroupCoherence
+            && r.Summary.Contains("dominant footprint")
+            && r.Summary.Contains("recon"));
+    }
+
+    [Fact]
+    public void PotencyMismatch_TokenCapacityBackbone_Detected()
+    {
+        var group = MakeGroupNode(1, "Main Group");
+
+        var ship = MakeShipNode(1, "Aurora MR");
+        ship.GlobalTags.Add(MakeTagNode("doctrine:value:backbone", "doctrine:value"));
+        ship.ContextualTags[1] = new List<TagNode>
+        {
+            MakeTagNode("potency:capacity:token", "potency:capacity")
+        };
+        group.MemberShips.Add(ship);
+
+        var graph = new FleetGraph { Ships = [ship], Groups = [group] };
+        var recs = _service.GetRecommendations(graph);
+
+        recs.Should().Contain(r =>
+            r.Kind == RecommendationKind.DoctrineMismatch
+            && r.Summary.Contains("backbone")
+            && r.Summary.Contains("token capacity"));
+    }
+
+    [Fact]
+    public void PotencyMismatch_HighFootprintTradeoff_EmitsOpportunityTarget()
+    {
+        var group = MakeGroupNode(1, "Stealth Recon");
+
+        var ship = MakeShipNode(1, "Javelin");
+        ship.ContextualTags[1] = new List<TagNode>
+        {
+            MakeTagNode("potency:footprint:dominant", "potency:footprint"),
+            MakeTagNode("intent:activity:hack", "intent:activity"),
+            MakeTagNode("tradeoff:high-footprint", "tradeoff")
+        };
+        group.MemberShips.Add(ship);
+
+        var graph = new FleetGraph { Ships = [ship], Groups = [group] };
+        var recs = _service.GetRecommendations(graph);
+
+        recs.Should().Contain(r =>
+            r.Kind == RecommendationKind.OpportunityTarget
+            && r.TargetTagKey == "tradeoff:high-footprint");
+
+        // Should NOT have the warning (suppressed)
+        recs.Should().NotContain(r =>
+            r.Kind == RecommendationKind.GroupCoherence
+            && r.Summary.Contains("dominant footprint"));
+    }
+
+    // ── Pattern 13: OrphanedTradeoffs ────────────────────────────────
+
+    [Fact]
+    public void OrphanedTradeoff_TradeoffWithoutIntent_Detected()
+    {
+        var group = MakeGroupNode(1, "Test Group");
+
+        var ship = MakeShipNode(1, "Mystery Ship");
+        ship.ContextualTags[1] = new List<TagNode>
+        {
+            MakeTagNode("tradeoff:undercrew", "tradeoff")
+        };
+        group.MemberShips.Add(ship);
+
+        var graph = new FleetGraph { Ships = [ship], Groups = [group] };
+        var recs = _service.GetRecommendations(graph);
+
+        recs.Should().Contain(r =>
+            r.Kind == RecommendationKind.OrphanedTradeoff
+            && r.ScopeId == 1);
+    }
+
+    // ── Pattern 14: VersatilityHighlight ─────────────────────────────
+
+    [Fact]
+    public void VersatilityHighlight_DailyDriverMultipleGroupsDifferentIntents_Detected()
+    {
+        var group1 = MakeGroupNode(1, "Combat Wing");
+        var group2 = MakeGroupNode(2, "Hauling Ops");
+
+        var ship = MakeShipNode(1, "Cutlass Black");
+        ship.GlobalTags.Add(MakeTagNode("doctrine:frequency:daily-driver", "doctrine:frequency"));
+        ship.ContextualTags[1] = new List<TagNode>
+        {
+            MakeTagNode("intent:activity:fight", "intent:activity")
+        };
+        ship.ContextualTags[2] = new List<TagNode>
+        {
+            MakeTagNode("intent:activity:haul", "intent:activity")
+        };
+
+        group1.MemberShips.Add(ship);
+        group2.MemberShips.Add(ship);
+
+        var graph = new FleetGraph { Ships = [ship], Groups = [group1, group2] };
+        var recs = _service.GetRecommendations(graph);
+
+        recs.Should().Contain(r =>
+            r.Kind == RecommendationKind.VersatilityHighlight
+            && r.ScopeId == 1);
+    }
 }

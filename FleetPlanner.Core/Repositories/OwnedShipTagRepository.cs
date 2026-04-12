@@ -104,4 +104,14 @@ public class OwnedShipTagRepository : IOwnedShipTagRepository
             await db.InsertAsync(tag);
         }
     }
+
+    /// <inheritdoc/>
+    public async Task DeleteContextualTagsForGroupAsync(int groupId)
+    {
+        var db = await GetConnectionAsync();
+        var all = await db.Table<OwnedShipTag>().ToListAsync();
+        var toDelete = all.Where(t => t.ContextType == "group" && t.ContextId == groupId).ToList();
+        foreach (var tag in toDelete)
+            await db.DeleteAsync(tag);
+    }
 }

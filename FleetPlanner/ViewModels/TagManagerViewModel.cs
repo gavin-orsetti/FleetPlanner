@@ -114,6 +114,10 @@ public partial class TagManagerViewModel : ObservableObject
 
             ApplyFilter();
         }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error loading tags: {ex}");
+        }
         finally
         {
             IsLoading = false;
